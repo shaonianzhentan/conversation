@@ -168,13 +168,13 @@ async def _async_converse(
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)
-    # 发送事件，共享给其他组件
-    hass.bus.fire('ha_voice_text_event', {
-        'text': text
-    })
     try:
         # 去掉前后标点符号
         _text = text.strip('。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')    
+        # 发送事件，共享给其他组件
+        hass.bus.fire('ha_voice_text_event', {
+            'text': _text
+        })
         # 执行自定义脚本
         states = hass.states.async_all()
         for state in states:
