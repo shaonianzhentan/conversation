@@ -29,8 +29,8 @@ UTTERANCES = {
         INTENT_CLOSE_COVER: ["Close [the] [a] [an] {name}[s]"],
     },
     "shopping_list": {
-        INTENT_ADD_ITEM: ["Add [the] [a] [an] {item} to my shopping list"],
-        INTENT_LAST_ITEMS: ["What is on my shopping list"],
+        INTENT_ADD_ITEM: ["添加{item}到我的购物单"],
+        INTENT_LAST_ITEMS: ["我的购物单上有什么"],
     },
 }
 

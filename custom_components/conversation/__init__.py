@@ -73,6 +73,19 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_get_agent_info)
     hass.components.websocket_api.async_register_command(websocket_set_onboarding)
 
+    # 显示插件信息
+    _LOGGER.info('''
+-------------------------------------------------------------------
+    语音小助手【作者QQ：635147515】
+    
+    版本：1.0
+    
+    介绍：官方语音助手修改增强版
+    
+    项目地址：https://github.com/shaonianzhentan/conversation
+
+-------------------------------------------------------------------''')
+
     return True
 
 
@@ -227,6 +240,7 @@ async def _async_converse(
             intent_result = await agent.async_process(text, context, conversation_id)
     except intent.IntentHandleError as err:
         err_msg = str(err)
+        # 没有找到设备
         if 'Unable to find an entity called' in err_msg:
             err_msg = err_msg.replace('Unable to find an entity called', '没有找到这个设备：')
 
