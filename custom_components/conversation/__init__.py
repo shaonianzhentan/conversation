@@ -14,6 +14,8 @@ from homeassistant.loader import bind_hass
 from .agent import AbstractConversationAgent
 from .default_agent import DefaultAgent, async_register
 
+from .voice import Voice
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TEXT = "text"
@@ -23,6 +25,7 @@ DOMAIN = "conversation"
 REGEX_TYPE = type(re.compile(""))
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
+DATA_VOICE = "conversation_voice"
 
 SERVICE_PROCESS = "process"
 
@@ -74,11 +77,12 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_set_onboarding)
 
     # 显示插件信息
+    hass.data[DATA_VOICE] = Voice(hass)
     _LOGGER.info('''
 -------------------------------------------------------------------
     语音小助手【作者QQ：635147515】
     
-    版本：1.0
+    版本：1.1
     
     介绍：官方语音助手修改增强版
     
@@ -173,90 +177,38 @@ async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
         await agent.async_initialize(hass.data.get(DATA_CONFIG))
     return agent
 
-def text_start(findText, text):
-    return text.find(findText,0,len(findText)) >= 0
 
 async def _async_converse(
     hass: core.HomeAssistant, text: str, conversation_id: str, context: core.Context
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)
+    voice = hass.data[DATA_VOICE]
     try:
         # 去掉前后标点符号
-        _text = text.strip('。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')    
-        # 发送事件，共享给其他组件
-        hass.bus.fire('ha_voice_text_event', {
-            'text': _text
-        })
+        _text = voice.fire_text(text)
         # 执行自定义脚本
-        states = hass.states.async_all()
-        for state in states:
-            entity_id = state.entity_id
-            if entity_id.find('script.') == 0:
-                attributes = state.attributes
-                friendly_name = attributes.get('friendly_name')
-                cmd = friendly_name.split('=')
-                if cmd.count(_text) > 0:
-                    arr = entity_id.split('.')
-                    _LOGGER.info('执行脚本：' + entity_id)
-                    await hass.services.async_call(arr[0], arr[1])
-                    intent_result = intent.IntentResponse()
-                    intent_result.async_set_speech("正在执行自定义脚本：" + entity_id)
-                    return intent_result
+        result = await voice.execute_script(_text)
+        if result is not None:
+            return result
         
         # 开关控制
-        intent_type = ''
-        if text_start('打开',_text) or text_start('开启',_text) or text_start('启动',_text):
-            intent_type = 'HassTurnOn'
-            if '打开' in _text:
-                _name = _text.split('打开')[1]
-            elif '开启' in _text:
-                _name = _text.split('开启')[1]
-            elif '启动' in _text:
-                _name = _text.split('启动')[1]
-        elif text_start('关闭',_text) or text_start('关掉',_text) or text_start('关上',_text):
-            intent_type = 'HassTurnOff'
-            if '关闭' in _text:
-                _name = _text.split('关闭')[1]
-            elif '关掉' in _text:
-                _name = _text.split('关掉')[1]
-            elif '关上' in _text:
-                _name = _text.split('关上')[1]            
-        elif text_start('切换', _text):
-            intent_type = 'HassToggle'
-            _name = _text.split('切换')[1]
-        # 默认的开关操作
-        if intent_type != '':
-            # 操作所有灯和开关
-            if _name == '所有灯' or _name == '所有的灯' or _name == '全部灯' or _name == '全部的灯':
-                _name = 'all lights'
-            elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
-                _name = 'all switchs'
-            await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech("正在" + text)
-            return intent_result
-        else:
-            intent_result = await agent.async_process(text, context, conversation_id)
+        result = await voice.execute_switch(_text)
+        if result is not None:
+            return result
+
+        # 内置处理指令
+        intent_result = await agent.async_process(_text, context, conversation_id)
     except intent.IntentHandleError as err:
-        err_msg = str(err)
-        # 没有找到设备
-        if 'Unable to find an entity called' in err_msg:
-            err_msg = err_msg.replace('Unable to find an entity called', '没有找到这个设备：')
+        # 错误信息处理
+        err_msg = voice.error_msg(str(err))
 
         intent_result = intent.IntentResponse()
         intent_result.async_set_speech(err_msg)
 
     if intent_result is None:
         # 调用聊天机器人
-        message = "对不起，我不明白"
-        try:
-            async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text) as r:
-                res = await r.json(content_type=None)
-                _LOGGER.info(res)
-                message = res['data']['info']['text']
-        except Exception as e:
-            _LOGGER.info(e)
+        message = await voice.chat_robot(text)
         intent_result = intent.IntentResponse()
         intent_result.async_set_speech(message)
 
