@@ -5,9 +5,7 @@
 > 官方文档：https://www.home-assistant.io/integrations/conversation/
 
 
-## 云音乐指令
-
-**强烈推荐歌单：播放歌单好听的女生翻唱**
+## 云音乐指令（需要配合云音乐播放器使用）
 
 - 我想听xxx的歌
 - 播放电台xxx
