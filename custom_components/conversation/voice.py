@@ -28,7 +28,7 @@ class Voice():
     # 触发事件
     def fire_text(self, text):
         # 去掉前后标点符号
-        _text = text.strip('。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')    
+        _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')    
         # 发送事件，共享给其他组件
         self.hass.bus.fire('ha_voice_text_event', {
             'text': _text
@@ -86,7 +86,7 @@ class Voice():
                 _name = 'all switchs'
             await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
             intent_result = intent.IntentResponse()
-            intent_result.async_set_speech("正在" + text)
+            intent_result.async_set_speech("正在" + _text)
             return intent_result
         return None
 
