@@ -75,7 +75,6 @@ class Voice():
                     {%- endfor %}
                 </table>
             ''')
-
         return None
 
     # 执行动作
