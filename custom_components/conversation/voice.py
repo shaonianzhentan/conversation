@@ -65,7 +65,7 @@ class Voice():
             if text.lower() == friendly_name_lower + '的属性':
                 tpl = template.Template('''
                 {% set entity_id = "''' + entity_id + '''" -%}
-                <table>
+                <table border cellpadding="5" style="border-collapse: collapse;">
                     <tr>
                         <th>{{entity_id}}</th>
                         <th>{{states(entity_id)}}</th>
