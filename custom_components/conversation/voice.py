@@ -56,7 +56,7 @@ class Voice():
             # 查询设备状态
             if text.lower() == friendly_name.lower() + '的状态':
                 intent_result = intent.IntentResponse()
-                intent_result.async_set_speech('当前设备的状态：' + state.state)
+                intent_result.async_set_speech(friendly_name.lower() + '的状态：' + state.state)
                 return intent_result
 
         return None
