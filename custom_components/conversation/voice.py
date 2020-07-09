@@ -1,6 +1,7 @@
 import logging, re, aiohttp
 from homeassistant.helpers import intent
 import homeassistant.config as conf_util
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class Voice():
         for state in states:
             entity_id = state.entity_id
             attributes = state.attributes
+            state_value = state.state
             friendly_name = attributes.get('friendly_name')
             # 查询匹配脚本
             if entity_id.find('script.') == 0:
@@ -54,9 +56,31 @@ class Voice():
                     intent_result.async_set_speech("正在执行自定义脚本：" + entity_id)
                     return intent_result
             # 查询设备状态
-            if text.lower() == friendly_name.lower() + '的状态':
+            friendly_name_lower = friendly_name.lower()
+            if text.lower() == friendly_name_lower + '的状态':
                 intent_result = intent.IntentResponse()
-                intent_result.async_set_speech(friendly_name.lower() + '的状态：' + state.state)
+                intent_result.async_set_speech(friendly_name + '的状态：' + state.state)
+                return intent_result
+            # 查询设备属性
+            if text.lower() == friendly_name_lower + '的属性':
+                tpl = template.Template('''
+                {% set entity_id = "''' + entity_id + '''" -%}
+                <table>
+                    <tr>
+                        <th>{{entity_id}}</th>
+                        <th>{{states(entity_id)}}</th>
+                    </tr>
+                    {% for state in states[entity_id].attributes -%}
+                    <tr>
+                        <td>{{state}}</td>
+                        <td>{{states[entity_id].attributes[state]}}</td>
+                    </tr>  
+                    {%- endfor %}
+                </table>
+                ''', hass)
+                message = tpl.async_render(None)
+                intent_result = intent.IntentResponse()
+                intent_result.async_set_speech(message)
                 return intent_result
 
         return None
