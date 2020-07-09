@@ -82,13 +82,15 @@ async def async_setup(hass, config):
 -------------------------------------------------------------------
     语音小助手【作者QQ：635147515】
     
-    版本：1.1
+    版本：1.2
     
     介绍：官方语音助手修改增强版
     
     项目地址：https://github.com/shaonianzhentan/conversation
 
 -------------------------------------------------------------------''')
+    local = hass.config.path("custom_components/ha_cloud_music/local")
+    hass.http.register_static_path('/conversation', local, False)
 
     return True
 

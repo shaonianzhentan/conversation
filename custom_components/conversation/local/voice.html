@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport"
+        content="width=device-width, height=device-height, initial-scale=1.0, viewport-fit=cover, user-scalable=no, minimal-ui" />
+    <meta charset="utf-8" />
+    <link rel="icon" href="/static/icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/favicon-apple-180x180.png">
+    <link rel="mask-icon" href="/static/icons/mask-icon.svg" color="#03a9f4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png">
+    <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png">
+    <meta name="msapplication-wide310x150logo" content="/static/icons/tile-win-310x150.png">
+    <meta name="msapplication-square310x310logo" content="/static/icons/tile-win-310x310.png">
+    <meta name="msapplication-TileColor" content="#03a9f4ff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#03A9F4">
+    <title>语音助手</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            background-color: #eee;
+        }
+
+        .text-panel {
+            width: 100%;
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            background-color: #eee;
+        }
+
+        #txtInput {
+            border-radius: 10px;
+            outline: none;
+            padding: 10px 20px;
+            width: 100%;
+            margin: 10px;
+            border: 1px solid gray;
+        }
+
+        .list {
+            padding-bottom: 60px;
+        }
+
+        .content {
+            padding: 10px 0;
+            display: flex;
+        }
+
+        .content div {
+            flex: 1;
+        }
+
+        .content span {
+            display: inline-block;
+            padding: 5px 10px 8px 10px;
+        }
+
+        .content button {
+            border: none;
+            font-size: 30px;
+            outline: none;
+            width: 55px;
+            background-color: transparent;
+        }
+
+        .right {
+            text-align: right;
+            padding-left: 10px;
+        }
+
+        .right span {
+            background-color: purple;
+            color: white;
+            border-radius: 10px 10px 0px 10px;
+            text-align: left;
+        }
+
+        .right button {
+            float: right;
+
+        }
+
+        .left button {
+            float: left;
+        }
+
+        .left {
+            text-align: left;
+            padding-right: 10px;
+        }
+
+        .left span {
+            background-color: white;
+            border-radius: 10px 10px 10px 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        function throttle(callback, time) {
+            let timer = null
+            return () => {
+                if (timer) clearTimeout(timer)
+                timer = setTimeout(() => {
+                    callback()
+                    timer = null
+                }, time)
+            }
+        }
+        let input = throttle(() => {
+            let txtInput = document.querySelector("#txtInput")
+            let value = txtInput.value.trim()
+            if (value) {
+                txtInput.value = ''
+                // console.log('发送信息', value)
+                sendMsg(value)
+            }
+        }, 1000)
+
+        function sendMsg(value) {
+            addMsg('right', value)
+            SocketClient.send({
+                conversation_id: `${Math.random().toString(16).substr(2, 10)}${Math.random().toString(16).substr(2, 10)}`,
+                text: value,
+                type: "conversation/process"
+            })
+        }
+
+        function addMsg(type, msg) {
+            let div = document.createElement('div')
+            div.className = `${type} content`
+            if (type == 'right') {
+                div.innerHTML = `<div><span>${msg}</span></div><button onclick="sendMsg('${msg}')">😘</button>`
+            } else {
+                div.innerHTML = `<button>😁</button><div><span>${msg}</span></div>`
+            }
+
+            document.querySelector(".list").appendChild(div)
+            document.documentElement.scrollTop = document.documentElement.scrollHeight
+        }
+
+    </script>
+    <div class="list">
+        <div class="right content">
+            <div><span>来聊天吧</span></div>
+            <button>😘</button>
+        </div>
+        <div class="left content">
+            <button>😁</button>
+            <div><span>欢迎使用语音小助手</span></div>
+        </div>
+    </div>
+    <div class="text-panel">
+        <input type="text" autofocus id="txtInput" oninput="input()" />
+    </div>
+    <script>
+        function getOAuthClientId() {
+            return encodeURIComponent(window.location.origin);
+        }
+
+        function getOAuthRedirectUrl() {
+            var url = window.location.origin + window.location.pathname + '?oauth=1';
+            return encodeURIComponent(url);
+        }
+        // 获取token
+        ; (() => {
+            let query = new URLSearchParams(location.search)
+            let code = query.get("code")
+            if (code) {
+                fetch('/auth/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `grant_type=authorization_code&code=${code}&client_id=${getOAuthClientId()}`
+                }).then(res => res.json()).then(res => {
+                    localStorage['hass_access_token'] = res.access_token
+                    location.href = window.location.pathname
+                })
+            }
+        })();
+
+        window.SocketClient = {
+            id: 0,
+            ws: new WebSocket(`${location.protocol == 'https' ? 'wss' : 'ws'}://${location.host}/api/websocket`),
+            init() {
+                let { ws } = this
+                ws.onmessage = (res) => {
+                    let obj = JSON.parse(res.data)
+                    if (obj.type == 'auth_invalid') {
+                        if (confirm("需要重新登录")) location.href = `/auth/authorize?client_id=${getOAuthClientId()}&redirect_uri=${getOAuthRedirectUrl()}`
+                    }
+                    // console.log(obj)
+                    if (this.id <= obj.id) this.id = obj.id
+                    if (obj.result && Reflect.has(obj.result, 'speech')) {
+                        let speech = obj.result['speech']
+                        addMsg('left', speech['plain']['speech'])
+                    }
+                }
+                ws.onopen = () => {
+                    try {
+                        ws.send(JSON.stringify({
+                            "type": "auth",
+                            access_token: localStorage['hass_access_token']
+                        }))
+                    } catch{
+                        location.href = '/'
+                    }
+                }
+
+            },
+            send(obj) {
+                this.ws.send(JSON.stringify({
+                    id: SocketClient.id + 1,
+                    ...obj
+                }))
+            }
+        }
+        SocketClient.init()
+    </script>
+</body>
+
+</html>
