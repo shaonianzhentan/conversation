@@ -189,8 +189,8 @@ async def _async_converse(
     try:
         # 去掉前后标点符号
         _text = voice.fire_text(text)
-        # 执行自定义脚本
-        result = await voice.execute_script(_text)
+        # 执行自定义语句
+        result = await voice.execute_action(_text)
         if result is not None:
             return result
         

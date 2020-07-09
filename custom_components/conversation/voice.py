@@ -18,6 +18,17 @@ class Voice():
         self.hass = hass
         hass.services.async_register(DOMAIN, 'reload', self.reload)
 
+    # 解析模板
+    def template(self, message):
+        tpl = template.Template(message, self.hass)
+        return tpl.async_render(None)
+
+    # 返回意图结果
+    def intent_result(self, message):
+        intent_result = intent.IntentResponse()
+        intent_result.async_set_speech(message)
+        return intent_result
+
     # 重新加载配置
     async def reload(self, service):
         hass = self.hass
@@ -36,52 +47,83 @@ class Voice():
         })
         return _text
 
-    # 执行自定义脚本
-    async def execute_script(self, text):
+    # 查看设备
+    def query_device(self, text):
         hass = self.hass
+        device_type = None
+        if text == '查看全部设备':
+            device_type = ''
+        elif text == '查看全部的灯':
+            device_type = '.light'
+        elif text == '查看全部的传感器':
+            device_type = '.sensor'
+        elif text == '查看全部的开关':
+            device_type = '.switch'
+        elif text == '查看全部的脚本':
+            device_type = '.script'
+        elif text == '查看全部的自动化':
+            device_type = '.automation'
+
+        if device_type is not None:
+            return self.intent_result(self.template('''
+                <table border cellpadding="5" style="border-collapse: collapse;">
+                    {% for state in states''' + device_type + ''' -%}
+                    <tr>
+                        <td>{{state.attributes.friendly_name}}</td>
+                        <td>{{state.state}}</td>
+                    </tr>
+                    {%- endfor %}
+                </table>
+            ''')
+
+        return None
+
+    # 执行动作
+    async def execute_action(self, text):
+        hass = self.hass
+        # 如果有查询到设备，则返回
+        device_result = self.query_device(text)
+        if device_result is not None:
+            return device_result
+
+        # 遍历所有实体
         states = hass.states.async_all()
         for state in states:
             entity_id = state.entity_id
             attributes = state.attributes
             state_value = state.state
             friendly_name = attributes.get('friendly_name')
-            # 查询匹配脚本
+            # 执行自定义脚本
             if entity_id.find('script.') == 0:
                 cmd = friendly_name.split('=')
                 if cmd.count(text) > 0:
                     arr = entity_id.split('.')
                     _LOGGER.info('执行脚本：' + entity_id)
                     await hass.services.async_call(arr[0], arr[1])
-                    intent_result = intent.IntentResponse()
-                    intent_result.async_set_speech("正在执行自定义脚本：" + entity_id)
-                    return intent_result
+                    return self.intent_result("正在执行自定义脚本：" + entity_id)
             # 查询设备状态
-            friendly_name_lower = friendly_name.lower()
-            if text.lower() == friendly_name_lower + '的状态':
-                intent_result = intent.IntentResponse()
-                intent_result.async_set_speech(friendly_name + '的状态：' + state.state)
-                return intent_result
-            # 查询设备属性
-            if text.lower() == friendly_name_lower + '的属性':
-                tpl = template.Template('''
-                {% set entity_id = "''' + entity_id + '''" -%}
-                <table border cellpadding="5" style="border-collapse: collapse;">
-                    <tr>
-                        <th>{{entity_id}}</th>
-                        <th>{{states(entity_id)}}</th>
-                    </tr>
-                    {% for state in states[entity_id].attributes -%}
-                    <tr>
-                        <td>{{state}}</td>
-                        <td>{{states[entity_id].attributes[state]}}</td>
-                    </tr>  
-                    {%- endfor %}
-                </table>
-                ''', hass)
-                message = tpl.async_render(None)
-                intent_result = intent.IntentResponse()
-                intent_result.async_set_speech(message)
-                return intent_result
+            if friendly_name is not None:
+                friendly_name_lower = friendly_name.lower()
+                if text.lower() == friendly_name_lower + '的状态':
+                    return self.intent_result(friendly_name + '的状态：' + state.state)
+                # 查询设备属性
+                if text.lower() == friendly_name_lower + '的属性':
+                    message = self.template('''
+                    {% set entity_id = "''' + entity_id + '''" -%}
+                    <table border cellpadding="5" style="border-collapse: collapse;">
+                        <tr>
+                            <th>{{entity_id}}</th>
+                            <th>{{states(entity_id)}}</th>
+                        </tr>
+                        {% for state in states[entity_id].attributes -%}
+                        <tr>
+                            <td>{{state}}</td>
+                            <td>{{states[entity_id].attributes[state]}}</td>
+                        </tr>  
+                        {%- endfor %}
+                    </table>
+                    ''')
+                    return self.intent_result(message)
 
         return None
 
