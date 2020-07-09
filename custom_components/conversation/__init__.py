@@ -89,7 +89,7 @@ async def async_setup(hass, config):
     项目地址：https://github.com/shaonianzhentan/conversation
 
 -------------------------------------------------------------------''')
-    local = hass.config.path("custom_components/ha_cloud_music/local")
+    local = hass.config.path("custom_components/conversation/local")
     hass.http.register_static_path('/conversation', local, False)
 
     return True
