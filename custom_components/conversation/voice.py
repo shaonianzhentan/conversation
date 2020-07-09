@@ -41,9 +41,10 @@ class Voice():
         states = hass.states.async_all()
         for state in states:
             entity_id = state.entity_id
+            attributes = state.attributes
+            friendly_name = attributes.get('friendly_name')
+            # 查询匹配脚本
             if entity_id.find('script.') == 0:
-                attributes = state.attributes
-                friendly_name = attributes.get('friendly_name')
                 cmd = friendly_name.split('=')
                 if cmd.count(text) > 0:
                     arr = entity_id.split('.')
@@ -52,6 +53,12 @@ class Voice():
                     intent_result = intent.IntentResponse()
                     intent_result.async_set_speech("正在执行自定义脚本：" + entity_id)
                     return intent_result
+            # 查询设备状态
+            if text.lower() == friendly_name.lower() + '的状态':
+                intent_result = intent.IntentResponse()
+                intent_result.async_set_speech('当前设备的状态：' + state.state)
+                return intent_result
+
         return None
 
     # 执行开关
