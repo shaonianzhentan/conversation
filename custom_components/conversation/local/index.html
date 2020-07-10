@@ -148,7 +148,7 @@
         }
 
         // 触发设备
-        function triggerDevice(entity_id, msg) {
+        function triggerDevice(entity_id, msg, friendly_name) {
             console.log(entity_id)
             let obj = null
             if (entity_id.includes('light.')) {
@@ -169,6 +169,9 @@
                     "service_data": { entity_id }
                 })
                 addMsg('right', msg)
+                setTimeout(() => {
+                    sendMsg(`${friendly_name}的状态`)
+                }, 2000)
             }
         }
 
