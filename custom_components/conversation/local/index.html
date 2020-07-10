@@ -50,6 +50,7 @@
         .content {
             padding: 10px 0;
             display: flex;
+            overflow: auto;
         }
 
         .content div {
@@ -144,6 +145,29 @@
 
             document.querySelector(".list").appendChild(div)
             document.documentElement.scrollTop = document.documentElement.scrollHeight
+        }
+
+        // 触发设备
+        function triggerDevice(entity_id, msg) {
+            console.log(entity_id)
+            let obj = null
+            if (entity_id.includes('light.')) {
+                obj = { domain: 'light', service: "toggle" }
+            } else if (entity_id.includes('switch.')) {
+                obj = { domain: 'switch', service: "toggle" }
+            } else if (entity_id.includes('automation.')) {
+                obj = { domain: 'automation', service: "trigger" }
+            } else if (entity_id.includes('script.')) {
+                obj = { domain: 'script', service: "toggle" }
+            }
+            if (obj) {
+                SocketClient.send({
+                    "type": "call_service",
+                    ...obj,
+                    "service_data": { entity_id }
+                })
+                addMsg(msg)
+            }
         }
 
     </script>

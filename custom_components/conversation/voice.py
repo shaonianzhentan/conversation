@@ -71,6 +71,9 @@ class Voice():
                     <tr>
                         <td>{{state.attributes.friendly_name}}</td>
                         <td>{{state.state}}</td>
+                        <td>
+                            <a onclick="triggerDevice('{{state.entity_id}}', '正在执行')">触发</a>
+                        </td>
                     </tr>
                     {%- endfor %}
                 </table>
