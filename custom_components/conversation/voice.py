@@ -69,6 +69,7 @@ class Voice():
         if device_type is not None:
             return self.intent_result(self.template('''
                 <table border cellpadding="5" style="border-collapse: collapse;">
+                    <tr><th>名称</th><th>状态</th><th>操作</th></tr>
                     {% for state in states''' + device_type + ''' -%}
                     <tr>
                         <td>{{state.attributes.friendly_name}}</td>
