@@ -144,7 +144,7 @@
             }
 
             document.querySelector(".list").appendChild(div)
-            document.documentElement.scrollTop = document.documentElement.scrollHeight
+            document.querySelector("#view").scrollIntoView()
         }
 
         // 触发设备
@@ -202,6 +202,7 @@
             <div><span>查看全部(灯、传感器、开关、脚本、自动化、场景)</span></div>
         </div>
     </div>
+    <div id="view">--</div>
     <div class="text-panel">
         <input type="text" autofocus id="txtInput" oninput="input()" />
     </div>
