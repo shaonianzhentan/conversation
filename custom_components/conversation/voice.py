@@ -39,12 +39,18 @@ class Voice():
 
     # 触发事件
     def fire_text(self, text):
+        hass = self.hass
         # 去掉前后标点符号
         _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')    
         # 发送事件，共享给其他组件
-        self.hass.bus.fire('ha_voice_text_event', {
+        hass.bus.fire('ha_voice_text_event', {
             'text': _text
         })
+        # 调用python_script.conversation
+        if hass.services.has_service('python_script', 'conversation'):
+            hass.async_create_task(hass.services.async_call('python_script', 'conversation', {
+                'text': _text
+            }))
         return _text
 
     # 查看设备
