@@ -53,15 +53,15 @@ class Voice():
         device_type = None
         if text == '查看全部设备':
             device_type = ''
-        elif text == '查看全部的灯':
+        elif text == '查看全部灯':
             device_type = '.light'
-        elif text == '查看全部的传感器':
+        elif text == '查看全部传感器':
             device_type = '.sensor'
-        elif text == '查看全部的开关':
+        elif text == '查看全部开关':
             device_type = '.switch'
-        elif text == '查看全部的脚本':
+        elif text == '查看全部脚本':
             device_type = '.script'
-        elif text == '查看全部的自动化':
+        elif text == '查看全部自动化':
             device_type = '.automation'
 
         if device_type is not None:
