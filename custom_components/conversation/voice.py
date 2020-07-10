@@ -75,7 +75,8 @@ class Voice():
                             {% if 'light.' in state.entity_id or 
                                   'switch.' in state.entity_id or
                                   'script.' in state.entity_id or
-                                  'automation.' in state.entity_id or -%}
+                                  'automation.' in state.entity_id or
+                                  'scene.' in state.entity_id -%}
                                 <a onclick="triggerDevice('{{state.entity_id}}', '正在执行')">触发</a>
                             {%- else -%}
                  

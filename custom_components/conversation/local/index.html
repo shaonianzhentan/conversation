@@ -159,6 +159,8 @@
                 obj = { domain: 'automation', service: "trigger" }
             } else if (entity_id.includes('script.')) {
                 obj = { domain: 'script', service: "toggle" }
+            } else if (entity_id.includes('scene.')) {
+                obj = { domain: 'scene', service: "turn_on" }
             }
             if (obj) {
                 SocketClient.send({
