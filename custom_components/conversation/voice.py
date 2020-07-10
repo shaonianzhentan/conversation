@@ -63,6 +63,8 @@ class Voice():
             device_type = '.script'
         elif text == '查看全部自动化':
             device_type = '.automation'
+        elif text == '查看全部场景':
+            device_type = '.scene'
 
         if device_type is not None:
             return self.intent_result(self.template('''

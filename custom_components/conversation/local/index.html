@@ -149,7 +149,7 @@
 
         // 触发设备
         function triggerDevice(entity_id, msg, friendly_name) {
-            console.log(entity_id)
+            // console.log(entity_id)
             let obj = null
             if (entity_id.includes('light.')) {
                 obj = { domain: 'light', service: "toggle" }
@@ -199,7 +199,7 @@
         </div>
         <div class="left content">
             <button>😁</button>
-            <div><span>查看全部(灯、传感器、开关、脚本、自动化)</span></div>
+            <div><span>查看全部(灯、传感器、开关、脚本、自动化、场景)</span></div>
         </div>
     </div>
     <div class="text-panel">
