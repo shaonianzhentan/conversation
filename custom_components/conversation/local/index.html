@@ -231,9 +231,10 @@
             })
         }
 
+        let WebSocketURL = `${location.protocol == 'https' ? 'wss' : 'ws'}://${location.host}/api/websocket`
         window.SocketClient = {
             id: 0,
-            ws: new WebSocket(`${location.protocol == 'https' ? 'wss' : 'ws'}://${location.host}/api/websocket`),
+            ws: new WebSocket(WebSocketURL),
             init() {
                 let { ws } = this
                 ws.onmessage = (res) => {
@@ -262,14 +263,16 @@
                 }
             },
             send(obj) {
-                try {
+                if ([2, 3].includes(this.ws.readyState)) {
+                    alert("连接断开了！点击重新连接")
+                    location.reload()
+                } else {
                     this.ws.send(JSON.stringify({
                         id: SocketClient.id + 1,
                         ...obj
                     }))
-                } catch (ex) {
-                    location.reload()
                 }
+
             }
         }
         SocketClient.init()
