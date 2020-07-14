@@ -147,6 +147,11 @@ class Voice():
                     </table>
                     ''')
                     return self.intent_result(message)
+                # 查询摄像监控画面
+                if text.lower() == '查看' + friendly_name_lower + '的画面':
+                    return self.intent_result(self.template('''
+                        <img src="{{ states['camera.generic_camera'].attributes['entity_picture'] }}" style="max-width:100%;" />
+                    '''))
 
         return None
 
@@ -154,8 +159,10 @@ class Voice():
     async def execute_switch(self, _text):
         hass = self.hass
         intent_type = ''
+        service_type = ''
         if text_start('打开',_text) or text_start('开启',_text) or text_start('启动',_text):
             intent_type = 'HassTurnOn'
+            service_type = 'turn_on'
             if '打开' in _text:
                 _name = _text.split('打开')[1]
             elif '开启' in _text:
@@ -164,6 +171,7 @@ class Voice():
                 _name = _text.split('启动')[1]
         elif text_start('关闭',_text) or text_start('关掉',_text) or text_start('关上',_text):
             intent_type = 'HassTurnOff'
+            service_type = 'turn_off'
             if '关闭' in _text:
                 _name = _text.split('关闭')[1]
             elif '关掉' in _text:
@@ -172,18 +180,22 @@ class Voice():
                 _name = _text.split('关上')[1]            
         elif text_start('切换', _text):
             intent_type = 'HassToggle'
+            service_type = 'toggle'
             _name = _text.split('切换')[1]
         # 默认的开关操作
         if intent_type != '':
             # 操作所有灯和开关
             if _name == '所有灯' or _name == '所有的灯' or _name == '全部灯' or _name == '全部的灯':
-                _name = 'all lights'
+                await hass.services.async_call('switch', service_type, {
+                    'entity_id': self.template('{% for state in states.light -%}{{ state.entity_id }},{%- endfor %}').strip(',')
+                })
             elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
-                _name = 'all switchs'
-            await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech("正在" + _text)
-            return intent_result
+                await hass.services.async_call('switch', service_type, {
+                    'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
+                })
+            else:
+                await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
+            return self.intent_result("正在" + _text)
         return None
 
     # 错误信息处理
