@@ -260,18 +260,16 @@
                         location.href = '/'
                     }
                 }
-
-                ws.onclose = () => {
-                    alert("连接已经断开")
-                    location.reload()
-                }
-
             },
             send(obj) {
-                this.ws.send(JSON.stringify({
-                    id: SocketClient.id + 1,
-                    ...obj
-                }))
+                try {
+                    this.ws.send(JSON.stringify({
+                        id: SocketClient.id + 1,
+                        ...obj
+                    }))
+                } catch (ex) {
+                    location.reload()
+                }
             }
         }
         SocketClient.init()
