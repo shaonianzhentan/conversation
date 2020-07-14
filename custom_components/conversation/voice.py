@@ -190,10 +190,32 @@ class Voice():
                 await hass.services.async_call('light', service_type, {
                     'entity_id': self.template('{% for state in states.light -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
+                return self.intent_result("正在" + _text + self.template('''
+                    <hr />
+                    <table border cellpadding="5" style="border-collapse: collapse;">
+                        <tr><th>名称</th><th>状态</th></tr>
+                        {% for state in states.light -%}
+                        <tr>
+                            <td>{{state.attributes.friendly_name}}</td>
+                            <td>{{state.state}}</td>  
+                        </tr>
+                    </table>
+                '''))
             elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
                 await hass.services.async_call('switch', service_type, {
                     'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
+                return self.intent_result("正在" + _text + self.template('''
+                    <hr />
+                    <table border cellpadding="5" style="border-collapse: collapse;">
+                        <tr><th>名称</th><th>状态</th></tr>
+                        {% for state in states.switch -%}
+                        <tr>
+                            <td>{{state.attributes.friendly_name}}</td>
+                            <td>{{state.state}}</td>  
+                        </tr>
+                    </table>
+                '''))
             else:
                 await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
             return self.intent_result("正在" + _text)
