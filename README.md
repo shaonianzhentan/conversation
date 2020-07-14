@@ -44,6 +44,7 @@
 
 ### v1.2
 - 加入单独的聊天界面
+- 支持`python_script.conversation`服务，接收`text`参数
 
 ### v1.1
 - 优化代码结构
