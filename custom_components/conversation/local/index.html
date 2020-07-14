@@ -216,15 +216,18 @@
     <script>
         function getRefreshToken() {
             console.log('正在重新刷新token')
-            let { refresh_token, clientId } = JSON.parse(localStorage['hassTokens'])
+            let hassTokens = JSON.parse(localStorage['hassTokens'])
+            let { refresh_token, clientId } = hassTokens
             fetch('/auth/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `grant_type=refresh_token&refresh_token=${refresh_token}&client_id=${clientId}`
             }).then(res => res.json()).then(res => {
-                console.log(res)
-                //localStorage['hass_access_token'] = res.access_token
-                //location.href = window.location.pathname
+                // 重新保存token
+                hassTokens.access_token = res.access_token
+                localStorage['hassTokens'] = JSON.stringify(hassTokens)
+                // 重新登录
+                SocketClient.ws.onopen()
             })
         }
 
