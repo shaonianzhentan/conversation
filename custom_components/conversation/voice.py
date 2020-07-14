@@ -150,7 +150,8 @@ class Voice():
                 # 查询摄像监控画面
                 if text.lower() == '查看' + friendly_name_lower + '的画面':
                     return self.intent_result(self.template('''
-                        <img src="{{ states['camera.generic_camera'].attributes['entity_picture'] }}" style="max-width:100%;" />
+                    {% set image = states['camera.generic_camera'].attributes['entity_picture'] %}
+                    <a href="{{ image }}" target="_blank">  <img src="{{ image }}" style="max-width:100%;" /> </a>
                     '''))
 
         return None
@@ -186,7 +187,7 @@ class Voice():
         if intent_type != '':
             # 操作所有灯和开关
             if _name == '所有灯' or _name == '所有的灯' or _name == '全部灯' or _name == '全部的灯':
-                await hass.services.async_call('switch', service_type, {
+                await hass.services.async_call('light', service_type, {
                     'entity_id': self.template('{% for state in states.light -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
             elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
