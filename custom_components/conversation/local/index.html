@@ -214,10 +214,6 @@
         <input type="text" autofocus id="txtInput" oninput="input()" />
     </div>
     <script>
-        function getOAuthClientId() {
-            return encodeURIComponent(window.location.origin);
-        }
-
         function getRefreshToken() {
             console.log('正在重新刷新token')
             let { refresh_token, clientId } = JSON.parse(localStorage['hassTokens'])
