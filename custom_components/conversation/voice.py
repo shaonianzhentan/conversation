@@ -100,6 +100,10 @@ class Voice():
     # 执行动作
     async def execute_action(self, text):
         hass = self.hass
+        if text == '重新加载配置':
+            self.reload()
+            return self.intent_result("重新加载配置成功")
+
         # 如果有查询到设备，则返回
         device_result = self.query_device(text)
         if device_result is not None:
