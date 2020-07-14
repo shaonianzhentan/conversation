@@ -261,6 +261,11 @@
                     }
                 }
 
+                ws.onclose = () => {
+                    alert("连接已经断开")
+                    location.reload()
+                }
+
             },
             send(obj) {
                 this.ws.send(JSON.stringify({
