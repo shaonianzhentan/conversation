@@ -230,7 +230,7 @@
                 hassTokens.access_token = res.access_token
                 localStorage['hassTokens'] = JSON.stringify(hassTokens)
                 // 重新登录
-                SocketClient.ws.onopen()
+                SocketClient.reconnect()
             })
         }
 
@@ -242,6 +242,8 @@
                 let { ws } = this
                 ws.onmessage = (res) => {
                     let obj = JSON.parse(res.data)
+                    if (this.id <= obj.id) this.id = obj.id
+                    // console.log(obj)
                     if (obj.type == 'auth_invalid') {
                         addMsg('right', '连接验证失败，重新验证中...')
                         getRefreshToken()
@@ -252,21 +254,23 @@
                             type: 'subscribe_events',
                             event_type: 'persistent_notifications_updated'
                         })
-                    } else if (obj.type == 'result') {
-                        // 显示通知                        
-                        obj.result.filter(ele => ele.entity_id.includes('persistent_notification.')).forEach(ele => {
-                            let attr = ele.attributes
-                            addMsg('left', `${attr.title}<hr/>${ele.message}`)
-                        })
+                    } else if (obj.type == 'result' && obj.result) {
 
+                        // 获取语音信息
+                        if (Reflect.has(obj.result, 'speech')) {
+                            let speech = obj.result['speech']
+                            addMsg('left', speech['plain']['speech'])
+                        }
+                        // 显示通知
+                        if (Array.isArray(obj.result)) {
+                            let arr = obj.result.filter(ele => ele.entity_id.includes('persistent_notification.'))
+                            arr.forEach(ele => {
+                                let attr = ele.attributes
+                                addMsg('left', `${attr.title}<hr/>${attr.message}`)
+                            })
+                        }
                     }
-                    console.log(obj)
-                    if (this.id <= obj.id) this.id = obj.id
-                    // 获取语音信息
-                    if (obj.result && Reflect.has(obj.result, 'speech')) {
-                        let speech = obj.result['speech']
-                        addMsg('left', speech['plain']['speech'])
-                    }
+
                     // 获取事件名称
                     if (obj.event && Reflect.has(obj.event, 'event_type')) {
                         if (obj.event.event_type == 'persistent_notifications_updated') {
@@ -301,6 +305,9 @@
                     }))
                 }
 
+            },
+            reconnect() {
+                this.ws = new WebSocket(WebSocketURL)
             }
         }
         SocketClient.init()
