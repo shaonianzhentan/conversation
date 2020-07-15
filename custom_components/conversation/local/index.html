@@ -243,13 +243,38 @@
                 ws.onmessage = (res) => {
                     let obj = JSON.parse(res.data)
                     if (obj.type == 'auth_invalid') {
+                        addMsg('right', '连接验证失败，重新验证中...')
                         getRefreshToken()
+                    } else if (obj.type == 'auth_ok') {
+                        addMsg('right', '连接验证成功，开始说话吧')
+                        // 订阅通知事件
+                        this.send({
+                            type: 'subscribe_events',
+                            event_type: 'persistent_notifications_updated'
+                        })
+                    } else if (obj.type == 'result') {
+                        // 显示通知                        
+                        obj.result.filter(ele => ele.entity_id.includes('persistent_notification.')).forEach(ele => {
+                            let attr = ele.attributes
+                            addMsg('left', `${attr.title}<hr/>${ele.message}`)
+                        })
+
                     }
-                    // console.log(obj)
+                    console.log(obj)
                     if (this.id <= obj.id) this.id = obj.id
+                    // 获取语音信息
                     if (obj.result && Reflect.has(obj.result, 'speech')) {
                         let speech = obj.result['speech']
                         addMsg('left', speech['plain']['speech'])
+                    }
+                    // 获取事件名称
+                    if (obj.event && Reflect.has(obj.event, 'event_type')) {
+                        if (obj.event.event_type == 'persistent_notifications_updated') {
+                            // 获取所有状态
+                            this.send({
+                                type: 'get_states'
+                            })
+                        }
                     }
                 }
                 ws.onopen = () => {
