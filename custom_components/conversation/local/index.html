@@ -25,21 +25,10 @@
             background-color: #eee;
         }
 
-        .text-panel {
-            width: 100%;
-            display: flex;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            background-color: #eee;
-        }
-
         #txtInput {
             border-radius: 10px;
             outline: none;
             padding: 10px 20px;
-            width: 100%;
-            margin: 10px;
             border: 1px solid gray;
         }
 
@@ -143,8 +132,8 @@
                 div.innerHTML = `<button>😁</button><div><span>${msg}</span></div>`
             }
 
-            document.querySelector(".list").appendChild(div)
-            document.querySelector("#view").scrollIntoView()
+            document.querySelector(".list").insertBefore(div, document.querySelector('#inputPanel'))
+            document.querySelector("#inputPanel").scrollIntoView()
         }
 
         // 触发设备
@@ -211,106 +200,49 @@
                     （camera摄像监控）查看xxx的画面
                 </span></div>
         </div>
+        <div id="inputPanel" class="right content">
+            <div><input type="text" placeholder="请使用手机语音输入法" autofocus id="txtInput" oninput="input()" /></div>
+            <button onclick="sendMsg('查看全部设备')">😘</button>
+        </div>
     </div>
-    <div id="view">&emsp;</div>
-    <div class="text-panel">
-        <input type="text" autofocus id="txtInput" oninput="input()" />
-    </div>
+    <script src="ha-ws.js"></script>
     <script>
-        function getRefreshToken() {
-            console.log('正在重新刷新token')
-            let hassTokens = JSON.parse(localStorage['hassTokens'])
-            let { refresh_token, clientId } = hassTokens
-            fetch('/auth/token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `grant_type=refresh_token&refresh_token=${refresh_token}&client_id=${clientId}`
-            }).then(res => res.json()).then(res => {
-                // 重新保存token
-                hassTokens.access_token = res.access_token
-                localStorage['hassTokens'] = JSON.stringify(hassTokens)
-                // 重新登录
-                SocketClient.reconnect()
-            })
-        }
+        var SocketClient = new HaWebSocket()
+        SocketClient.on('message', function (obj) {
+            if (obj.type == 'auth_ok') {
+                addMsg('right', '连接验证成功，开始说话吧')
+                // 订阅通知事件
+                this.send({
+                    type: 'subscribe_events',
+                    event_type: 'persistent_notifications_updated'
+                })
+            } else if (obj.type == 'result' && obj.result) {
 
-        let WebSocketURL = `${location.protocol == 'https' ? 'wss' : 'ws'}://${location.host}/api/websocket`
-        window.SocketClient = {
-            id: 0,
-            ws: new WebSocket(WebSocketURL),
-            init() {
-                let { ws } = this
-                ws.onmessage = (res) => {
-                    let obj = JSON.parse(res.data)
-                    if (this.id <= obj.id) this.id = obj.id
-                    // console.log(obj)
-                    if (obj.type == 'auth_invalid') {
-                        addMsg('right', '连接验证失败，重新验证中...')
-                        getRefreshToken()
-                    } else if (obj.type == 'auth_ok') {
-                        addMsg('right', '连接验证成功，开始说话吧')
-                        // 订阅通知事件
-                        this.send({
-                            type: 'subscribe_events',
-                            event_type: 'persistent_notifications_updated'
-                        })
-                    } else if (obj.type == 'result' && obj.result) {
-
-                        // 获取语音信息
-                        if (Reflect.has(obj.result, 'speech')) {
-                            let speech = obj.result['speech']
-                            addMsg('left', speech['plain']['speech'])
-                        }
-                        // 显示通知
-                        if (Array.isArray(obj.result)) {
-                            let arr = obj.result.filter(ele => ele.entity_id.includes('persistent_notification.'))
-                            arr.forEach(ele => {
-                                let attr = ele.attributes
-                                addMsg('left', `${attr.title}<hr/>${attr.message}`)
-                            })
-                        }
-                    }
-
-                    // 获取事件名称
-                    if (obj.event && Reflect.has(obj.event, 'event_type')) {
-                        if (obj.event.event_type == 'persistent_notifications_updated') {
-                            // 获取所有状态
-                            this.send({
-                                type: 'get_states'
-                            })
-                        }
-                    }
+                // 获取语音信息
+                if (Reflect.has(obj.result, 'speech')) {
+                    let speech = obj.result['speech']
+                    addMsg('left', speech['plain']['speech'])
                 }
-                ws.onopen = () => {
-                    try {
-                        let hassTokens = JSON.parse(localStorage['hassTokens'])
-                        ws.send(JSON.stringify({
-                            "type": "auth",
-                            access_token: hassTokens.access_token
-                        }))
-                    } catch {
-                        alert("登录后请重新打开此页面")
-                        location.href = '/'
-                    }
+                // 显示通知
+                if (Array.isArray(obj.result)) {
+                    let arr = obj.result.filter(ele => ele.entity_id.includes('persistent_notification.'))
+                    arr.forEach(ele => {
+                        let attr = ele.attributes
+                        addMsg('left', `${attr.title}<hr/>${attr.message}`)
+                    })
                 }
-            },
-            send(obj) {
-                if ([2, 3].includes(this.ws.readyState)) {
-                    alert("连接断开了！点击重新连接")
-                    location.reload()
-                } else {
-                    this.ws.send(JSON.stringify({
-                        id: SocketClient.id + 1,
-                        ...obj
-                    }))
-                }
-
-            },
-            reconnect() {
-                this.ws = new WebSocket(WebSocketURL)
             }
-        }
-        SocketClient.init()
+            // 获取事件名称
+            if (obj.event && Reflect.has(obj.event, 'event_type')) {
+                if (obj.event.event_type == 'persistent_notifications_updated') {
+                    // 获取所有状态
+                    this.send({
+                        type: 'get_states'
+                    })
+                }
+            }
+        })
+        SocketClient.connect()
     </script>
     <script>var _hmt = _hmt || []; window._hmt = _hmt; (function () { var hm = document.createElement('script'); hm.src = 'https://hm.baidu.com/hm.js?52d57d8b7588a022f89c451d06e311f0'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(hm, s) })();</script>
 </body>
