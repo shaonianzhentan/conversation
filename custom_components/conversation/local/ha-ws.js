@@ -72,8 +72,10 @@ class HaWebSocket {
 
     // 重新连接
     reconnect() {
+        try {
+            this.ws.close()
+        } catch{ }
         this.id = 0
-        this.ws.close()
         this.connect()
     }
 
