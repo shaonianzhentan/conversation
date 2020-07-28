@@ -17,7 +17,11 @@ class HaWebSocket {
     // hassTokens
     get hassTokens() {
         try {
-            return JSON.parse(localStorage['hassTokens'])
+            let tokens = JSON.parse(localStorage['hassTokens'])
+            if(!tokens){
+                throw new Error("没有Token")
+            }
+            return tokens
         } catch{
             location.href = '/'
         }
@@ -35,6 +39,12 @@ class HaWebSocket {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `grant_type=refresh_token&refresh_token=${refresh_token}&client_id=${clientId}`
         }).then(res => res.json()).then(res => {
+            console.log(res)
+            if (res.error) {
+                alert("Token失效，请登录后重新进入")
+                location.href = '/'
+                return
+            }
             // 重新保存token
             this.hassTokens.access_token = res.access_token
             this.hassTokens = this.hassTokens

@@ -4,6 +4,7 @@
 
 > 官方文档：https://www.home-assistant.io/integrations/conversation/
 
+访问链接：http://localhost:8123/conversation/index.html?v=1.4
 
 ## 云音乐指令（需要配合云音乐播放器使用）
 
