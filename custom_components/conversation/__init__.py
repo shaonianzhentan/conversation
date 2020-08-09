@@ -185,33 +185,6 @@ async def _async_converse(
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)
-    voice = hass.data[DATA_VOICE]
-    try:
-        # 去掉前后标点符号
-        _text = voice.fire_text(text)
-        # 执行自定义语句
-        result = await voice.execute_action(_text)
-        if result is not None:
-            return result
-        
-        # 开关控制
-        result = await voice.execute_switch(_text)
-        if result is not None:
-            return result
-
-        # 内置处理指令
-        intent_result = await agent.async_process(_text, context, conversation_id)
-    except intent.IntentHandleError as err:
-        # 错误信息处理
-        err_msg = voice.error_msg(str(err))
-
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(err_msg)
-
-    if intent_result is None:
-        # 调用聊天机器人
-        message = await voice.chat_robot(text)
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(message)
-
+    # 内置处理指令
+    intent_result = await agent.async_process(text, context, conversation_id)
     return intent_result

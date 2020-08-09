@@ -120,18 +120,48 @@ class DefaultAgent(AbstractConversationAgent):
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
 
-        for intent_type, matchers in intents.items():
-            for matcher in matchers:
-                match = matcher.match(text)
+        voice = self.hass.data["conversation_voice"]
+        try:
+            # 去掉前后标点符号
+            _text = voice.fire_text(text)
+            # 执行自定义语句
+            result = await voice.execute_action(_text)
+            if result is not None:
+                return result
+            
+            # 开关控制
+            result = await voice.execute_switch(_text)
+            if result is not None:
+                return result
 
-                if not match:
-                    continue
+            # 内置处理指令
+            for intent_type, matchers in intents.items():
+                for matcher in matchers:
+                    match = matcher.match(_text)
 
-                return await intent.async_handle(
-                    self.hass,
-                    DOMAIN,
-                    intent_type,
-                    {key: {"value": value} for key, value in match.groupdict().items()},
-                    text,
-                    context,
-                )
+                    if not match:
+                        continue
+
+                    return await intent.async_handle(
+                        self.hass,
+                        DOMAIN,
+                        intent_type,
+                        {key: {"value": value} for key, value in match.groupdict().items()},
+                        _text,
+                        context,
+                    )
+            
+        except intent.IntentHandleError as err:
+            # 错误信息处理
+            err_msg = voice.error_msg(str(err))
+
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(err_msg)
+
+        if intent_result is None:
+            # 调用聊天机器人
+            message = await voice.chat_robot(text)
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(message)
+
+        return intent_result
