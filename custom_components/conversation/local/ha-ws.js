@@ -18,7 +18,7 @@ class HaWebSocket {
     get hassTokens() {
         try {
             let tokens = JSON.parse(localStorage['hassTokens'])
-            if(!tokens){
+            if (!tokens) {
                 throw new Error("没有Token")
             }
             return tokens
@@ -50,6 +50,9 @@ class HaWebSocket {
             this.hassTokens = this.hassTokens
             // 重新登录
             this.reconnect()
+        }).catch(() => {
+            alert("出现错误")
+            location.href = '/'
         })
     }
 
