@@ -125,14 +125,14 @@ class DefaultAgent(AbstractConversationAgent):
             # 去掉前后标点符号
             _text = voice.fire_text(text)
             # 执行自定义语句
-            result = await voice.execute_action(_text)
-            if result is not None:
-                return result
+            intent_result = await voice.execute_action(_text)
+            if intent_result is not None:
+                return intent_result
             
             # 开关控制
-            result = await voice.execute_switch(_text)
-            if result is not None:
-                return result
+            intent_result = await voice.execute_switch(_text)
+            if intent_result is not None:
+                return intent_result
 
             # 内置处理指令
             for intent_type, matchers in intents.items():
