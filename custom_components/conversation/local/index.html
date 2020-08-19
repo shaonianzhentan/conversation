@@ -271,11 +271,11 @@
         auth = await getAuth({
           loadTokens() {
             try {
-              return JSON.parse(localStorage['voice-token'])
+              return JSON.parse(localStorage['hassTokens'])
             } catch{ }
           },
           saveTokens: (data) => {
-            localStorage['voice-token'] = JSON.stringify(data)
+            localStorage['hassTokens'] = JSON.stringify(data)
           }
         });
       } catch (err) {
