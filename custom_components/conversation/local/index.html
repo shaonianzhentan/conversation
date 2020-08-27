@@ -262,7 +262,7 @@
           // console.log(res)
           if (res.length > 0) {
             res[0].forEach(ele => {
-              addLeftMsg(`【语音助手】${new Date(ele.last_updated).toLocaleTimeString()}<hr/>${ele.state}`)
+              addLeftMsg(`【语音助手】${new Date(ele.last_changed).toLocaleTimeString()}<hr/>${ele.state}`)
             })
           }
         })
