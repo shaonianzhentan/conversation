@@ -1,6 +1,6 @@
 """Support for functionality to have conversations with Home Assistant."""
 import logging
-import re, aiohttp
+import re
 
 import voluptuous as vol
 
@@ -13,7 +13,6 @@ from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent
 from .default_agent import DefaultAgent, async_register
-
 from .voice import Voice
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +24,6 @@ DOMAIN = "conversation"
 REGEX_TYPE = type(re.compile(""))
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
-DATA_VOICE = "conversation_voice"
 
 SERVICE_PROCESS = "process"
 
@@ -75,23 +73,8 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_process)
     hass.components.websocket_api.async_register_command(websocket_get_agent_info)
     hass.components.websocket_api.async_register_command(websocket_set_onboarding)
-
-    # 显示插件信息
-    hass.data[DATA_VOICE] = Voice(hass)
-    _LOGGER.info('''
--------------------------------------------------------------------
-    语音小助手【作者QQ：635147515】
-    
-    版本：1.4
-    
-    介绍：官方语音助手修改增强版
-    
-    项目地址：https://github.com/shaonianzhentan/conversation
-
--------------------------------------------------------------------''')
-    local = hass.config.path("custom_components/conversation/local")
-    hass.http.register_static_path('/conversation', local, False)
-
+    # 声明变量
+    hass.data["conversation_voice"] = Voice(hass)
     return True
 
 
@@ -185,6 +168,14 @@ async def _async_converse(
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)
-    # 内置处理指令
-    intent_result = await agent.async_process(text, context, conversation_id)
+    try:
+        intent_result = await agent.async_process(text, context, conversation_id)
+    except intent.IntentHandleError as err:
+        intent_result = intent.IntentResponse()
+        intent_result.async_set_speech(str(err))
+
+    if intent_result is None:
+        intent_result = intent.IntentResponse()
+        intent_result.async_set_speech("Sorry, I didn't understand that")
+
     return intent_result

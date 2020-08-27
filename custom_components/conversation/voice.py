@@ -17,6 +17,20 @@ class Voice():
     def __init__(self, hass):
         self.hass = hass
         hass.services.async_register(DOMAIN, 'reload', self.reload)
+        # 显示插件信息
+        _LOGGER.info('''
+    -------------------------------------------------------------------
+        语音小助手【作者QQ：635147515】
+        
+        版本：1.4
+        
+        介绍：官方语音助手修改增强版
+        
+        项目地址：https://github.com/shaonianzhentan/conversation
+
+    -------------------------------------------------------------------''')
+        local = hass.config.path("custom_components/conversation/local")
+        hass.http.register_static_path('/conversation', local, False)
 
     # 解析模板
     def template(self, message):
