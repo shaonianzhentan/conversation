@@ -5,6 +5,7 @@ from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
+VERSION = '1.4'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -22,7 +23,7 @@ class Voice():
     -------------------------------------------------------------------
         语音小助手【作者QQ：635147515】
         
-        版本：1.4
+        版本：''' + VERSION + '''
         
         介绍：官方语音助手修改增强版
         
@@ -255,7 +256,7 @@ class Voice():
         return message
 
     # 记录语音识别语句
-    async def set_state(self, text): 
+    async def set_state(self, text=VERSION):
         self.hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:voice",
             "friendly_name": "语音助手",
