@@ -196,6 +196,10 @@
       })
     }
 
+    function addLeftMsg(msg) {
+      addMsg('left', msg)
+    }
+
     function addMsg(type, msg) {
       let div = document.createElement('div')
       div.className = `${type} content`
@@ -250,11 +254,20 @@
           })
         })
       }, 'persistent_notifications_updated')
+      // 获取历史数据
+      fetchWithAuth(`/api/history/period/${new Date().toISOString().substr(0, 10)}T00:00:00.000Z?filter_entity_id=conversation.voice&end_time=${new Date().toISOString()}&minimal_response`,
+        {
+          method: 'GET',
+        }).then(res => {
+          // console.log(res)
+          if (res.length > 0) {
+            res[0].forEach(ele => {
+              addLeftMsg(`【语音助手】${new Date(ele.last_updated).toLocaleTimeString()}<hr/>${ele.state}`)
+            })
+          }
+        })
     }, 3000)
   </script>
-  <table>
-    <tbody></tbody>
-  </table>
   <script type="module">
     import {
       getAuth,
@@ -300,6 +313,16 @@
       // To play from the console
       window.auth = auth;
       window.connection = connection;
+      window.fetchWithAuth = (url, params) => {
+        let { access_token, token_type } = connection.options.auth.data
+        return fetch(url, {
+          method: 'POST',
+          headers: {
+            authorization: `${token_type} ${access_token}`
+          },
+          ...params
+        }).then(res => res.json())
+      }
       getUser(connection).then(user => {
         console.log("Logged in as", user);
         window.user = user;

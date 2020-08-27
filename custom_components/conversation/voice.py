@@ -2,6 +2,7 @@ import logging, re, aiohttp
 from homeassistant.helpers import intent
 import homeassistant.config as conf_util
 from homeassistant.helpers import template
+from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -257,9 +258,12 @@ class Voice():
 
     # 记录语音识别语句
     async def set_state(self, text=VERSION):
-        self.hass.states.async_set('conversation.voice', text, {
+        hass = self.hass        
+        hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:voice",
             "friendly_name": "语音助手",
-            '语音助手': 'https://github.com/shaonianzhentan/voice_assistant',
-            '项目地址': 'https://github.com/shaonianzhentan/conversation'
+            "版本": VERSION,
+            '语音助手': get_url(hass) + '/conversation/index.html?ver=' + VERSION,
+            '项目地址': 'https://github.com/shaonianzhentan/conversation',            
+            '语音唤醒': 'https://github.com/shaonianzhentan/voice_assistant'
         })
