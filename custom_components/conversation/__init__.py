@@ -62,13 +62,16 @@ async def async_setup(hass, config):
         _LOGGER.debug("Processing: <%s>", text)
         agent = await _get_agent(hass)
         try:
+            # 如果来源是百度语音识别，则记录
+            source = service.data.get('source', '')
+            if source == 'baidu':
+                hass.data["conversation_voice"].set_state(text)
+            
             await agent.async_process(text, service.context)
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
-    )
+    hass.services.async_register(DOMAIN, SERVICE_PROCESS, handle_service)
     hass.http.register_view(ConversationProcessView())
     hass.components.websocket_api.async_register_command(websocket_process)
     hass.components.websocket_api.async_register_command(websocket_get_agent_info)

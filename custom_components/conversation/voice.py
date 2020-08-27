@@ -253,3 +253,12 @@ class Voice():
         except Exception as e:
             _LOGGER.info(e)        
         return message
+
+    # 记录语音识别语句
+    async def set_state(self, text): 
+        self.hass.states.async_set('conversation.voice', text, {
+            "icon": "mdi:voice",
+            "friendly_name": "语音助手",
+            '语音助手': 'https://github.com/shaonianzhentan/voice_assistant',
+            '项目地址': 'https://github.com/shaonianzhentan/conversation'
+        })
