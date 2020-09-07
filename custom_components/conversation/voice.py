@@ -257,12 +257,13 @@ class Voice():
         return message
 
     # 记录语音识别语句
-    async def set_state(self, text=VERSION):
+    async def set_state(self, text=VERSION, source = ''):
         hass = self.hass        
         hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:voice",
             "friendly_name": "语音助手",
             "版本": VERSION,
+            "文本来源": source,
             '语音助手': get_url(hass) + '/conversation/index.html?ver=' + VERSION,
             '项目地址': 'https://github.com/shaonianzhentan/conversation',            
             '语音唤醒': 'https://github.com/shaonianzhentan/voice_assistant'

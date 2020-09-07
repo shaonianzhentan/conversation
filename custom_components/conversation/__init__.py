@@ -64,8 +64,8 @@ async def async_setup(hass, config):
         try:
             # 如果来源是百度语音识别，则记录
             source = service.data.get('source', '')
-            if source == 'baidu':
-                await hass.data["conversation_voice"].set_state(text)
+            if source != '':
+                await hass.data["conversation_voice"].set_state(text, source)
             
             await agent.async_process(text, service.context)
         except intent.IntentHandleError as err:
