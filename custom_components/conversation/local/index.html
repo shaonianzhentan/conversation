@@ -255,7 +255,9 @@
         })
       }, 'persistent_notifications_updated')
       // 获取历史数据
-      fetchWithAuth(`/api/history/period/${new Date().toISOString().substr(0, 10)}T00:00:00.000Z?filter_entity_id=conversation.voice&end_time=${new Date().toISOString()}&minimal_response`,
+      let today = new Date()
+      today.setHours(today.getHours() - 1)
+      fetchWithAuth(`/api/history/period/${today.toISOString()}?filter_entity_id=conversation.voice&end_time=${new Date().toISOString()}&minimal_response`,
         {
           method: 'GET',
         }).then(res => {
@@ -326,6 +328,16 @@
       getUser(connection).then(user => {
         console.log("Logged in as", user);
         window.user = user;
+        // 获取当前组件版本
+        connection.sendMessagePromise({ type: 'get_states' }).then(res => {
+          let entity = res.find(ele => ele.entity_id === 'conversation.voice')
+          let query = new URLSearchParams(location.search)
+          let ver = entity.attributes['版本']
+          // 如果版本不一样，则跳转到最新版本
+          if (query.get('ver') != ver) {
+            location.search = `?ver=${ver}`
+          }
+        })
       });
     })();
   </script>

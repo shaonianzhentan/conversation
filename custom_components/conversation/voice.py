@@ -6,7 +6,7 @@ from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = '1.4'
+VERSION = '1.4.1'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
