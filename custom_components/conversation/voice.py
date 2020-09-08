@@ -6,7 +6,7 @@ from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = '1.4.1'
+VERSION = '1.4.2'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -257,11 +257,12 @@ class Voice():
         return message
 
     # 记录语音识别语句
-    async def set_state(self, text=VERSION, source = ''):
+    async def set_state(self, text=VERSION, source = '', timestamp = ''):
         hass = self.hass        
         hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:voice",
             "friendly_name": "语音助手",
+            "timestamp": timestamp,
             "版本": VERSION,
             "文本来源": source,
             '语音助手': get_url(hass) + '/conversation/index.html?ver=' + VERSION,
