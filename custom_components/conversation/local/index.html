@@ -332,7 +332,7 @@
         connection.sendMessagePromise({ type: 'get_states' }).then(res => {
           let entity = res.find(ele => ele.entity_id === 'conversation.voice')
           let query = new URLSearchParams(location.search)
-          let ver = entity.attributes['版本']
+          let ver = entity.attributes['version']
           // 如果版本不一样，则跳转到最新版本
           if (query.get('ver') != ver) {
             location.search = `?ver=${ver}`

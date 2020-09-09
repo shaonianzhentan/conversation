@@ -6,7 +6,7 @@ from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = '1.4.2'
+VERSION = '1.4.3'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -263,9 +263,8 @@ class Voice():
             "icon": "mdi:voice",
             "friendly_name": "语音助手",
             "timestamp": timestamp,
-            "版本": VERSION,
-            "文本来源": source,
-            '语音助手': get_url(hass) + '/conversation/index.html?ver=' + VERSION,
-            '项目地址': 'https://github.com/shaonianzhentan/conversation',            
-            '语音唤醒': 'https://github.com/shaonianzhentan/voice_assistant'
+            "source": source,
+            "version": VERSION,
+            'link': get_url(hass) + '/conversation/index.html?ver=' + VERSION,
+            'github': 'https://github.com/shaonianzhentan/conversation'
         })
