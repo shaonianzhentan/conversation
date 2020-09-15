@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-async_register = bind_hass(async_register)  # pylint: disable=invalid-name
+async_register = bind_hass(async_register)
 
 
 @core.callback
@@ -67,7 +67,6 @@ async def async_setup(hass, config):
             timestamp = service.data.get('timestamp', '')
             if source != '':
                 await hass.data["conversation_voice"].set_state(text, source, timestamp)
-            
             await agent.async_process(text, service.context)
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
@@ -77,6 +76,7 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_process)
     hass.components.websocket_api.async_register_command(websocket_get_agent_info)
     hass.components.websocket_api.async_register_command(websocket_set_onboarding)
+
     # 声明变量
     hass.data["conversation_voice"] = Voice(hass)
     await hass.data["conversation_voice"].set_state()

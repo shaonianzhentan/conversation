@@ -6,7 +6,7 @@ from homeassistant.helpers.network import get_url
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = '1.4.3'
+VERSION = '1.5'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -53,11 +53,29 @@ class Voice():
         # 清除agent
         hass.data[DATA_AGENT] = None
 
+    # 语音服务处理
+    async def async_process(text):
+        # 去掉前后标点符号
+        _text = self.fire_text(text)
+        # 执行自定义语句
+        intent_result = await self.execute_action(_text)
+        if intent_result is not None:
+            return intent_result
+        
+        # 开关控制
+        intent_result = await self.execute_switch(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 调用聊天机器人
+        message = await self.chat_robot(text)
+        return self.intent_result(message)
+
     # 触发事件
     def fire_text(self, text):
         hass = self.hass
         # 去掉前后标点符号
-        _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')    
+        _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
         # 发送事件，共享给其他组件
         hass.bus.fire('ha_voice_text_event', {
             'text': _text
@@ -68,6 +86,18 @@ class Voice():
                 'text': _text
             }))
         return _text
+
+    # 根据名称查询设备
+    def find_device(self, name):
+        # 遍历所有实体
+        states = self.hass.states.async_all()
+        for state in states:
+            attributes = state.attributes
+            friendly_name = attributes.get('friendly_name')
+            # 查询对应的设备名称
+            if friendly_name is not None and friendly_name.lower() == name.lower():
+                return state
+        return None
 
     # 查看设备
     def query_device(self, text):
@@ -177,28 +207,27 @@ class Voice():
         hass = self.hass
         intent_type = ''
         service_type = ''
-        if text_start('打开',_text) or text_start('开启',_text) or text_start('启动',_text):
+
+        matchObj = re.match(r'.*((打开|开启|启动)(.+))', _text)
+        if matchObj is not None:
             intent_type = 'HassTurnOn'
             service_type = 'turn_on'
-            if '打开' in _text:
-                _name = _text.split('打开')[1]
-            elif '开启' in _text:
-                _name = _text.split('开启')[1]
-            elif '启动' in _text:
-                _name = _text.split('启动')[1]
-        elif text_start('关闭',_text) or text_start('关掉',_text) or text_start('关上',_text):
-            intent_type = 'HassTurnOff'
-            service_type = 'turn_off'
-            if '关闭' in _text:
-                _name = _text.split('关闭')[1]
-            elif '关掉' in _text:
-                _name = _text.split('关掉')[1]
-            elif '关上' in _text:
-                _name = _text.split('关上')[1]            
-        elif text_start('切换', _text):
-            intent_type = 'HassToggle'
-            service_type = 'toggle'
-            _name = _text.split('切换')[1]
+            _name = matchObj.group(3)
+        
+        if matchObj is None:
+            matchObj = re.match(r'.*((关闭|关掉|关上)(.+))', _text)
+            if matchObj is not None:
+                intent_type = 'HassTurnOff'
+                service_type = 'turn_off'
+                _name = matchObj.group(3)
+
+        if matchObj is None:
+            matchObj = re.match(r'.*((切换)(.+))', _text)
+            if matchObj is not None:
+                intent_type = 'HassToggle'
+                service_type = 'toggle'
+                _name = matchObj.group(3)
+        
         # 默认的开关操作
         if intent_type != '':
             # 操作所有灯和开关
@@ -233,16 +262,13 @@ class Voice():
                     </table>
                 '''))
             else:
+                # 如果没有这个设备，则返回为空
+                if self.find_device(_name) is None:
+                    return None
+
                 await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
             return self.intent_result("正在" + _text)
         return None
-
-    # 错误信息处理
-    def error_msg(self, err_msg):
-        # 没有找到设备
-        if 'Unable to find an entity called' in err_msg:
-            err_msg = err_msg.replace('Unable to find an entity called', '没有找到这个设备：')
-        return err_msg
 
     # 聊天机器人
     async def chat_robot(self, text):

@@ -29,8 +29,8 @@ UTTERANCES = {
         INTENT_CLOSE_COVER: ["Close [the] [a] [an] {name}[s]"],
     },
     "shopping_list": {
-        INTENT_ADD_ITEM: ["添加{item}到我的购物单"],
-        INTENT_LAST_ITEMS: ["我的购物单上有什么"],
+        INTENT_ADD_ITEM: ["Add [the] [a] [an] {item} to my shopping list"],
+        INTENT_LAST_ITEMS: ["What is on my shopping list"],
     },
 }
 
@@ -120,48 +120,21 @@ class DefaultAgent(AbstractConversationAgent):
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
 
+        for intent_type, matchers in intents.items():
+            for matcher in matchers:
+                match = matcher.match(text)
+
+                if not match:
+                    continue
+
+                return await intent.async_handle(
+                    self.hass,
+                    DOMAIN,
+                    intent_type,
+                    {key: {"value": value} for key, value in match.groupdict().items()},
+                    text,
+                    context,
+                )
+        
         voice = self.hass.data["conversation_voice"]
-        try:
-            # 去掉前后标点符号
-            _text = voice.fire_text(text)
-            # 执行自定义语句
-            intent_result = await voice.execute_action(_text)
-            if intent_result is not None:
-                return intent_result
-            
-            # 开关控制
-            intent_result = await voice.execute_switch(_text)
-            if intent_result is not None:
-                return intent_result
-
-            # 内置处理指令
-            for intent_type, matchers in intents.items():
-                for matcher in matchers:
-                    match = matcher.match(_text)
-
-                    if not match:
-                        continue
-
-                    return await intent.async_handle(
-                        self.hass,
-                        DOMAIN,
-                        intent_type,
-                        {key: {"value": value} for key, value in match.groupdict().items()},
-                        _text,
-                        context,
-                    )
-            
-        except intent.IntentHandleError as err:
-            # 错误信息处理
-            err_msg = voice.error_msg(str(err))
-
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech(err_msg)
-
-        if intent_result is None:
-            # 调用聊天机器人
-            message = await voice.chat_robot(text)
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech(message)
-
-        return intent_result
+        return await voice.async_process(text)

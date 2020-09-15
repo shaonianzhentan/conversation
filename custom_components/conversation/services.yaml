@@ -1,9 +1,7 @@
 # Describes the format for available component services
 process:
-  description: 语音文字识别
+  description: Launch a conversation from a transcribed text.
   fields:
     text:
-      description: 要识别的文本
-      example: 打开所有灯
-reload:
-  description: 重新加载配置，避免重新启动HA
+      description: Transcribed text
+      example: Turn all lights on
