@@ -76,15 +76,35 @@ class Voice():
         hass = self.hass
         # 去掉前后标点符号
         _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
+        # 预处理文本结果
+        command = ''
+        command_data = ''
+        
+        matchObj = re.match(r'.*(下一曲|下一首|下一集).*', text)
+        if matchObj is not None:
+            command = 'next'
+
+        if matchObj is None:
+            matchObj = re.match(r'.*(上一曲|上一首|上一集).*', text)
+            if matchObj is not None:
+                command = 'prev'
+        
+        if matchObj is None:
+            matchObj = re.match(r'.*(音量调到|音量设置到|设置音量到)(.*)', text)
+            if matchObj is not None:
+                command = 'set_volume'
+                command_data = matchObj.group(2)
+
         # 发送事件，共享给其他组件
-        hass.bus.fire('ha_voice_text_event', {
-            'text': _text
-        })
+        text_data = {
+            'text': _text,
+            'command': command,
+            'command_data': command_data
+        }
+        hass.bus.fire('ha_voice_text_event', text_data)
         # 调用python_script.conversation
         if hass.services.has_service('python_script', 'conversation'):
-            hass.async_create_task(hass.services.async_call('python_script', 'conversation', {
-                'text': _text
-            }))
+            hass.async_create_task(hass.services.async_call('python_script', 'conversation', text_data))
         return _text
 
     # 根据名称查询设备
