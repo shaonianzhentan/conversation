@@ -54,7 +54,7 @@ class Voice():
         hass.data[DATA_AGENT] = None
 
     # 语音服务处理
-    async def async_process(text):
+    async def async_process(self, text):
         # 去掉前后标点符号
         _text = self.fire_text(text)
         # 执行自定义语句
