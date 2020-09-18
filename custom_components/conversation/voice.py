@@ -264,10 +264,14 @@ class Voice():
                             <td>{{state.attributes.friendly_name}}</td>
                             <td>{{state.state}}</td>  
                         </tr>
+                        {%- endfor %}
                     </table>
                 '''))
             elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
                 await hass.services.async_call('switch', service_type, {
+                    'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
+                })
+                await hass.services.async_call('input_boolean', service_type, {
                     'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
                 return self.intent_result("正在" + _text + self.template('''
@@ -279,6 +283,13 @@ class Voice():
                             <td>{{state.attributes.friendly_name}}</td>
                             <td>{{state.state}}</td>  
                         </tr>
+                        {%- endfor %}
+                        {% for state in states.input_boolean -%}
+                        <tr>
+                            <td>{{state.attributes.friendly_name}}</td>
+                            <td>{{state.state}}</td>  
+                        </tr>
+                        {%- endfor %}
                     </table>
                 '''))
             else:
