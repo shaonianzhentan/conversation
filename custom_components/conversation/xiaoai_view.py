@@ -1,10 +1,13 @@
 import json
+import logging
 from homeassistant.components.http import HomeAssistantView
 from .const import DOMAIN
 
 from .xiaoai import (XiaoAIAudioItem, XiaoAIDirective, XiaoAIOpenResponse,
                     XiaoAIResponse, XiaoAIStream, XiaoAIToSpeak, XiaoAITTSItem,
                     xiaoai_request, xiaoai_response)
+
+_LOGGER = logging.getLogger(__name__)
 
 # 文本回复
 def build_text_message(to_speak, is_session_end, open_mic):
@@ -47,10 +50,13 @@ def parse_input(event, hass):
     if hasattr(req.request.slot_info, 'intent_name'):
         intent_name = req.request.slot_info.intent_name
     # 消息内容：req.query
-    print(text)
     if req.request.type == 0:
         # 技能进入请求
-        return build_text_message('欢迎使用你的家庭助理', is_session_end=False, open_mic=True)
+        if intent_name == 'Mi_Welcome':
+            return build_text_message('欢迎使用您的家庭助理', is_session_end=False, open_mic=True)
+        # 初始化识别内容
+        hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': text}))
+        return build_text_message('收到，还有什么事吗？', is_session_end=False, open_mic=True)
     elif req.request.type == 1:        
         # 退出意图
         if intent_name == 'Mi_Exit' or ['没事了', '退下', '没有了', '没有', '没了'].count(text) > 0:
@@ -72,7 +78,7 @@ class XiaoaiGateView(HomeAssistantView):
 
     async def post(self, request):
         data = await request.json()
-        # print(data)
+        # _LOGGER.info(data)
         hass = request.app["hass"]        
         response = parse_input(data, hass)
         return self.json(json.loads(response))

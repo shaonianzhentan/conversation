@@ -260,8 +260,6 @@ class Voice():
             # print(name)
             state = self.find_device(name)
             if state is not None:
-                if color == '随机':
-                    return self.intent_result(f"已经设置为{color}色")
                 # 颜色
                 if color in colorObj or color == '随机':
                     service_data = {
