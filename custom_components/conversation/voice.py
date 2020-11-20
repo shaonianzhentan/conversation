@@ -56,6 +56,11 @@ class Voice():
         # 清除agent
         hass.data[DATA_AGENT] = None
 
+    # 异步调用服务
+    def call_service(self, service, data):
+        arr = service.split('.')
+        self.hass.async_create_task(self.hass.services.async_call(arr[0], arr[1], data))
+
     # 语音服务处理
     async def async_process(self, text):
         # 去掉前后标点符号
@@ -255,7 +260,7 @@ class Voice():
             if state is not None:
                 # 颜色
                 if color in colorObj:
-                    self.hass.services.call('light', 'turn_on', {
+                    self.call_service('light.turn_on', {
                         'entity_id': state.entity_id,
                         'color_name': colorObj[color]
                     })
