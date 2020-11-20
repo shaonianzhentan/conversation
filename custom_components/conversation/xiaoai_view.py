@@ -39,7 +39,7 @@ def build_music_message(to_speak, mp3_urls):
     return response
 
 # 格式转换
-def parse_input(event, hass, voice):
+def parse_input(event, hass):
     req = xiaoai_request(event)
     # 插槽：req.request.slot_info.intent_name
     intent_name = ''
@@ -55,8 +55,8 @@ def parse_input(event, hass, voice):
         if intent_name == 'Mi_Exit':
             return build_text_message('再见了您！', is_session_end=True, open_mic=False)
         else:
-            hass.async_create_task(voice.async_process(req.query))
-            return build_text_message('收到', is_session_end=False, open_mic=True)
+            hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': req.query}))
+            return build_text_message('收到，还有什么事吗？', is_session_end=False, open_mic=True)
     elif req.request.type == 2:
         return build_text_message('再见了您！', is_session_end=True, open_mic=False)
 
@@ -71,8 +71,8 @@ class XiaoaiGateView(HomeAssistantView):
 
     async def post(self, request):
         data = await request.json()
-        print(data)
+        # print(data)
         hass = request.app["hass"]        
-        response = parse_input(data, hass, hass.data["conversation_voice"])
+        response = parse_input(data, hass)
         return self.json(json.loads(response))
 
