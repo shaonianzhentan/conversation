@@ -70,6 +70,11 @@ class Voice():
         if intent_result is not None:
             return intent_result
 
+        # 灯光颜色控制
+        intent_result = await self.execute_light_color(_text)
+        if intent_result is not None:
+            return intent_result
+
         # 调用聊天机器人
         message = await self.chat_robot(text)
         return self.intent_result(message)
@@ -224,6 +229,37 @@ class Voice():
                     '''))
 
         return None
+    
+    # 执行灯光调色
+    async def execute_light_color(self, text):
+        matchObj = re.match(r'(.+)(调成|设为|调为)(.*)色', text)
+        if matchObj is not None:
+            name = matchObj.group(1) 
+            color = matchObj.group(3)
+            colorObj = {
+                '红': 'red',
+                '橙': 'orange',
+                '黄': 'yellow',
+                '绿': 'green',
+                '青': 'red',
+                '蓝': 'blue',
+                '紫': 'red',
+                '粉': 'pink',
+                '白': 'white'
+            }            
+            # 设备
+            if name[0:1] == '把':
+                name = name[1:]
+            # print(name)
+            state = self.find_device(name)
+            if state is not None:
+                # 颜色
+                if color in colorObj:
+                    self.hass.services.call('light', 'turn_on', {
+                        'entity_id': state.entity_id,
+                        'color_name': colorObj[color]
+                    })
+                    return self.intent_result(f"已经设置为{color}色")
 
     # 执行开关
     async def execute_switch(self, _text):
