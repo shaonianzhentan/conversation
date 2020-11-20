@@ -237,7 +237,7 @@ class Voice():
     
     # 执行灯光调色
     async def execute_light_color(self, text):
-        matchObj = re.match(r'(.+)(调成|设为|调为)(.*)色', text)
+        matchObj = re.match(r'(.+)(调成|设为|设置为|调为)(.*)色', text)
         if matchObj is not None:
             name = matchObj.group(1) 
             color = matchObj.group(3)
@@ -246,11 +246,13 @@ class Voice():
                 '橙': 'orange',
                 '黄': 'yellow',
                 '绿': 'green',
-                '青': 'red',
+                '青': 'teal',
                 '蓝': 'blue',
-                '紫': 'red',
+                '紫': 'purple',
                 '粉': 'pink',
-                '白': 'white'
+                '白': 'white',
+                '紫红': 'fuchsia',
+                '橄榄': 'olive'
             }            
             # 设备
             if name[0:1] == '把':
@@ -258,12 +260,18 @@ class Voice():
             # print(name)
             state = self.find_device(name)
             if state is not None:
+                if color == '随机':
+                    return self.intent_result(f"已经设置为{color}色")
                 # 颜色
-                if color in colorObj:
-                    self.call_service('light.turn_on', {
-                        'entity_id': state.entity_id,
-                        'color_name': colorObj[color]
-                    })
+                if color in colorObj or color == '随机':
+                    service_data = {
+                        'entity_id': state.entity_id
+                    }
+                    if color == '随机':
+                        service_data.update({ 'effect': 'random' })
+                    else:
+                        service_data.update({ 'color_name': colorObj[color] })
+                    self.call_service('light.turn_on', service_data)
                     return self.intent_result(f"已经设置为{color}色")
 
     # 执行开关
