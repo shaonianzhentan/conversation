@@ -4,9 +4,11 @@ import homeassistant.config as conf_util
 from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
+from .xiaoai_view import XiaoaiGateView
+
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = '1.5'
+VERSION = '1.6'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -33,6 +35,7 @@ class Voice():
     -------------------------------------------------------------------''')
         local = hass.config.path("custom_components/conversation/local")
         hass.http.register_static_path('/conversation', local, False)
+        hass.http.register_view(XiaoaiGateView)
 
     # 解析模板
     def template(self, message):
