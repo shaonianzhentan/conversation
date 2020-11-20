@@ -41,21 +41,22 @@ def build_music_message(to_speak, mp3_urls):
 # 格式转换
 def parse_input(event, hass):
     req = xiaoai_request(event)
+    text = req.query
     # 插槽：req.request.slot_info.intent_name
     intent_name = ''
     if hasattr(req.request.slot_info, 'intent_name'):
         intent_name = req.request.slot_info.intent_name
     # 消息内容：req.query
-    print(req.query)
+    print(text)
     if req.request.type == 0:
         # 技能进入请求
         return build_text_message('欢迎使用你的家庭助理', is_session_end=False, open_mic=True)
     elif req.request.type == 1:        
         # 退出意图
-        if intent_name == 'Mi_Exit':
+        if intent_name == 'Mi_Exit' or ['没事了', '退下', '没有了', '没有', '没了'].count(text) > 0:
             return build_text_message('再见了您！', is_session_end=True, open_mic=False)
         else:
-            hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': req.query}))
+            hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': text}))
             return build_text_message('收到，还有什么事吗？', is_session_end=False, open_mic=True)
     elif req.request.type == 2:
         return build_text_message('再见了您！', is_session_end=True, open_mic=False)
