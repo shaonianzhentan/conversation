@@ -5,6 +5,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
+from .util import matcher_brightness, matcher_color
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +78,11 @@ class Voice():
 
         # 灯光颜色控制
         intent_result = await self.execute_light_color(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 灯光亮度控制
+        intent_result = await self.execute_light_brightness(_text)
         if intent_result is not None:
             return intent_result
 
@@ -237,40 +243,27 @@ class Voice():
     
     # 执行灯光调色
     async def execute_light_color(self, text):
-        matchObj = re.match(r'(.+)(调成|设为|设置为|调为)(.*)色', text)
-        if matchObj is not None:
-            name = matchObj.group(1) 
-            color = matchObj.group(3)
-            colorObj = {
-                '红': 'red',
-                '橙': 'orange',
-                '黄': 'yellow',
-                '绿': 'green',
-                '青': 'teal',
-                '蓝': 'blue',
-                '紫': 'purple',
-                '粉': 'pink',
-                '白': 'white',
-                '紫红': 'fuchsia',
-                '橄榄': 'olive'
-            }            
-            # 设备
-            if name[0:1] == '把':
-                name = name[1:]
-            # print(name)
-            state = self.find_device(name)
+        result = matcher_color(text)
+        if result is not None:
+            state = self.find_device(result[0])
             if state is not None:
-                # 颜色
-                if color in colorObj or color == '随机':
-                    service_data = {
-                        'entity_id': state.entity_id
-                    }
-                    if color == '随机':
-                        service_data.update({ 'effect': 'random' })
-                    else:
-                        service_data.update({ 'color_name': colorObj[color] })
-                    self.call_service('light.turn_on', service_data)
-                    return self.intent_result(f"已经设置为{color}色")
+                self.call_service('light.turn_on', {
+                    'entity_id': state.entity_id,
+                    'color_name': result[1]
+                })
+                return self.intent_result(f"已经设置为{result[2]}色")
+    
+    # 执行灯光亮度
+    async def execute_light_brightness(self, text):
+        result = matcher_brightness(text)
+        if result is not None:
+            state = self.find_device(result[0])
+            if state is not None:
+                self.call_service('light.turn_on', {
+                    'entity_id': state.entity_id,
+                    'brightness_pct': result[1]
+                })
+                return self.intent_result(f"亮度已经设置为{result[1]}%")
 
     # 执行开关
     async def execute_switch(self, _text):
