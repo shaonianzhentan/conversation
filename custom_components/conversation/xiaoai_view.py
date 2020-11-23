@@ -1,7 +1,8 @@
 import json
 import logging
 from homeassistant.components.http import HomeAssistantView
-from .const import DOMAIN
+
+from .util import DOMAIN, XIAOAI_API
 
 from .xiaoai import (XiaoAIAudioItem, XiaoAIDirective, XiaoAIOpenResponse,
                     XiaoAIResponse, XiaoAIStream, XiaoAIToSpeak, XiaoAITTSItem,
@@ -72,7 +73,7 @@ def parse_input(event, hass):
 # 网关视图
 class XiaoaiGateView(HomeAssistantView):
 
-    url = f"/{DOMAIN}-xiaoai"
+    url = XIAOAI_API
     name = DOMAIN
     requires_auth = False
 

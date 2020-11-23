@@ -5,14 +5,9 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import matcher_brightness, matcher_color
+from .util import matcher_brightness, matcher_color, VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
-
-VERSION = '1.6'
-DOMAIN = "conversation"
-DATA_AGENT = "conversation_agent"
-DATA_CONFIG = "conversation_config"
 
 def text_start(findText, text):
     return text.find(findText,0,len(findText)) >= 0
@@ -370,5 +365,6 @@ class Voice():
             "source": source,
             "version": VERSION,
             'link': base_url + '/conversation/index.html?ver=' + VERSION,
+            'XiaoAi': base_url + '/conversation-xiaoai',
             'github': 'https://github.com/shaonianzhentan/conversation'
         })

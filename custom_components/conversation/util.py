@@ -34,6 +34,14 @@ def create_matcher(utterance):
     pattern.append("$")
     return re.compile("".join(pattern), re.I)
 
+########################################## 常量
+VERSION = '1.6'
+DOMAIN = "conversation"
+DATA_AGENT = "conversation_agent"
+DATA_CONFIG = "conversation_config"
+XIAOAI_API = "/conversation-xiaoai"
+########################################## 汉字转数字
+
 ########################################## 汉字转数字
 common_used_numerals_tmp ={'零':0, '一':1, '二':2, '两':2, '三':3, '四':4, '五':5, '六':6, '七':7, '八':8, '九':9, '十':10, '百':100, '千':1000, '万':10000, '亿':100000000}
 common_used_numerals = {}
