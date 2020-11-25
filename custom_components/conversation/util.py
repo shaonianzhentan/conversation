@@ -52,8 +52,8 @@ def find_entity(hass, name, type = None):
         if friendly_name is not None and friendly_name.lower() == name.lower():
             entity_type = entity_id.split('.')[0]
             # 指定类型
-            if type is None 
-                or (isinstance(type, list) and type.count(entity_type) == 1)
+            if type is None \
+                or (isinstance(type, list) and type.count(entity_type) == 1) \
                 or (isinstance(type, str) and type == entity_type):
                 return state
 
