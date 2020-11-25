@@ -40,7 +40,19 @@ DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
 XIAOAI_API = "/conversation-xiaoai"
-########################################## 汉字转数字
+########################################## 查询实体
+def find_entity(hass, name, type = ''):
+    # 遍历所有实体
+    states = hass.states.async_all()
+    for state in states:
+        entity_id = state.entity_id
+        attributes = state.attributes
+        friendly_name = attributes.get('friendly_name')
+        # 查询对应的设备名称
+        if friendly_name is not None and friendly_name.lower() == name.lower():
+            # 指定类型
+            if type == '' or entity_id.find(f'{type}.') == 0:
+                return state
 
 ########################################## 汉字转数字
 common_used_numerals_tmp ={'零':0, '一':1, '二':2, '两':2, '三':3, '四':4, '五':5, '六':6, '七':7, '八':8, '九':9, '十':10, '百':100, '千':1000, '万':10000, '亿':100000000}
@@ -131,3 +143,29 @@ def matcher_brightness(text):
         # 如果亮度大于0，返回设备名称和亮度值
         if brightness > 0:
             return (name, brightness)
+
+########################################## 执行脚本
+def matcher_script(text):
+    matchObj = re.match(r'执行脚本(.*)', text)
+    if matchObj is not None:
+        return matchObj.group(1)
+
+########################################## (执行|触发|打开|关闭)自动化
+def matcher_automation(text):
+    matchObj = re.match(r'(执行|触发|打开|关闭)自动化(.*)', text)
+    if matchObj is not None:
+        return (matchObj.group(1), matchObj.group(2))
+
+########################################## 查看设备状态
+def matcher_query_state(text):
+    matchObj = re.match(r'(查看|查询)(.*)的状态', text)
+    if matchObj is not None:
+        return matchObj.group(2)
+
+    matchObj = re.match(r'(查看|查询)(.*)', text)
+    if matchObj is not None:
+        return matchObj.group(2)
+    
+    matchObj = re.match(r'(.*)的状态', text)
+    if matchObj is not None:
+        return matchObj.group(1)

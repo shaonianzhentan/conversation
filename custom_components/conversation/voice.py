@@ -5,7 +5,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import matcher_brightness, matcher_color, VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
+from .util import matcher_brightness, matcher_color, matcher_script, matcher_automation, matcher_query_state, find_entity, VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class Voice():
         hass.data[DATA_AGENT] = None
 
     # 异步调用服务
-    def call_service(self, service, data):
+    def call_service(self, service, data={}):
         arr = service.split('.')
         self.hass.async_create_task(self.hass.services.async_call(arr[0], arr[1], data))
 
@@ -61,16 +61,12 @@ class Voice():
     async def async_process(self, text):
         # 去掉前后标点符号
         _text = self.fire_text(text)
-        # 执行自定义语句
-        intent_result = await self.execute_action(_text)
+
+        # 查询设备状态
+        intent_result = await self.execute_query_state(_text)
         if intent_result is not None:
             return intent_result
         
-        # 开关控制
-        intent_result = await self.execute_switch(_text)
-        if intent_result is not None:
-            return intent_result
-
         # 灯光颜色控制
         intent_result = await self.execute_light_color(_text)
         if intent_result is not None:
@@ -78,6 +74,26 @@ class Voice():
 
         # 灯光亮度控制
         intent_result = await self.execute_light_brightness(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 执行脚本
+        intent_result = await self.execute_script(_text)
+        if intent_result is not None:
+            return intent_result
+        
+        # 自动化操作
+        intent_result = await self.execute_automation(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 开关控制
+        intent_result = await self.execute_switch(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 执行自定义语句
+        intent_result = await self.execute_action(_text)
         if intent_result is not None:
             return intent_result
 
@@ -120,18 +136,6 @@ class Voice():
         if hass.services.has_service('python_script', 'conversation'):
             hass.async_create_task(hass.services.async_call('python_script', 'conversation', text_data))
         return _text
-
-    # 根据名称查询设备
-    def find_device(self, name):
-        # 遍历所有实体
-        states = self.hass.states.async_all()
-        for state in states:
-            attributes = state.attributes
-            friendly_name = attributes.get('friendly_name')
-            # 查询对应的设备名称
-            if friendly_name is not None and friendly_name.lower() == name.lower():
-                return state
-        return None
 
     # 查看设备
     def query_device(self, text):
@@ -240,7 +244,7 @@ class Voice():
     async def execute_light_color(self, text):
         result = matcher_color(text)
         if result is not None:
-            state = self.find_device(result[0])
+            state = find_entity(self.hass, result[0], 'light')
             if state is not None:
                 self.call_service('light.turn_on', {
                     'entity_id': state.entity_id,
@@ -252,14 +256,59 @@ class Voice():
     async def execute_light_brightness(self, text):
         result = matcher_brightness(text)
         if result is not None:
-            state = self.find_device(result[0])
+            state = find_entity(self.hass, result[0], 'light')
             if state is not None:
                 self.call_service('light.turn_on', {
                     'entity_id': state.entity_id,
                     'brightness_pct': result[1]
                 })
                 return self.intent_result(f"亮度已经设置为{result[1]}%")
+    # 执行脚本
+    async def execute_script(self, text):
+        result = matcher_script(text)
+        if result is not None:
+            # 遍历所有实体
+            states = hass.states.async_all()
+            for state in states:
+                entity_id = state.entity_id
+                attributes = state.attributes
+                state_value = state.state
+                friendly_name = attributes.get('friendly_name')
+                # 执行自定义脚本
+                if entity_id.find('script.') == 0:
+                    cmd = friendly_name.split('=')
+                    if cmd.count(text) > 0:
+                        self.call_service(entity_id)
+                        return self.intent_result("正在执行自定义脚本：" + entity_id)
 
+    # (执行|触发|打开|关闭)自动化
+    async def execute_automation(self, text):
+        result = matcher_automation(text)
+        if result is not None:
+            action = result[0]
+            state = find_entity(self.hass, result[1], 'automation')
+            if state is not None:
+                service_data = {'entity_id': state.entity_id}
+                if action == '执行' or action == '触发':
+                    self.call_service('automation.trigger', service_data)
+                    return self.intent_result("正在触发自动化：" + entity_id)
+                elif action == '打开':
+                    self.call_service('automation.turn_on', service_data)
+                    return self.intent_result("正在打开自动化：" + entity_id)
+                elif action == '关闭':
+                    self.call_service('automation.turn_off', service_data)
+                    return self.intent_result("正在关闭自动化：" + entity_id)
+
+    # 查看设备状态
+    async def execute_query_state(self, text):
+        result = matcher_query_state(text)
+        if result is not None:
+            state = find_entity(self.hass, result[0])
+            if state is not None:
+                attributes = state.attributes
+                friendly_name = attributes.get('friendly_name')
+                return self.intent_result(f"{friendly_name}的状态是：{state.state}")
+                    
     # 执行开关
     async def execute_switch(self, _text):
         hass = self.hass
@@ -332,7 +381,7 @@ class Voice():
                 '''))
             else:
                 # 如果没有这个设备，则返回为空
-                if self.find_device(_name) is None:
+                if find_entity(self.hass, _name) is None:
                     return None
 
                 await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
