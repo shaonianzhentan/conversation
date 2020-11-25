@@ -41,7 +41,7 @@ DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
 XIAOAI_API = "/conversation-xiaoai"
 ########################################## 查询实体
-def find_entity(hass, name, type = ''):
+def find_entity(hass, name, type = None):
     # 遍历所有实体
     states = hass.states.async_all()
     for state in states:
@@ -50,8 +50,11 @@ def find_entity(hass, name, type = ''):
         friendly_name = attributes.get('friendly_name')
         # 查询对应的设备名称
         if friendly_name is not None and friendly_name.lower() == name.lower():
+            entity_type = entity_id.split('.')[0]
             # 指定类型
-            if type == '' or entity_id.find(f'{type}.') == 0:
+            if type is None 
+                or (isinstance(type, list) and type.count(entity_type) == 1)
+                or (isinstance(type, str) and type == entity_type):
                 return state
 
 ########################################## 汉字转数字
@@ -155,6 +158,26 @@ def matcher_automation(text):
     matchObj = re.match(r'(执行|触发|打开|关闭)自动化(.*)', text)
     if matchObj is not None:
         return (matchObj.group(1), matchObj.group(2))
+
+########################################## (执行|触发|打开|关闭)开关
+def matcher_switch(text):
+    matchObj = re.match(r'.*((打开|开启|启动|关闭|关掉|关上|切换)(.+))', text)
+    if matchObj is not None:
+        service_type = ''
+        intent_type = ''
+        action = matchObj.group(2)
+        if ['打开', '开启', '启动'].count(action) == 1:
+            service_type = 'turn_on'
+            intent_type = 'HassTurnOn'
+        elif ['关闭', '关掉', '关上'].count(action) == 1:
+            service_type = 'turn_off'
+            intent_type = 'HassTurnOff'
+        elif action == '切换':
+            service_type = 'toggle'
+            intent_type = 'HassToggle'
+        
+        if service_type != '' and intent_type != '':
+            return (matchObj.group(3), service_type, intent_type)
 
 ########################################## 查看设备状态
 def matcher_query_state(text):

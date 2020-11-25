@@ -5,7 +5,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import matcher_brightness, matcher_color, matcher_script, matcher_automation, matcher_query_state, find_entity, VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
+from .util import matcher_brightness, matcher_color, matcher_script, matcher_automation, matcher_query_state, matcher_switch, find_entity, VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -312,34 +312,14 @@ class Voice():
     # 执行开关
     async def execute_switch(self, _text):
         hass = self.hass
-        intent_type = ''
-        service_type = ''
-
-        matchObj = re.match(r'.*((打开|开启|启动)(.+))', _text)
-        if matchObj is not None:
-            intent_type = 'HassTurnOn'
-            service_type = 'turn_on'
-            _name = matchObj.group(3)
-        
-        if matchObj is None:
-            matchObj = re.match(r'.*((关闭|关掉|关上)(.+))', _text)
-            if matchObj is not None:
-                intent_type = 'HassTurnOff'
-                service_type = 'turn_off'
-                _name = matchObj.group(3)
-
-        if matchObj is None:
-            matchObj = re.match(r'.*((切换)(.+))', _text)
-            if matchObj is not None:
-                intent_type = 'HassToggle'
-                service_type = 'toggle'
-                _name = matchObj.group(3)
-        
-        # 默认的开关操作
-        if intent_type != '':
+        result = matcher_switch(_text)
+        if result is not None:                
+            _name = result[0]
+            service_type = result[1]
+            intent_type = result[2]
             # 操作所有灯和开关
             if _name == '所有灯' or _name == '所有的灯' or _name == '全部灯' or _name == '全部的灯':
-                await hass.services.async_call('light', service_type, {
+                self.call_service(f'light.{service_type}', {
                     'entity_id': self.template('{% for state in states.light -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
                 return self.intent_result("正在" + _text + self.template('''
@@ -355,11 +335,11 @@ class Voice():
                     </table>
                 '''))
             elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
-                await hass.services.async_call('switch', service_type, {
+                self.call_service(f'switch.{service_type}', {
                     'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
-                await hass.services.async_call('input_boolean', service_type, {
-                    'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
+                self.call_service(f'input_boolean.{service_type}', {
+                    'entity_id': self.template('{% for state in states.input_boolean -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
                 return self.intent_result("正在" + _text + self.template('''
                     <hr />
@@ -381,12 +361,10 @@ class Voice():
                 '''))
             else:
                 # 如果没有这个设备，则返回为空
-                if find_entity(self.hass, _name) is None:
-                    return None
-
-                await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
-            return self.intent_result("正在" + _text)
-        return None
+                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
+                if state is not None:
+                    await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
+                    return self.intent_result("正在" + _text)
 
     # 聊天机器人
     async def chat_robot(self, text):
