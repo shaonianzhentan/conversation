@@ -5,7 +5,9 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import matcher_brightness, matcher_color, matcher_script, matcher_automation, matcher_query_state, matcher_switch, find_entity, VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
+from .util import matcher_brightness, matcher_color, matcher_script, ApiConfig, \
+    matcher_automation, matcher_query_state, matcher_switch, find_entity, \
+    VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +18,9 @@ class Voice():
 
     def __init__(self, hass):
         self.hass = hass
+        self.api_config = ApiConfig(hass.config.path(".shaonianzhentan/conversation"))
         hass.services.async_register(DOMAIN, 'reload', self.reload)
+        hass.services.async_register(DOMAIN, 'setting', self.setting)
         # 显示插件信息
         _LOGGER.info('''
     -------------------------------------------------------------------
@@ -377,6 +381,21 @@ class Voice():
         except Exception as e:
             _LOGGER.info(e)        
         return message
+
+    # 配置设置
+    async def setting(self, service):
+        hass = self.hass
+        is_save = False
+        config_data = {}
+        data = service.data
+        media_player_entity_id = data.get('media_player', '')
+        if media_player_entity_id != '' and hass.states.get(media_player_entity_id) is not None:
+            # 保存媒体播放器
+            config_data.update({'media_player': media_player_entity_id})
+            is_save = True
+        # 保存配置
+        if is_save:
+            self.api_config.save_config(config_data)
 
     # 记录语音识别语句
     async def set_state(self, text=VERSION, source = '', timestamp = ''):

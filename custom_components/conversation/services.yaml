@@ -5,3 +5,11 @@ process:
     text:
       description: Transcribed text
       example: Turn all lights on
+reload:
+  description: 重新加载 intent_script 配置
+setting:
+  description: 设置相关配置
+  fields:
+    media_player:
+      description: 视频播放器（电视投屏要用）
+      example: media_player.android_tv

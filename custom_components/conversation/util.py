@@ -2,6 +2,7 @@
 import re
 import string
 import random
+import json, os
 
 def create_matcher(utterance):
     """Create a regex that matches the utterance."""
@@ -56,7 +57,6 @@ def find_entity(hass, name, type = None):
                 or (isinstance(type, list) and type.count(entity_type) == 1) \
                 or (isinstance(type, str) and type == entity_type):
                 return state
-
 ########################################## 汉字转数字
 common_used_numerals_tmp ={'零':0, '一':1, '二':2, '两':2, '三':3, '四':4, '五':5, '六':6, '七':7, '八':8, '九':9, '十':10, '百':100, '千':1000, '万':10000, '亿':100000000}
 common_used_numerals = {}
@@ -192,3 +192,47 @@ def matcher_query_state(text):
     matchObj = re.match(r'(.*)的状态', text)
     if matchObj is not None:
         return matchObj.group(1)
+
+########################################## 接口配置
+class ApiConfig():
+
+    def __init__(self, _dir):
+        if os.path.exists(_dir) == False:           
+            self.mkdir(_dir)
+        self.dir = _dir
+
+    def get_config(self):
+        return self.read('conversation.json')
+
+    def save_config(self, data):
+        content = self.get_config()
+        content.update(data)
+        self.write('conversation.json', content)
+
+    # 创建文件夹
+    def mkdir(self, path):
+        folders = []
+        while not os.path.isdir(path):
+            path, suffix = os.path.split(path)
+            folders.append(suffix)
+        for folder in folders[::-1]:
+            path = os.path.join(path, folder)
+            os.mkdir(path)
+
+    # 获取路径
+    def get_path(self, name):
+        return self.dir + '/' + name
+
+    # 读取文件内容
+    def read(self, name):
+        fn = self.get_path(name)
+        if os.path.isfile(fn):
+            with open(fn,'r', encoding='utf-8') as f:
+                content = json.load(f)
+                return content
+        return None
+
+    # 写入文件内容
+    def write(self, name, obj):
+        with open(self.get_path(name), 'w', encoding='utf-8') as f:
+            json.dump(obj, f, ensure_ascii=False)
