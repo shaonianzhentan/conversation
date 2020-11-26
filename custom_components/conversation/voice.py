@@ -5,9 +5,9 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import matcher_brightness, matcher_color, matcher_script, ApiConfig, \
-    matcher_automation, matcher_query_state, matcher_switch, find_entity, \
-    VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, \
+    matcher_brightness, matcher_color, matcher_script, matcher_watch_tv, \
+    matcher_automation, matcher_query_state, matcher_switch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class Voice():
 
     def __init__(self, hass):
         self.hass = hass
-        self.api_config = ApiConfig(hass.config.path(".shaonianzhentan/conversation"))
+        self.api_config = ApiConfig(hass.config.path(".shaonianzhentan"))
         hass.services.async_register(DOMAIN, 'reload', self.reload)
         hass.services.async_register(DOMAIN, 'setting', self.setting)
         # 显示插件信息
@@ -66,6 +66,11 @@ class Voice():
         # 去掉前后标点符号
         _text = self.fire_text(text)
 
+        # 看电视
+        intent_result = await self.execute_watch_tv(_text)
+        if intent_result is not None:
+            return intent_result
+
         # 查询设备状态
         intent_result = await self.execute_query_state(_text)
         if intent_result is not None:
@@ -110,31 +115,8 @@ class Voice():
         hass = self.hass
         # 去掉前后标点符号
         _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
-        # 预处理文本结果
-        command = ''
-        command_data = ''
-        
-        matchObj = re.match(r'.*(下一曲|下一首|下一集).*', text)
-        if matchObj is not None:
-            command = 'next'
-
-        if matchObj is None:
-            matchObj = re.match(r'.*(上一曲|上一首|上一集).*', text)
-            if matchObj is not None:
-                command = 'prev'
-        
-        if matchObj is None:
-            matchObj = re.match(r'.*(音量调到|音量设置到|设置音量到)(.*)', text)
-            if matchObj is not None:
-                command = 'set_volume'
-                command_data = matchObj.group(2)
-
         # 发送事件，共享给其他组件
-        text_data = {
-            'text': _text,
-            'command': command,
-            'command_data': command_data
-        }
+        text_data = { 'text': _text }
         hass.bus.fire('ha_voice_text_event', text_data)
         # 调用python_script.conversation
         if hass.services.has_service('python_script', 'conversation'):
@@ -312,7 +294,21 @@ class Voice():
                 attributes = state.attributes
                 friendly_name = attributes.get('friendly_name')
                 return self.intent_result(f"{friendly_name}的状态是：{state.state}")
-                    
+
+    # 看电视
+    async def execute_watch_tv(self, text):
+        result = matcher_watch_tv(text)
+        if result is not None:
+            cfg = self.api_config.get_config()
+            entity_id = cfg.get('media_player')
+            if self.hass.states.get(entity_id) is not None:
+                self.call_service('media_player.play_media', {
+                    'entity_id': entity_id,
+                    'media_content_id': result,
+                    'media_content_type': 'video'
+                })
+                return self.intent_result(f"正在{text}，请查看是否成功")
+
     # 执行开关
     async def execute_switch(self, _text):
         hass = self.hass
@@ -389,13 +385,25 @@ class Voice():
         config_data = {}
         data = service.data
         media_player_entity_id = data.get('media_player', '')
-        if media_player_entity_id != '' and hass.states.get(media_player_entity_id) is not None:
-            # 保存媒体播放器
-            config_data.update({'media_player': media_player_entity_id})
-            is_save = True
+        if media_player_entity_id != '':
+            if hass.states.get(media_player_entity_id) is not None:
+                # 保存媒体播放器
+                config_data.update({'media_player': media_player_entity_id})
+                is_save = True
+            else:
+                self.call_service('persistent_notification.create', {
+                    'message': '选择的媒体播放器在系统中不存在',
+                    'title': '语音小助手',
+                    'notification_id': 'conversation-error'
+                })
         # 保存配置
         if is_save:
             self.api_config.save_config(config_data)
+            self.call_service('persistent_notification.create', {
+                    'message': '配置信息保存成功',
+                    'title': '语音小助手',
+                    'notification_id': 'conversation-success'
+                })
 
     # 记录语音识别语句
     async def set_state(self, text=VERSION, source = '', timestamp = ''):
