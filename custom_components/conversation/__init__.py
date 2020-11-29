@@ -62,11 +62,11 @@ async def async_setup(hass, config):
         _LOGGER.debug("Processing: <%s>", text)
         agent = await _get_agent(hass)
         try:
+            await agent.async_process(text, service.context)
             # 如果来源是百度语音识别，则记录
             source = service.data.get('source', '')
             timestamp = service.data.get('timestamp', '')
             await hass.data["conversation_voice"].set_state(text, source, timestamp)
-            await agent.async_process(text, service.context)
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
