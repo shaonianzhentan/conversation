@@ -254,20 +254,6 @@
           })
         })
       }, 'persistent_notifications_updated')
-      // 获取历史数据
-      let today = new Date()
-      today.setHours(today.getHours() - 1)
-      fetchWithAuth(`/api/history/period/${today.toISOString()}?filter_entity_id=conversation.voice&end_time=${new Date().toISOString()}&minimal_response`,
-        {
-          method: 'GET',
-        }).then(res => {
-          // console.log(res)
-          if (res.length > 0) {
-            res[0].forEach(ele => {
-              addLeftMsg(`【语音助手】${new Date(ele.last_changed).toLocaleTimeString()}<hr/>${ele.state}`)
-            })
-          }
-        })
     }, 3000)
   </script>
   <script type="module">
