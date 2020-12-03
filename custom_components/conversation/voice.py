@@ -5,7 +5,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, trim_char, \
     matcher_brightness, matcher_color, matcher_script, matcher_watch_tv, \
     matcher_automation, matcher_query_state, matcher_switch
 
@@ -114,7 +114,7 @@ class Voice():
     def fire_text(self, text):
         hass = self.hass
         # 去掉前后标点符号
-        _text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
+        _text = trim_char(text)
         # 发送事件，共享给其他组件
         text_data = { 'text': _text }
         hass.bus.fire('ha_voice_text_event', text_data)
@@ -360,11 +360,26 @@ class Voice():
                     </table>
                 '''))
             else:
+                # 当名称包含多个设备时执行
+                result = self.matcher_multiple_switch(_name, service_type)
+                if result is not None:
+                    return self.intent_result("正在执行多个设备")
                 # 如果没有这个设备，则返回为空
                 state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
                     await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
                     return self.intent_result("正在" + _text)
+
+    # 执行多个开关
+    def matcher_multiple_switch(self, text, service_type):
+        if text.count('灯') > 1:
+            matchObj = re.findall(r'(.*?)灯', text)
+            for item in matchObj:
+                # 这里去掉常用连接汉字
+                _name = trim_char(item.strip('和跟'))
+                state = find_entity(hass, _name, ['input_boolean', 'light', 'switch'])
+                if state is not None:
+                    self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
 
     # 聊天机器人
     async def chat_robot(self, text):

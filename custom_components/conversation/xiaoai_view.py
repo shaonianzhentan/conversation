@@ -56,9 +56,9 @@ def parse_input(event, hass):
             return build_text_message('欢迎使用您的家庭助理', is_session_end=False, open_mic=True)
         # 初始化识别内容
         return conversation_process(hass, text)
-    elif req.request.type == 1:        
+    elif req.request.type == 1:
         # 退出意图
-        if intent_name == 'Mi_Exit' or ['没事了', '退下', '没有了', '没有', '没了'].count(text) > 0:
+        if intent_name == 'Mi_Exit' or ['没事了', '退下', '没有了', '没有', '没用了', '没了', '没有呢'].count(text) > 0:
             return build_text_message('再见了您！', is_session_end=True, open_mic=False)
         else:
             return conversation_process(hass, text)

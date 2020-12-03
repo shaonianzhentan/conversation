@@ -57,6 +57,9 @@ def find_entity(hass, name, type = None):
                 or (isinstance(type, list) and type.count(entity_type) == 1) \
                 or (isinstance(type, str) and type == entity_type):
                 return state
+########################################## 去掉前后标点符号
+def trim_char(text):
+    return text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
 ########################################## 汉字转数字
 common_used_numerals_tmp ={'零':0, '一':1, '二':2, '两':2, '三':3, '四':4, '五':5, '六':6, '七':7, '八':8, '九':9, '十':10, '百':100, '千':1000, '万':10000, '亿':100000000}
 common_used_numerals = {}
@@ -100,11 +103,12 @@ def format_number(num):
     if is_number(num) == False:
         num = chinese2digits(num)
     return float(num)
+
 ########################################## 颜色调整
 def matcher_color(text):
     matchObj = re.match(r'(.+)(调成|设为|设置为|调为)(.*)色', text)
     if matchObj is not None:
-        name = matchObj.group(1) 
+        name = trim_char(matchObj.group(1)) 
         color = matchObj.group(3)
         colorObj = {
             '红': 'red',
@@ -133,7 +137,7 @@ def matcher_color(text):
 def matcher_brightness(text):
     matchObj = re.match(r'(.+)亮度(调成|调到|调为|设为)(.*)', text)
     if matchObj is not None:
-        name = matchObj.group(1) 
+        name = trim_char(matchObj.group(1)) 
         brightness = matchObj.group(3)
         # print(brightness)
         # 设备
@@ -169,7 +173,7 @@ def matcher_script(text):
 def matcher_automation(text):
     matchObj = re.match(r'(执行|触发|打开|关闭)自动化(.*)', text)
     if matchObj is not None:
-        return (matchObj.group(1), matchObj.group(2))
+        return (matchObj.group(1), trim_char(matchObj.group(2)))
 
 ########################################## (执行|触发|打开|关闭)开关
 def matcher_switch(text):
@@ -189,21 +193,21 @@ def matcher_switch(text):
             intent_type = 'HassToggle'
         
         if service_type != '' and intent_type != '':
-            return (matchObj.group(3), service_type, intent_type)
+            return (trim_char(matchObj.group(3)), service_type, intent_type)
 
 ########################################## 查看设备状态
 def matcher_query_state(text):
     matchObj = re.match(r'(查看|查询)(.*)的状态', text)
     if matchObj is not None:
-        return matchObj.group(2)
+        return trim_char(matchObj.group(2))
 
     matchObj = re.match(r'(查看|查询)(.*)', text)
     if matchObj is not None:
-        return matchObj.group(2)
+        return trim_char(matchObj.group(2))
     
     matchObj = re.match(r'(.*)的状态', text)
     if matchObj is not None:
-        return matchObj.group(1)
+        return trim_char(matchObj.group(1))
 
 ########################################## 看电视
 # 视频源地址：https://raw.githubusercontent.com/Hunlongyu/ZY-Player/master/src/lib/dexie/iniData/Iptv.json
