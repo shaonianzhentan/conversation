@@ -363,7 +363,7 @@ class Voice():
                 # 当名称包含多个设备时执行
                 result = self.matcher_multiple_switch(_name, service_type)
                 if result is not None:
-                    return self.intent_result("正在执行多个设备")
+                    return self.intent_result("正在执行" + result)
                 # 如果没有这个设备，则返回为空
                 state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
@@ -374,12 +374,17 @@ class Voice():
     def matcher_multiple_switch(self, text, service_type):
         if text.count('灯') > 1:
             matchObj = re.findall(r'(.*?)灯', text)
+            _list = []
             for item in matchObj:
                 # 这里去掉常用连接汉字
                 _name = trim_char(item.strip('和跟'))
                 state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
+                    print(state.domain)
+                    _list.push(_name)
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
+            if len(_list) > 0:
+                return '、'.join(_list)
 
     # 聊天机器人
     async def chat_robot(self, text):
