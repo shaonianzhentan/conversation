@@ -377,7 +377,7 @@ class Voice():
             for item in matchObj:
                 # 这里去掉常用连接汉字
                 _name = trim_char(item.strip('和跟'))
-                state = find_entity(hass, _name, ['input_boolean', 'light', 'switch'])
+                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
 

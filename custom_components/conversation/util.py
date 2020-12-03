@@ -36,7 +36,7 @@ def create_matcher(utterance):
     return re.compile("".join(pattern), re.I)
 
 ########################################## 常量
-VERSION = '1.3'
+VERSION = '1.3.1'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
