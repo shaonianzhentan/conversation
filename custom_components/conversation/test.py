@@ -8,6 +8,6 @@ if matchObj is not None:
     print(action)
     print(name)
     if name.count('灯') > 1:
-        matchObj = re.findall(r'(.*?)灯', name)
+        matchObj = re.findall(r'((.*?)灯)', name)
         for item in matchObj:
-            print(item.strip('和跟'))
+            print(item[0].strip('和跟'))

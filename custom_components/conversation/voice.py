@@ -373,11 +373,12 @@ class Voice():
     # 执行多个开关
     def matcher_multiple_switch(self, text, service_type):
         if text.count('灯') > 1:
-            matchObj = re.findall(r'(.*?)灯', text)
+            matchObj = re.findall(r'((.*?)灯)', text)
             _list = []
             for item in matchObj:
                 # 这里去掉常用连接汉字
-                _name = trim_char(item.strip('和跟'))
+                _name = trim_char(item[0].strip('和跟'))
+                print(_name)
                 state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
                     print(state.domain)
