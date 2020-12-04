@@ -382,7 +382,7 @@ class Voice():
                 state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
                     print(state.domain)
-                    _list.push(_name)
+                    _list.append(_name)
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
             if len(_list) > 0:
                 return '、'.join(_list)
