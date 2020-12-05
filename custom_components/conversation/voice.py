@@ -403,7 +403,7 @@ class Voice():
     async def setting(self, service):
         hass = self.hass
         is_save = False
-        config_data = {}
+        config_data = self.api_config.get_config()
         data = service.data        
         # 保存媒体播放器
         media_player_entity_id = data.get('media_player', '')
@@ -420,7 +420,7 @@ class Voice():
         # 保存user_id
         user_id = data.get('user_id')
         if user_id is not None:
-            config_data.update({'user_id', user_id})
+            config_data.update({'user_id': user_id})
             is_save = True
         # 保存配置
         if is_save:
