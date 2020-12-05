@@ -89,7 +89,7 @@ class XiaoaiGateView(HomeAssistantView):
 
     async def post(self, request):
         data = await request.json()
-        # _LOGGER.info(data)
+        _LOGGER.info(data)
         hass = request.app["hass"]        
         response = parse_input(data, hass)
         return self.json(json.loads(response))
