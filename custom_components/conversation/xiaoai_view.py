@@ -77,7 +77,7 @@ def conversation_process(hass, text):
         if state is not None:
             return build_text_message(f'{friendly_name}的状态是{state.state}，请问还有什么事吗？', is_session_end=False, open_mic=True) 
 
-    hass.async_create_task(hass.services.async_call('conversation', 'process', {'text': text}))
+    hass.async_create_task(hass.services.async_call('conversation', 'process', {'source': 'XiaoAi','text': text}))
     return build_text_message('收到，还有什么事吗？', is_session_end=False, open_mic=True)
 
 # 网关视图

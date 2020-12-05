@@ -63,7 +63,7 @@ async def async_setup(hass, config):
         agent = await _get_agent(hass)
         try:
             await agent.async_process(text, service.context)
-            # 如果来源是百度语音识别，则记录
+            # 记录来源
             source = service.data.get('source', '')
             timestamp = service.data.get('timestamp', '')
             await hass.data["conversation_voice"].set_state(text, source, timestamp)
