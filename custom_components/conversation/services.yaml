@@ -13,3 +13,5 @@ setting:
     media_player:
       description: 视频播放器（电视投屏要用）
       example: media_player.android_tv
+    user_id:
+      description: 小米账号加密ID（过滤其它人接入时需要）

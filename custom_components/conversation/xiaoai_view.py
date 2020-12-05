@@ -45,6 +45,11 @@ def build_music_message(to_speak, mp3_urls):
 def parse_input(event, hass):
     req = xiaoai_request(event)
     text = req.query
+    # 判断当前用户是否是自己
+    cfg = hass.data['conversation_voice'].api_config.get_config()
+    user_id = cfg.get('user_id', '')
+    if user_id != '' and user_id != req.user.user_id:
+        return build_text_message('我真的好笨笨哦，不知道你在说啥，换个方式叫我吧', is_session_end=True, open_mic=False)
     # 插槽：req.request.slot_info.intent_name
     intent_name = ''
     if hasattr(req.request.slot_info, 'intent_name'):
@@ -89,7 +94,9 @@ class XiaoaiGateView(HomeAssistantView):
 
     async def post(self, request):
         data = await request.json()
+        _LOGGER.info('======= 小爱API接口信息 =========')
         _LOGGER.info(data)
+        _LOGGER.info('======= 小爱API接口信息 =========')
         hass = request.app["hass"]        
         response = parse_input(data, hass)
         return self.json(json.loads(response))

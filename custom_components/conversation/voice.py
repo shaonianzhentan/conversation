@@ -404,11 +404,11 @@ class Voice():
         hass = self.hass
         is_save = False
         config_data = {}
-        data = service.data
+        data = service.data        
+        # 保存媒体播放器
         media_player_entity_id = data.get('media_player', '')
         if media_player_entity_id != '':
             if hass.states.get(media_player_entity_id) is not None:
-                # 保存媒体播放器
                 config_data.update({'media_player': media_player_entity_id})
                 is_save = True
             else:
@@ -417,6 +417,11 @@ class Voice():
                     'title': '语音小助手',
                     'notification_id': 'conversation-error'
                 })
+        # 保存user_id
+        user_id = data.get('user_id')
+        if user_id is not None:
+            config_data.update({'user_id', user_id})
+            is_save = True
         # 保存配置
         if is_save:
             self.api_config.save_config(config_data)
