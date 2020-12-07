@@ -11,3 +11,5 @@ if matchObj is not None:
         matchObj = re.findall(r'((.*?)灯)', name)
         for item in matchObj:
             print(item[0].strip('和跟'))
+
+print(text[-1])

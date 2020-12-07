@@ -319,9 +319,35 @@ class Voice():
             intent_type = result[2]
             # 操作所有灯和开关
             if _name == '所有灯' or _name == '所有的灯' or _name == '全部灯' or _name == '全部的灯':
-                self.call_service(f'light.{service_type}', {
-                    'entity_id': self.template('{% for state in states.light -%}{{ state.entity_id }},{%- endfor %}').strip(',')
-                })
+                # 灯
+                light_entity = self.template('''
+                    {% for state in states.light -%}
+                        {{ state.entity_id }},
+                    {%- endfor %}
+                ''').strip(',')
+                if light_entity != '':
+                    self.call_service(f'light.{service_type}', { 'entity_id': light_entity })
+                # 开关
+                input_boolean_entity = self.template('''
+                    {% for state in states.input_boolean -%}
+                        {% if state.attributes['friendly_name'][-1] == '灯' -%}
+                            {{state.entity_id}},
+                        {%- endif %}
+                    {%- endfor %}
+                ''').strip(' ,')
+                if input_boolean_entity != '':
+                    self.call_service(f'input_boolean.{service_type}', { 'entity_id': input_boolean_entity})
+                # 开关
+                switch_entity = self.template('''
+                    {% for state in states.switch -%}
+                        {% if state.attributes['friendly_name'][-1] == '灯' -%}
+                            {{state.entity_id}},
+                        {%- endif %}
+                    {%- endfor %}
+                ''').strip(' ,')
+                if switch_entity != '':
+                    self.call_service(f'switch.{service_type}', { 'entity_id': switch_entity})
+
                 return self.intent_result("正在" + _text + self.template('''
                     <hr />
                     <table border cellpadding="5" style="border-collapse: collapse;">
