@@ -6,7 +6,7 @@ from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, trim_char, \
-    matcher_brightness, matcher_color, matcher_script, matcher_watch_tv, \
+    matcher_brightness, matcher_light_color, matcher_light_mode, matcher_script, matcher_watch_tv, \
     matcher_automation, matcher_query_state, matcher_switch
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +78,11 @@ class Voice():
         
         # 灯光颜色控制
         intent_result = await self.execute_light_color(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 灯光模式控制
+        intent_result = await self.execute_light_mode(_text)
         if intent_result is not None:
             return intent_result
 
@@ -228,7 +233,7 @@ class Voice():
     
     # 执行灯光调色
     async def execute_light_color(self, text):
-        result = matcher_color(text)
+        result = matcher_light_color(text)
         if result is not None:
             state = find_entity(self.hass, result[0], 'light')
             if state is not None:
@@ -237,6 +242,18 @@ class Voice():
                     'color_name': result[1]
                 })
                 return self.intent_result(f"已经设置为{result[2]}色")
+
+    # 执行灯光模式
+    async def execute_light_mode(self, text):
+        result = matcher_light_mode(text)
+        if result is not None:
+            state = find_entity(self.hass, result[0], 'light')
+            if state is not None:
+                self.call_service('light.turn_on', {
+                    'entity_id': state.entity_id,
+                    'effect': result[1]
+                })
+                return self.intent_result(f"已经设置为{result[2]}模式")
     
     # 执行灯光亮度
     async def execute_light_brightness(self, text):
