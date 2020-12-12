@@ -13,8 +13,8 @@ setting:
     media_player:
       description: 视频播放器（电视投屏要用）
       example: media_player.android_tv
+    open_mic:
+      description: 语音结束后是否继续开麦（是：true，否：false）
+      example: false
     user_id:
       description: 小米账号加密ID（过滤其它人接入时需要）
-    open_mic:
-      description: 语音结束后是否继续开麦
-      example: false
