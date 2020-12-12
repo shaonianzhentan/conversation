@@ -140,16 +140,15 @@ def matcher_light_mode(text):
         name = trim_char(matchObj.group(1)) 
         mode = matchObj.group(3)
         modeObj = {
-            '随机': 'random',
-            '频闪': 'strobe',
-            '闪光': 'flicker',
-            '彩虹': 'addressable_rainbow',
-            '颜色流动': 'addressable_color_wipe',
-            '扫描': 'addressable_scan',
-            '闪烁': 'addressable_twinkle',
-            '随机闪烁': 'addressable_random_twinkle',
-            '烟火': 'addressable_fireworks'
-            # '闪光': 'addressable_flicker'
+            '随机': 'Random',
+            '跑马灯': 'Strobe',
+            '彩虹': 'Rainbow',
+            '颜色流动': 'Color Wipe',
+            '扫描': 'Scan',
+            '闪烁': 'Twinkle',
+            '随机闪烁': 'Random Twinkle',
+            '烟火': 'Fireworks',
+            '闪光': 'Flicker'
         }
         # 设备
         if name[0:1] == '把':
