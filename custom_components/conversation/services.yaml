@@ -15,3 +15,6 @@ setting:
       example: media_player.android_tv
     user_id:
       description: 小米账号加密ID（过滤其它人接入时需要）
+    open_mic:
+      description: 语音结束后是否继续开麦
+      example: false

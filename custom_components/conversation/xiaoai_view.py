@@ -60,30 +60,31 @@ def parse_input(event, hass):
         if intent_name == 'Mi_Welcome':
             return build_text_message('欢迎使用您的家庭助理', is_session_end=False, open_mic=True)
         # 初始化识别内容
-        return conversation_process(hass, text)
+        return conversation_process(hass, text, cfg)
     elif req.request.type == 1:
         # 退出意图
         if intent_name == 'Mi_Exit' or ['没事了', '退下', '没有了', '没有', '没用了', '没了', '没有呢'].count(text) > 0:
             return build_text_message('再见了您！', is_session_end=True, open_mic=False)
         else:
-            return conversation_process(hass, text)
+            return conversation_process(hass, text, cfg)
     elif req.request.type == 2:
         return build_text_message('再见了您！', is_session_end=True, open_mic=False)
 
     return build_text_message('我没听懂欸', is_session_end=True, open_mic=False)
 
 # 消息处理
-def conversation_process(hass, text):
+def conversation_process(hass, text, cfg):
+    open_mic = cfg.get('open_mic', True)
     # 如果配置到了查询，则不进入系统意图
     result = matcher_query_state(text)
     if result is not None:
         friendly_name = result[0]
         state = find_entity(hass, friendly_name)
         if state is not None:
-            return build_text_message(f'{friendly_name}的状态是{state.state}，请问还有什么事吗？', is_session_end=False, open_mic=True) 
+            return build_text_message(f'{friendly_name}的状态是{state.state}，请问还有什么事吗？', is_session_end=False, open_mic) 
 
     hass.async_create_task(hass.services.async_call('conversation', 'process', {'source': 'XiaoAi','text': text}))
-    return build_text_message('收到，还有什么事吗？', is_session_end=False, open_mic=True)
+    return build_text_message('收到，还有什么事吗？', is_session_end=False, open_mic)
 
 # 网关视图
 class XiaoaiGateView(HomeAssistantView):
