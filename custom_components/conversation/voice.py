@@ -7,7 +7,7 @@ from homeassistant.helpers.network import get_url
 from .xiaoai_view import XiaoaiGateView
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, trim_char, \
     matcher_brightness, matcher_light_color, matcher_light_mode, matcher_script, matcher_watch_tv, \
-    matcher_automation, matcher_query_state, matcher_switch
+    matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +98,11 @@ class Voice():
         
         # 自动化操作
         intent_result = await self.execute_automation(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 开关同时控制
+        intent_result = await self.execute_on_off(_text)
         if intent_result is not None:
             return intent_result
 
@@ -326,6 +331,16 @@ class Voice():
                 })
                 return self.intent_result(f"正在{text}，请查看是否成功")
 
+    # 同时开关
+    async def execute_on_off(self, _text):
+        hass = self.hass
+        result = matcher_on_off(_text)
+        if result is not None:
+            result1 = self.matcher_multiple_switch(result[0][1], result[0][0])
+            result2 = self.matcher_multiple_switch(result[1][1], result[1][0])
+            if result1 is not None or result2 is not None:
+                return self.intent_result(f"执行成功")
+
     # 执行开关
     async def execute_switch(self, _text):
         hass = self.hass
@@ -415,7 +430,18 @@ class Voice():
 
     # 执行多个开关
     def matcher_multiple_switch(self, text, service_type):
-        if text.count('灯') > 1:
+        if isinstance(text, list):
+            # 多个设备
+            _list = []
+            for _name in text:
+                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
+                if state is not None:
+                    _list.append(_name)
+                    self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
+            if len(_list) > 0:
+                return '、'.join(_list)
+        elif text.count('灯') > 1:
+            # 全是灯
             matchObj = re.findall(r'((.*?)灯)', text)
             _list = []
             for item in matchObj:

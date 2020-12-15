@@ -218,6 +218,19 @@ def matcher_switch(text):
         if service_type != '' and intent_type != '':
             return (trim_char(matchObj.group(3)), service_type, intent_type)
 
+########################################## (打开|关闭)设备(打开|关闭)设备
+def matcher_on_off(text):
+    matchObj = re.match(r'(打开|关闭)(.+)(打开|关闭)(.+)', text)
+    if matchObj is not None:
+        name1 = matchObj.group(2)
+        name2 = matchObj.group(4)
+        if name1 is not None and name2 is not None:
+            type1 = matchObj.group(1) == '打开' and 'turn_on' or 'turn_off'
+            type2 = matchObj.group(3) == '打开' and 'turn_on' or 'turn_off'
+            _list1 = list(filter(lambda x: x != '', name1.split('和')))
+            _list2 = list(filter(lambda x: x != '', name2.split('和')))
+            return ((type1, _list1), (type2, _list2))
+
 ########################################## 查看设备状态
 def matcher_query_state(text):
     matchObj = re.match(r'(查看|查询)(.*)的状态', text)
