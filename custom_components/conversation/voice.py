@@ -423,7 +423,7 @@ class Voice():
                 if result is not None:
                     return self.intent_result("正在执行" + result)
                 # 如果没有这个设备，则返回为空
-                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
+                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
                 if state is not None:
                     await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
                     return self.intent_result("正在" + _text)
@@ -434,7 +434,7 @@ class Voice():
             # 多个设备
             _list = []
             for _name in text:
-                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
+                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
                 if state is not None:
                     _list.append(_name)
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
