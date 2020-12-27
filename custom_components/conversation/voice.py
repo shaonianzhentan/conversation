@@ -7,6 +7,7 @@ from homeassistant.helpers.network import get_url
 from .xiaoai_view import XiaoaiGateView
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, trim_char, \
     matcher_brightness, matcher_light_color, matcher_light_mode, matcher_script, matcher_watch_tv, \
+    matcher_watch_video, get_video_url, \
     matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,16 @@ class Voice():
         local = hass.config.path("custom_components/conversation/local")
         hass.http.register_static_path('/conversation', local, False)
         hass.http.register_view(XiaoaiGateView)
+
+    @property
+    def media_player(self):
+        ''' 媒体播放器 '''
+        cfg = self.api_config.get_config()
+        entity_id = cfg.get('media_player')
+        state = self.hass.states.get(entity_id)
+        if state is not None:
+            return state
+        return None
 
     # 解析模板
     def template(self, message):
@@ -319,14 +330,22 @@ class Voice():
 
     # 看电视
     async def execute_watch_tv(self, text):
+        # 电视直播
         result = matcher_watch_tv(text)
+        video_url = None
         if result is not None:
-            cfg = self.api_config.get_config()
-            entity_id = cfg.get('media_player')
-            if self.hass.states.get(entity_id) is not None:
+            video_url = result
+        # 网络视频
+        result = matcher_watch_video(text)
+        if result is not None:
+            video_url = get_video_url(result[0], result[1])
+        # 如果有视频地址则播放
+        if video_url is not None:
+            media_player = self.media_player
+            if media_player is not None:
                 self.call_service('media_player.play_media', {
-                    'entity_id': entity_id,
-                    'media_content_id': result,
+                    'entity_id': media_player.entity_id,
+                    'media_content_id': video_url,
                     'media_content_type': 'video'
                 })
                 return self.intent_result(f"正在{text}，请查看是否成功")

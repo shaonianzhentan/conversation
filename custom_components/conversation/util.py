@@ -2,7 +2,7 @@
 import re
 import string
 import random
-import json, os
+import json, os, requests
 
 def create_matcher(utterance):
     """Create a regex that matches the utterance."""
@@ -311,6 +311,26 @@ def matcher_watch_tv(text):
         }
         if name in obj:
             return obj[name]
+
+def matcher_watch_video(text):
+    matchObj = re.match(r'打开电视(.+)第(.+)集', text)
+    if matchObj is not None:
+        name = matchObj.group(1)
+        num = int(format_number(matchObj.group(2)))
+        if name is not None and num is not None:
+            return (name, num)
+
+# 获取视频链接
+def get_video_url(name, num):
+    res = requests.get(f'https://api.okzy.tv/api.php/provide/vod/at/json/?ac=detail&wd={name}')
+    data = res.json()
+    if data['total'] > 0:
+        obj = data['list'][0]
+        text = obj['vod_play_url']
+        matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', text.split('$$$')[1])
+        for item in matchObj:
+            if int(item[0]) == num:
+                return f'{item[1]}m3u8'
 
 ########################################## 接口配置
 class ApiConfig():
