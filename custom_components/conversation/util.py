@@ -2,7 +2,7 @@
 import re
 import string
 import random
-import json, os, requests
+import json, os, aiohttp
 
 def create_matcher(utterance):
     """Create a regex that matches the utterance."""
@@ -321,16 +321,20 @@ def matcher_watch_video(text):
             return (name, num)
 
 # 获取视频链接
-def get_video_url(name, num):
-    res = requests.get(f'https://api.okzy.tv/api.php/provide/vod/at/json/?ac=detail&wd={name}')
-    data = res.json()
-    if data['total'] > 0:
-        obj = data['list'][0]
-        text = obj['vod_play_url']
-        matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', text.split('$$$')[1])
-        for item in matchObj:
-            if int(item[0]) == num:
-                return f'{item[1]}m3u8'
+async def get_video_url(name, num):
+    print(f'{name} {num}')
+    async with aiohttp.request("GET", f'https://api.okzy.tv/api.php/provide/vod/at/json/?ac=detail&wd={name}') as response:
+        data = json.loads(await response.text())
+        # print(data)
+        if data['total'] > 0:
+            obj = data['list'][0]
+            text = obj['vod_play_url']
+            matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', text.split('$$$')[1])
+            for item in matchObj:
+                print(item)
+                if int(item[0]) == num:
+                    return f'{item[1]}m3u8'
+    return None
 
 ########################################## 接口配置
 class ApiConfig():
