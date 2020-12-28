@@ -2,7 +2,7 @@
 import re
 import string
 import random
-import json, os, aiohttp
+import json, os, aiohttp, uuid
 
 def create_matcher(utterance):
     """Create a regex that matches the utterance."""
@@ -34,13 +34,16 @@ def create_matcher(utterance):
 
     pattern.append("$")
     return re.compile("".join(pattern), re.I)
-
+# 获取本机MAC地址
+def get_mac_address(): 
+    mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
+    return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
 VERSION = '1.3.3'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
-XIAOAI_API = "/conversation-xiaoai"
+XIAOAI_API = f"/conversation-xiaoai-{get_mac_address().replace(':','').lower()}"
 ########################################## 查询实体
 def find_entity(hass, name, type = None):
     # 遍历所有实体

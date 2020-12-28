@@ -5,7 +5,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, ApiConfig, find_entity, trim_char, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, ApiConfig, find_entity, trim_char, \
     matcher_brightness, matcher_light_color, matcher_light_mode, matcher_script, matcher_watch_tv, \
     matcher_watch_video, get_video_url, \
     matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
@@ -538,6 +538,6 @@ class Voice():
             "source": source,
             "version": VERSION,
             'link': base_url + '/conversation/index.html?ver=' + VERSION,
-            'XiaoAi': base_url + '/conversation-xiaoai',
+            'XiaoAi': base_url + XIAOAI_API,
             'github': 'https://github.com/shaonianzhentan/conversation'
         })
