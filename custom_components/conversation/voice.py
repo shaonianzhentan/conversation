@@ -338,6 +338,7 @@ class Voice():
         # 网络视频
         result = matcher_watch_video(text)
         if result is not None:
+            print(result)
             video_url = await get_video_url(result[0], result[1])
         # 如果有视频地址则播放
         if video_url is not None:
