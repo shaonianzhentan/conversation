@@ -330,24 +330,6 @@ async def http_get(url):
 # 获取视频链接
 async def get_video_url(name, num):
     print(f'{name} - {num}')
-    # b搜索
-    _url = f'https://api.bilibili.com/x/web-interface/search/type?context=&search_type=media_ft&order=&keyword={name}'
-    print(_url)
-    data = await http_get(_url)
-    # print(data)
-    result = data['data'].get('result', [])
-    if len(result) > 0:
-        # 这里可以过滤电视剧。。。懒得搞了，先就这样
-        eps = result[0]['eps']
-        for item in eps:
-            # 过滤会员，查找集数
-            if len(item.get('badges', [])) == 0 and int(item['index_title']) == num:
-                # 查询视频链接
-                res = await http_get(f"https://api.bilibili.com/pgc/player/web/playurl/html5?ep_id={item['id']}")
-                # print(res)
-                return res['result']['durl'][0]['url']
-
-    # 辣鸡视频
     _url = f'https://api.okzy.tv/api.php/provide/vod/at/json/?ac=detail&wd={name}'
     print(_url)
     data = await http_get(_url)

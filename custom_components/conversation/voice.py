@@ -493,7 +493,7 @@ class Voice():
         hass = self.hass
         is_save = False
         config_data = self.api_config.get_config()
-        data = service.data        
+        data = service.data
         # 保存媒体播放器
         media_player_entity_id = data.get('media_player', '')
         if media_player_entity_id != '':
@@ -515,6 +515,11 @@ class Voice():
         open_mic = data.get('open_mic')
         if open_mic is not None:
             config_data.update({'open_mic': open_mic})
+            is_save = True
+        # 保存video_path
+        video_path = data.get('video_path')
+        if video_path is not None:
+            config_data.update({'video_path': video_path})
             is_save = True
         # 保存配置
         if is_save:

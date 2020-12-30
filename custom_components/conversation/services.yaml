@@ -12,9 +12,12 @@ setting:
   fields:
     media_player:
       description: 视频播放器（电视投屏要用）
-      example: media_player.android_tv
+      example: 'media_player.android_tv'
+    video_path:
+      description: 视频路径（支持http链接）
+      example: '/home/pi/download'
     open_mic:
       description: 语音结束后是否继续开麦（是：true，否：false）
-      example: false
+      example: False
     user_id:
       description: 小米账号加密ID（过滤其它人接入时需要）
