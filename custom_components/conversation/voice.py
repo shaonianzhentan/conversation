@@ -5,10 +5,10 @@ from homeassistant.helpers import template
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, ApiConfig, find_entity, trim_char, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, VIDEO_API, \
+    ApiConfig, find_entity, trim_char, get_video_url, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, matcher_script, matcher_watch_tv, \
-    matcher_watch_video, get_video_url, \
-    matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
+    matcher_watch_video, matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +37,14 @@ class Voice():
         local = hass.config.path("custom_components/conversation/local")
         hass.http.register_static_path('/conversation', local, False)
         hass.http.register_view(XiaoaiGateView)
+
+    # 获取基础url
+    def get_base_url(self, url):
+        try:
+            base_url = get_url(self.hass)
+        except Exception as ex:
+            base_url = 'http://localhost:8123'
+        return f'{base_url}{url}'
 
     @property
     def media_player(self):
@@ -339,7 +347,12 @@ class Voice():
         result = matcher_watch_video(text)
         if result is not None:
             print(result)
-            video_url = await get_video_url(result[0], result[1])
+            config_data = self.api_config.get_config()
+            video_url = await get_local_video_url(config_data.get('video_path', ''), result[0], result[1])
+            if video_url is not None and video_url[:4] != 'http':
+                video_url = self.get_base_url(f'{VIDEO_API}/{video_url}')
+            else:
+                video_url = await get_video_url(result[0], result[1])
         # 如果有视频地址则播放
         if video_url is not None:
             media_player = self.media_player
@@ -519,8 +532,12 @@ class Voice():
         # 保存video_path
         video_path = data.get('video_path')
         if video_path is not None:
+            video_path = video_path.rstrip('/')
             config_data.update({'video_path': video_path})
             is_save = True
+            # 如果是文件夹，则设置静态目录访问
+            if os.path.exists(video_path):
+                self.hass.http.register_static_path(VIDEO_API, video_path, False)
         # 保存配置
         if is_save:
             self.api_config.save_config(config_data)
@@ -533,17 +550,17 @@ class Voice():
     # 记录语音识别语句
     async def set_state(self, text=VERSION, source = '', timestamp = ''):
         hass = self.hass
-        try:
-            base_url = get_url(hass)
-        except Exception as ex:
-            base_url = 'http://localhost:8123'
+        config_data = self.api_config.get_config()
         hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:account-voice",
             "friendly_name": "语音助手",
             "timestamp": timestamp,
             "source": source,
             "version": VERSION,
-            'link': base_url + '/conversation/index.html?ver=' + VERSION,
-            'XiaoAi': base_url + XIAOAI_API,
+            "media_player": config_data.get("media_player", ""),
+            "video_path": config_data.get("video_path", ""),
+            "open_mic": config_data.get("open_mic", True),
+            'link': self.get_base_url('/conversation/index.html?ver=' + VERSION),
+            'XiaoAi': self.get_base_url(XIAOAI_API),
             'github': 'https://github.com/shaonianzhentan/conversation'
         })

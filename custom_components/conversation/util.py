@@ -39,11 +39,12 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.3.3'
+VERSION = '1.3.4'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
 XIAOAI_API = f"/conversation-xiaoai-{get_mac_address().replace(':','').lower()}"
+VIDEO_API = '/conversation-video'
 ########################################## 查询实体
 def find_entity(hass, name, type = None):
     # 遍历所有实体
@@ -323,9 +324,33 @@ def matcher_watch_video(text):
         if name is not None and num is not None:
             return (name, num)
 
+async def http_code(url):
+    async with aiohttp.request("GET", url) as response:
+        return response.status
+
 async def http_get(url):
     async with aiohttp.request("GET", url) as response:
         return json.loads(await response.text())
+
+# 获取本地视频链接
+async def get_local_video_url(video_path, name, num):
+    if video_path == '':
+        return None
+    _url = f'{video_path}/{name}'
+    print(f'查找资源：')
+    # 判断是否为链接
+    if video_path[:4] == 'http':
+        # 暂时还没想好怎么处理
+        return None
+    elif os.path.exists(_url):
+        # 读取目录里的文件
+        files = os.listdir(_url)
+        for f in files:
+            if os.path.isfile(f'{_url}/{f}'):
+                # 判断集数是否存在
+                arr = f.split('.')
+                if arr[0] == str(num):
+                    return f'{name}/{f}'
 
 # 获取视频链接
 async def get_video_url(name, num):
