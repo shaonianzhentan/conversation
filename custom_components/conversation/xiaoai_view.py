@@ -79,7 +79,7 @@ def conversation_process(hass, text, cfg):
     # 如果配置到了查询，则不进入系统意图
     result = matcher_query_state(text)
     if result is not None:
-        friendly_name = result[0]
+        friendly_name = result
         state = find_entity(hass, friendly_name)
         if state is not None:
             message = f'{friendly_name}的状态是{state.state}'

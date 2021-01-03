@@ -330,7 +330,7 @@ class Voice():
     async def execute_query_state(self, text):
         result = matcher_query_state(text)
         if result is not None:
-            state = find_entity(self.hass, result[0])
+            state = find_entity(self.hass, result)
             if state is not None:
                 attributes = state.attributes
                 friendly_name = attributes.get('friendly_name')
