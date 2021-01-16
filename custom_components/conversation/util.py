@@ -381,7 +381,8 @@ async def get_video_url(name, num):
             ''' 电影 '''
             if num == -1:
                 arr = url_list.split('$')
-                return arr[-1:]
+                if len(arr) > 1:
+                    return arr[len(arr) - 1]
             else:
                 # 匹配集数
                 matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', url_list)
