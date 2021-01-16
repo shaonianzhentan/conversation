@@ -76,6 +76,7 @@ def parse_input(event, hass):
 def conversation_process(hass, text, cfg):
     open_mic = cfg.get('open_mic', True)
     is_session_end = (open_mic == False)
+    hass.async_create_task(hass.services.async_call('conversation', 'process', {'source': 'XiaoAi','text': text}))
     # 如果配置到了查询，则不进入系统意图
     result = matcher_query_state(text)
     if result is not None:
@@ -86,8 +87,7 @@ def conversation_process(hass, text, cfg):
             if open_mic:
                 message += '，请问还有什么事吗？'
             return build_text_message(message, is_session_end, open_mic)
-
-    hass.async_create_task(hass.services.async_call('conversation', 'process', {'source': 'XiaoAi','text': text}))
+    
     message = '收到'
     if open_mic:
         message += '，还有什么事吗？'

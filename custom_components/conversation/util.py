@@ -39,7 +39,7 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.3'
+VERSION = '1.3.1'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -329,7 +329,7 @@ def matcher_watch_movie(text):
     if matchObj is not None:
         name = matchObj.group(1)
         if name is not None:
-            return name
+            return (name)
 
 async def http_code(url):
     async with aiohttp.request("GET", url) as response:
@@ -378,16 +378,21 @@ async def get_video_url(name, num):
             # 判断后缀格式
             if url_list[-5:] != '.m3u8':
                 url_list = vod_play_url_list[0]
-            # 匹配集数
-            matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', url_list)
-            # 如果集数，大于当前列表，则去找下一个
-            if num > len(matchObj):
-                continue
-            # 遍历当前视频集合
-            for item in matchObj:
-                print(item)
-                if int(item[0]) == num:
-                    return f'{item[1]}m3u8'
+            ''' 电影 '''
+            if num == -1:
+                arr = url_list.split('$')
+                return arr[-1:]
+            else:
+                # 匹配集数
+                matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', url_list)
+                # 如果集数，大于当前列表，则去找下一个
+                if num > len(matchObj):
+                    continue
+                # 遍历当前视频集合
+                for item in matchObj:
+                    print(item)
+                    if int(item[0]) == num:
+                        return f'{item[1]}m3u8'
     return None
 
 ########################################## 接口配置

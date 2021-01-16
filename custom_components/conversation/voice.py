@@ -7,8 +7,9 @@ from homeassistant.helpers.network import get_url
 from .xiaoai_view import XiaoaiGateView
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, VIDEO_API, \
     ApiConfig, find_entity, trim_char, get_video_url, get_local_video_url, \
-    matcher_brightness, matcher_light_color, matcher_light_mode, matcher_script, matcher_watch_tv, \
-    matcher_watch_video, matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
+    matcher_brightness, matcher_light_color, matcher_light_mode, \
+    matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
+    matcher_script, matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -343,16 +344,21 @@ class Voice():
         video_url = None
         if result is not None:
             video_url = result
-        # 网络视频
-        result = matcher_watch_video(text)
+        # 电影
+        result = matcher_watch_movie(text)
         if result is not None:
-            print(result)
-            config_data = self.api_config.get_config()
-            video_url = await get_local_video_url(config_data.get('video_path', ''), result[0], result[1])
-            if video_url is not None and video_url[:4] != 'http':
-                video_url = self.get_base_url(f'{VIDEO_API}/{video_url}')
-            else:
-                video_url = await get_video_url(result[0], result[1])
+            video_url = await get_video_url(result[0], -1)
+        else:
+            # 电视剧
+            result = matcher_watch_video(text)
+            if result is not None:
+                print(result)
+                config_data = self.api_config.get_config()
+                video_url = await get_local_video_url(config_data.get('video_path', ''), result[0], result[1])
+                if video_url is not None and video_url[:4] != 'http':
+                    video_url = self.get_base_url(f'{VIDEO_API}/{video_url}')
+                else:
+                    video_url = await get_video_url(result[0], result[1])
         # 如果有视频地址则播放
         if video_url is not None:
             media_player = self.media_player
