@@ -317,12 +317,19 @@ def matcher_watch_tv(text):
             return obj[name]
 
 def matcher_watch_video(text):
-    matchObj = re.match(r'打开电视(.+)第(.+)集', text)
+    matchObj = re.match(r'打开电视剧(.+)第(.+)集', text)
     if matchObj is not None:
         name = matchObj.group(1)
         num = int(format_number(matchObj.group(2)))
         if name is not None and num is not None:
             return (name, num)
+
+def matcher_watch_movie(text):
+    matchObj = re.match(r'打开电影(.+)', text)
+    if matchObj is not None:
+        name = matchObj.group(1)
+        if name is not None:
+            return name
 
 async def http_code(url):
     async with aiohttp.request("GET", url) as response:
