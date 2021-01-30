@@ -14,18 +14,18 @@ class XunfeiView(HomeAssistantView):
 
     async def put(self, request):
         hass = request.app["hass"]
-        xunfei_pi_path = hass.config.path(f"./custom_components/conversation/xunfei_pi/bin")
+        root_path = os.path.abspath('.') + '/'
         try:
             
             # 判断程序文件是否存在
-            iat_sample = f'{xunfei_pi_path}/iat_sample'
+            iat_sample = f'{root_path}xunfei_pi/bin/iat_sample'
             if os.path.exists(iat_sample) == False:
                 return self.json({ 'code': 1, 'msg': '文件不存在'})
 
             # 读取文件
             reader = await request.multipart()
             file = await reader.next()
-            filename = f"{xunfei_pi_path}/voice.wav"
+            filename = f"{root_path}voice.wav"
             size = 0
             with open(filename, 'wb') as f:
                 while True:
@@ -45,5 +45,5 @@ class XunfeiView(HomeAssistantView):
             result = arr[1].strip('\n')
             return self.json({ 'code': 0, 'msg': '识别成功', 'data': result})
         except Exception as e:
-            _LOGGER.info(text)
+            _LOGGER.info(e)
             return self.json({ 'code': 1, 'msg': '出现异常'})
