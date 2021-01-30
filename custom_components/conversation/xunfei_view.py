@@ -14,7 +14,7 @@ class XunfeiView(HomeAssistantView):
 
     async def put(self, request):
         hass = request.app["hass"]
-        root_path = os.path.abspath('.') + '/xunfei_pi/bin/'
+        root_path = hass.config.path(r"custom_components/conversation/xunfei_pi/bin/")
         iat_sample = f'{root_path}iat_sample'
         try:
             
