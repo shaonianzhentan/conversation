@@ -465,7 +465,11 @@ class Voice():
                 # 如果没有这个设备，则返回为空
                 state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
                 if state is not None:
-                    await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': state.name}})
+                    # 空调没有切换方法
+                    if ['climate'].count(state.domain) == 1 and service_type == 'toggle':
+                        return None
+                    # 调用服务执行
+                    self.call_service(f'{state.domain}.{service_type}', { 'entity_id': state.entity_id})
                     return self.intent_result(f"正在{action_text}{state.name}")
 
     # 执行多个开关
