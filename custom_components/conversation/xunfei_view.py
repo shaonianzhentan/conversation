@@ -1,4 +1,4 @@
-import os
+import os, subprocess
 import json
 import logging
 from homeassistant.components.http import HomeAssistantView
@@ -14,11 +14,11 @@ class XunfeiView(HomeAssistantView):
 
     async def put(self, request):
         hass = request.app["hass"]
-        root_path = os.path.abspath('.') + '/'
+        root_path = os.path.abspath('.') + '/xunfei_pi/bin/'
+        iat_sample = f'{root_path}iat_sample'
         try:
             
             # 判断程序文件是否存在
-            iat_sample = f'{root_path}xunfei_pi/bin/iat_sample'
             if os.path.exists(iat_sample) == False:
                 return self.json({ 'code': 1, 'msg': '文件不存在'})
 
@@ -36,8 +36,8 @@ class XunfeiView(HomeAssistantView):
                     f.write(chunk)
 
             # 语音转文本
-            rs = os.popen(iat_sample)
-            text = rs.read()
+            pi = subprocess.Popen(iat_sample, cwd=root_path, shell=True, stdout=subprocess.PIPE)
+            text = str(pi.stdout.read(), encoding='utf-8')
             _LOGGER.info(text)
             arr = text.split('=============================================================')
             if len(arr) == 0:
@@ -45,5 +45,5 @@ class XunfeiView(HomeAssistantView):
             result = arr[1].strip('\n')
             return self.json({ 'code': 0, 'msg': '识别成功', 'data': result})
         except Exception as e:
-            _LOGGER.info(e)
+            _LOGGER.error(e)
             return self.json({ 'code': 1, 'msg': '出现异常'})
