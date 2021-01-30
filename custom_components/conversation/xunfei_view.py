@@ -1,4 +1,9 @@
 import os
+import json
+import logging
+from homeassistant.components.http import HomeAssistantView
+_LOGGER = logging.getLogger(__name__)
+
 from .util import DOMAIN, XUNFEI_API
 
 class XunfeiView(HomeAssistantView):
