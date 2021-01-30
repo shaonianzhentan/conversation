@@ -1,7 +1,7 @@
 import logging, re, aiohttp
 from homeassistant.helpers import intent
 import homeassistant.config as conf_util
-from homeassistant.helpers import template
+from homeassistant.helpers import template, entity_registry, area_registry
 from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
@@ -38,7 +38,7 @@ class Voice():
         local = hass.config.path("custom_components/conversation/local")
         hass.http.register_static_path('/conversation', local, False)
         hass.http.register_view(XiaoaiGateView)
-
+        
     # 获取基础url
     def get_base_url(self, url):
         try:
@@ -260,7 +260,7 @@ class Voice():
     async def execute_light_color(self, text):
         result = matcher_light_color(text)
         if result is not None:
-            state = find_entity(self.hass, result[0], 'light')
+            state = await find_entity(self.hass, result[0], 'light')
             if state is not None:
                 self.call_service('light.turn_on', {
                     'entity_id': state.entity_id,
@@ -272,7 +272,7 @@ class Voice():
     async def execute_light_mode(self, text):
         result = matcher_light_mode(text)
         if result is not None:
-            state = find_entity(self.hass, result[0], 'light')
+            state = await find_entity(self.hass, result[0], 'light')
             if state is not None:
                 self.call_service('light.turn_on', {
                     'entity_id': state.entity_id,
@@ -284,7 +284,7 @@ class Voice():
     async def execute_light_brightness(self, text):
         result = matcher_brightness(text)
         if result is not None:
-            state = find_entity(self.hass, result[0], 'light')
+            state = await find_entity(self.hass, result[0], 'light')
             if state is not None:
                 self.call_service('light.turn_on', {
                     'entity_id': state.entity_id,
@@ -314,7 +314,7 @@ class Voice():
         result = matcher_automation(text)
         if result is not None:
             action = result[0]
-            state = find_entity(self.hass, result[1], 'automation')
+            state = await find_entity(self.hass, result[1], 'automation')
             if state is not None:
                 service_data = {'entity_id': state.entity_id}
                 if action == '执行' or action == '触发':
@@ -331,7 +331,7 @@ class Voice():
     async def execute_query_state(self, text):
         result = matcher_query_state(text)
         if result is not None:
-            state = find_entity(self.hass, result)
+            state = await find_entity(self.hass, result)
             if state is not None:
                 attributes = state.attributes
                 friendly_name = attributes.get('friendly_name')
@@ -375,8 +375,8 @@ class Voice():
         hass = self.hass
         result = matcher_on_off(_text)
         if result is not None:
-            result1 = self.matcher_multiple_switch(result[0][1], result[0][0])
-            result2 = self.matcher_multiple_switch(result[1][1], result[1][0])
+            result1 = await self.matcher_multiple_switch(result[0][1], result[0][0])
+            result2 = await self.matcher_multiple_switch(result[1][1], result[1][0])
             if result1 is not None or result2 is not None:
                 return self.intent_result(f"执行成功")
 
@@ -388,6 +388,7 @@ class Voice():
             _name = result[0]
             service_type = result[1]
             intent_type = result[2]
+            action_text = result[3]
             # 操作所有灯和开关
             if _name == '所有灯' or _name == '所有的灯' or _name == '全部灯' or _name == '全部的灯':
                 # 灯
@@ -458,22 +459,22 @@ class Voice():
                 '''))
             else:
                 # 当名称包含多个设备时执行
-                result = self.matcher_multiple_switch(_name, service_type)
+                result = await self.matcher_multiple_switch(_name, service_type)
                 if result is not None:
                     return self.intent_result("正在执行" + result)
                 # 如果没有这个设备，则返回为空
-                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
+                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
                 if state is not None:
-                    await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': _name}})
-                    return self.intent_result("正在" + _text)
+                    await intent.async_handle(hass, DOMAIN, intent_type, {'name': {'value': state.name}})
+                    return self.intent_result(f"正在{action_text}{state.name}")
 
     # 执行多个开关
-    def matcher_multiple_switch(self, text, service_type):
+    async def matcher_multiple_switch(self, text, service_type):
         if isinstance(text, list):
             # 多个设备
             _list = []
             for _name in text:
-                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
+                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
                 if state is not None:
                     _list.append(_name)
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
@@ -487,9 +488,8 @@ class Voice():
                 # 这里去掉常用连接汉字
                 _name = trim_char(item[0].strip('和跟'))
                 print(_name)
-                state = find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
+                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch'])
                 if state is not None:
-                    print(state.domain)
                     _list.append(_name)
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
             if len(_list) > 0:

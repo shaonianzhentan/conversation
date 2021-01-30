@@ -3,6 +3,7 @@ import re
 import string
 import random
 import json, os, aiohttp, uuid
+from homeassistant.helpers import template, entity_registry, area_registry
 
 def create_matcher(utterance):
     """Create a regex that matches the utterance."""
@@ -39,28 +40,68 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.3.1'
+VERSION = '1.3.2'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
 XIAOAI_API = f"/conversation-xiaoai-{get_mac_address().replace(':','').lower()}"
 VIDEO_API = '/conversation-video'
 ########################################## 查询实体
-def find_entity(hass, name, type = None):
+def isMatchDomain(type, domain):
+    return type is None or (isinstance(type, list) and type.count(domain) == 1) or (isinstance(type, str) and type == domain)
+
+async def find_entity(hass, name, type = None):
     # 遍历所有实体
     states = hass.states.async_all()
     for state in states:
         entity_id = state.entity_id
+        domain = state.domain
         attributes = state.attributes
         friendly_name = attributes.get('friendly_name')
         # 查询对应的设备名称
         if friendly_name is not None and friendly_name.lower() == name.lower():
-            entity_type = entity_id.split('.')[0]
             # 指定类型
-            if type is None \
-                or (isinstance(type, list) and type.count(entity_type) == 1) \
-                or (isinstance(type, str) and type == entity_type):
+            if isMatchDomain(type, domain):
                 return state
+    # 如果没有匹配到实体，则开始从区域里查找
+    arr = name.split('的', 1)
+    if len(arr) == 2:
+        area_name = arr[0]
+        device_name = arr[1]
+        # 获取所有区域
+        area = await area_registry.async_get_registry(hass)
+        area_list = area.async_list_areas()
+        _list = list(filter(lambda item: item.name == area_name, area_list))
+        if(len(_list) > 0):
+            area_id = _list[0].id
+            entity = await entity_registry.async_get_registry(hass)
+            entity_list = entity_registry.async_entries_for_area(entity, area_id)
+            # 有设备才处理
+            if len(entity_list) > 0:
+                # 查找完整设备
+                _list = list(filter(lambda item: item.name == device_name or item.original_name == device_name, entity_list))
+                if(len(_list) > 0):
+                    # print(_list)
+                    item = _list[0]
+                    state = hass.states.get(item.entity_id)
+                    if isMatchDomain(type, state.domain):
+                        return state
+                # 如果直接说了灯或开关
+                if device_name == '灯':
+                    # 如果只有一个设备
+                    if len(entity_list) == 1:
+                        item = entity_list[0]
+                        state = hass.states.get(item.entity_id)
+                        if isMatchDomain(type, state.domain):
+                            return state
+                    else:
+                        # 取第一个含有灯字的设备（这里可以通过其他属性来判断，以后再考虑）
+                        for item in entity_list:
+                            state = hass.states.get(item.entity_id)
+                            friendly_name = state.attributes.get('friendly_name')
+                            if '灯' in friendly_name and isMatchDomain(type, state.domain):
+                                return state
+
 ########################################## 去掉前后标点符号
 def trim_char(text):
     return text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
@@ -220,7 +261,7 @@ def matcher_switch(text):
             intent_type = 'HassToggle'
         
         if service_type != '' and intent_type != '':
-            return (trim_char(matchObj.group(3)), service_type, intent_type)
+            return (trim_char(matchObj.group(3)), service_type, intent_type, action)
 
 ########################################## (打开|关闭)设备(打开|关闭)设备
 def matcher_on_off(text):
