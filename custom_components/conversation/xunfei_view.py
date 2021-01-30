@@ -26,6 +26,7 @@ class XunfeiView(HomeAssistantView):
             reader = await request.multipart()
             file = await reader.next()
             filename = f"{xunfei_pi_path}/voice.wav"
+            size = 0
             with open(filename, 'wb') as f:
                 while True:
                     chunk = await file.read_chunk()  # 默认是8192个字节。
@@ -37,11 +38,12 @@ class XunfeiView(HomeAssistantView):
             # 语音转文本
             rs = os.popen(iat_sample)
             text = rs.read()
-            print(text)
+            _LOGGER.info(text)
             arr = text.split('=============================================================')
             if len(arr) == 0:
-                return None
+                return self.json({ 'code': 1, 'msg': '识别失败', 'data': text})
             result = arr[1].strip('\n')
             return self.json({ 'code': 0, 'msg': '识别成功', 'data': result})
         except Exception as e:
-            return self.json({ 'code': 1, 'msg': '出现异常', 'data': e})
+            _LOGGER.info(text)
+            return self.json({ 'code': 1, 'msg': '出现异常'})
