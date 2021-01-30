@@ -44,7 +44,9 @@ VERSION = '1.3.2'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
-XIAOAI_API = f"/conversation-xiaoai-{get_mac_address().replace(':','').lower()}"
+MAC_ADDRESS = get_mac_address().replace(':','').lower()
+XIAOAI_API = f"/conversation-xiaoai-{MAC_ADDRESS}"
+XUNFEI_API = f"/conversation-xunfei-{MAC_ADDRESS}"
 VIDEO_API = '/conversation-video'
 ########################################## 查询实体
 def isMatchDomain(type, domain):
