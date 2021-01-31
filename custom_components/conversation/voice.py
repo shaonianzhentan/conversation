@@ -404,7 +404,7 @@ class Voice():
                 # 开关
                 input_boolean_entity = self.template('''
                     {% for state in states.input_boolean -%}
-                        {% if state.attributes['friendly_name'][-1] == '灯' -%}
+                        {% '灯' in state.attributes['friendly_name'] -%}
                             {{state.entity_id}},
                         {%- endif %}
                     {%- endfor %}
@@ -414,7 +414,7 @@ class Voice():
                 # 开关
                 switch_entity = self.template('''
                     {% for state in states.switch -%}
-                        {% if state.attributes['friendly_name'][-1] == '灯' -%}
+                        {% if '灯' in state.attributes['friendly_name'] -%}
                             {{state.entity_id}},
                         {%- endif %}
                     {%- endfor %}
