@@ -12,7 +12,7 @@ class XunfeiView(HomeAssistantView):
     name = DOMAIN
     requires_auth = False
 
-    async def post(self, request):
+    async def put(self, request):
         hass = request.app["hass"]
         query = request.query
         type = query.get('type', '')
