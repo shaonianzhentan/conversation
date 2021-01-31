@@ -36,8 +36,8 @@ class XunfeiView(HomeAssistantView):
                     f.write(chunk)
 
             # 语音转文本
-            pi = subprocess.Popen(iat_sample, cwd=root_path, shell=True, stdout=subprocess.PIPE)
-            text = str(pi.stdout.read(), encoding='utf-8')
+            pi = os.popen(f'{root_path}iat_sample.sh')
+            text = pi.read()
             _LOGGER.info(text)
             arr = text.split('=============================================================')
             if len(arr) == 0:
