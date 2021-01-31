@@ -465,7 +465,7 @@ class Voice():
                 if result is not None:
                     return self.intent_result("正在执行" + result)
                 # 如果没有这个设备，则返回为空
-                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
+                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate', 'fan'])
                 if state is not None:
                     # 空调没有切换方法
                     if ['climate'].count(state.domain) == 1 and service_type == 'toggle':
