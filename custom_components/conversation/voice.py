@@ -404,7 +404,7 @@ class Voice():
                 # 开关
                 input_boolean_entity = self.template('''
                     {% for state in states.input_boolean -%}
-                        {% '灯' in state.attributes['friendly_name'] -%}
+                        {% if '灯' in state.attributes['friendly_name'] -%}
                             {{state.entity_id}},
                         {%- endif %}
                     {%- endfor %}
