@@ -8,7 +8,7 @@ from .xiaoai_view import XiaoaiGateView
 from .xunfei_view import XunfeiView
 from .aligenie_view import AliGenieView
 
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, VIDEO_API, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, ALIGENIE_API, VIDEO_API, \
     ApiConfig, find_entity, trim_char, get_video_url, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
@@ -577,5 +577,6 @@ class Voice():
             "open_mic": config_data.get("open_mic", True),
             'link': self.get_base_url('/conversation/index.html?ver=' + VERSION),
             'XiaoAi': self.get_base_url(XIAOAI_API),
+            'AliGenie': self.get_base_url(ALIGENIE_API),
             'github': 'https://github.com/shaonianzhentan/conversation'
         })
