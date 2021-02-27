@@ -6,6 +6,8 @@ from homeassistant.helpers.network import get_url
 
 from .xiaoai_view import XiaoaiGateView
 from .xunfei_view import XunfeiView
+from .aligenie_view import AliGenieView
+
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, VIDEO_API, \
     ApiConfig, find_entity, trim_char, get_video_url, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
@@ -40,7 +42,8 @@ class Voice():
         hass.http.register_static_path('/conversation', local, False)
         hass.http.register_view(XiaoaiGateView)
         hass.http.register_view(XunfeiView)
-        
+        hass.http.register_view(AliGenieView)
+                
     # 获取基础url
     def get_base_url(self, url):
         try:

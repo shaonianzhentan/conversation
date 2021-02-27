@@ -105,7 +105,7 @@ class XiaoaiGateView(HomeAssistantView):
         _LOGGER.info('======= 小爱API接口信息 =========')
         _LOGGER.info(data)
         _LOGGER.info('======= 小爱API接口信息 =========')
-        hass = request.app["hass"]        
+        hass = request.app["hass"]
         response = await parse_input(data, hass)
         return self.json(json.loads(response))
 
