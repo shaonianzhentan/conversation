@@ -1,3 +1,4 @@
+import logging, json
 from .util import DOMAIN, ALIGENIE_API
 from .aligenie import discoveryDevice, controlDevice, queryDevice
 
