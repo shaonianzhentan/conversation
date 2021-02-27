@@ -42,7 +42,7 @@ def build_music_message(to_speak, mp3_urls):
     return response
 
 # 格式转换
-def parse_input(event, hass):
+async def parse_input(event, hass):
     req = xiaoai_request(event)
     text = req.query
     # 判断当前用户是否是自己
@@ -73,7 +73,7 @@ def parse_input(event, hass):
     return build_text_message('我没听懂欸', is_session_end=True, open_mic=False)
 
 # 消息处理
-def conversation_process(hass, text, cfg):
+async def conversation_process(hass, text, cfg):
     open_mic = cfg.get('open_mic', True)
     is_session_end = (open_mic == False)
     hass.async_create_task(hass.services.async_call('conversation', 'process', {'source': 'XiaoAi','text': text}))
@@ -81,7 +81,7 @@ def conversation_process(hass, text, cfg):
     result = matcher_query_state(text)
     if result is not None:
         friendly_name = result
-        state = find_entity(hass, friendly_name)
+        state = await find_entity(hass, friendly_name)
         if state is not None:
             message = f'{friendly_name}的状态是{state.state}'
             if open_mic:
@@ -106,6 +106,6 @@ class XiaoaiGateView(HomeAssistantView):
         _LOGGER.info(data)
         _LOGGER.info('======= 小爱API接口信息 =========')
         hass = request.app["hass"]        
-        response = parse_input(data, hass)
+        response = await parse_input(data, hass)
         return self.json(json.loads(response))
 
