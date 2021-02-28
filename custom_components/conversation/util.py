@@ -248,11 +248,22 @@ def matcher_automation(text):
 
 ########################################## (执行|触发|打开|关闭)开关
 def matcher_switch(text):
-    matchObj = re.match(r'.*((打开|开启|启动|关闭|关掉|关上|切换)(.+))', text)
+    action = None
+    name = None
+    # 把 设备 操作
+    matchObj = re.match(r'.*把((.+)(打开|开启|启动|关闭|关掉|关上|切换))', text)
     if matchObj is not None:
+        action = matchObj.group(3)
+        name = matchObj.group(2)
+    else:
+        matchObj = re.match(r'.*((打开|开启|启动|关闭|关掉|关上|切换)(.+))', text)
+        if matchObj is not None: 
+            action = matchObj.group(2)
+            name = matchObj.group(3)
+    
+    if action is not None:
         service_type = ''
         intent_type = ''
-        action = matchObj.group(2)
         if ['打开', '开启', '启动'].count(action) == 1:
             service_type = 'turn_on'
             intent_type = 'HassTurnOn'
@@ -264,7 +275,8 @@ def matcher_switch(text):
             intent_type = 'HassToggle'
         
         if service_type != '' and intent_type != '':
-            return (trim_char(matchObj.group(3)), service_type, intent_type, action)
+            return (trim_char(name), service_type, intent_type, action)
+
 
 ########################################## (打开|关闭)设备(打开|关闭)设备
 def matcher_on_off(text):

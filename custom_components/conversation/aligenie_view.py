@@ -72,12 +72,14 @@ class AliGenieView(HomeAssistantView):
 
     async def post(self, request):
         hass = request.app["hass"]
+        # 自定义token
+        token = request.headers.get('token', '')
         data = await request.json()
         _LOGGER.info('======= 天猫精灵API接口信息 =========')
         _LOGGER.info(data)
         _LOGGER.info('======= 天猫精灵API接口信息 =========')
         # 验证权限
-        token = await hass.auth.async_validate_access_token(data['token'])
+        token = await hass.auth.async_validate_access_token(token)
         if token is not None:
             response = await parse_input(data, hass)
         else:
