@@ -114,3 +114,27 @@ voice: http://192.168.1.101:8123/conversation-xunfei-xxxxxx
 voice: http://192.168.1.101:8123/conversation-xunfei-xxxxxx?type=conversation
 voice_time: 2
 ```
+
+## 意图配置
+```
+把@{text}
+打开@{text}
+开启@{text}
+启动@{text}
+关闭@{text}
+关掉@{text}
+关上@{text}
+切换@{text}
+触发@{text}
+执行@{text}
+查看@{text}
+查询@{text}
+下一曲
+下一首
+上一曲
+上一首
+播放@{text}
+暂停@{text}
+声音@{text}
+小@{text}
+```
