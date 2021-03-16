@@ -1,23 +1,36 @@
 # Describes the format for available component services
 process:
+  name: Process
   description: Launch a conversation from a transcribed text.
   fields:
     text:
+      name: Text
       description: Transcribed text
       example: Turn all lights on
+      selector:
+        text:
 reload:
   description: 重新加载 intent_script 配置
 setting:
   description: 设置相关配置
   fields:
     media_player:
+      name: 媒体播放器
       description: 视频播放器（电视投屏要用）
       example: 'media_player.android_tv'
+      selector:
+        text:
     video_path:
       description: 视频路径（支持http链接）
       example: '/home/pi/download'
+      selector:
+        text:
     open_mic:
       description: 语音结束后是否继续开麦（是：true，否：false）
       example: False
+      selector:
+        text:
     user_id:
       description: 小米账号加密ID（过滤其它人接入时需要）
+      selector:
+        text:
