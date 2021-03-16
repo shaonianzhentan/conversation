@@ -34,10 +34,18 @@ setting:
       selector:
         boolean:
     user_id:
-      description: 小米账号加密ID（过滤其它人接入时需要）
+      name: 小爱同学用户ID
+      description: 通过用户ID，过滤其它人的命令
       selector:
         text:
-    device_id:
-      description: 天猫精灵设备ID（过滤其它人接入时需要）
+    userOpenId:
+      name: 天猫精灵用户ID
+      description: 通过用户ID，过滤其它人的命令
+      selector:
+        text:
+    aligenie:
+      name: 天猫精灵唤醒词
+      description: 天猫精灵自定义技能的唤醒词
+      default: 请帮我
       selector:
         text:

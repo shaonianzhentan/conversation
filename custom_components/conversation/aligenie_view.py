@@ -54,9 +54,9 @@ async def conversation_process(hass, text, cfg):
     return build_text_message(message, is_session_end, open_mic)
 
 # 格式转换
-async def parse_input(data, hass):
+async def parse_input(aligenie, data, hass):
     # 原始语音内容（这里先写死测试）
-    text = data['utterance'].replace('请帮我', '')
+    text = data['utterance'].replace(aligenie, '')
     # 判断当前用户是否是自己
     cfg = hass.data['conversation_voice'].api_config.get_config()
     if text != '':
@@ -72,15 +72,16 @@ class AliGenieView(HomeAssistantView):
 
     async def post(self, request):
         hass = request.app["hass"]
-        # 自定义token
-        token = request.headers.get('token', '')
         data = await request.json()
         _LOGGER.debug("======= 天猫精灵API接口信息")
         _LOGGER.debug(data)
+        # 读取配置文件
+        cfg = hass.data['conversation_voice'].api_config.get_config()
+        userOpenId = cfg.get('userOpenId', '')
+        aligenie = cfg.get('aligenie', '请帮我')
         # 验证权限
-        token = await hass.auth.async_validate_access_token(token)
-        if token is not None:
-            response = await parse_input(data, hass)
+        if userOpenId != '' and userOpenId != data['requestData']['userOpenId']:
+            response =  build_text_message('抱歉，您没有权限', is_session_end=True, open_mic=False)
         else:
-            response =  build_text_message('您没有权限', is_session_end=True, open_mic=False)
+            response = await parse_input(aligenie, data, hass)
         return self.json(response)

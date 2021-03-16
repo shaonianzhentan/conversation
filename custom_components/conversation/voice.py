@@ -539,6 +539,16 @@ class Voice():
         if user_id is not None:
             config_data.update({'user_id': user_id})
             is_save = True
+        # 保存userOpenId
+        userOpenId = data.get('userOpenId')
+        if userOpenId is not None:
+            config_data.update({'userOpenId': userOpenId})
+            is_save = True
+        # 保存aligenie
+        aligenie = data.get('aligenie')
+        if aligenie is not None:
+            config_data.update({'aligenie': aligenie})
+            is_save = True
         # 保存open_mic
         open_mic = data.get('open_mic')
         if open_mic is not None:
