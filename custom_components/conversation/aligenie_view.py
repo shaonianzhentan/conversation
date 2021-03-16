@@ -75,11 +75,8 @@ class AliGenieView(HomeAssistantView):
         # 自定义token
         token = request.headers.get('token', '')
         data = await request.json()
-        _LOGGER.info('''
-        ======= 天猫精灵API接口信息 =========
-        ''' + data + '''
-        ======= 天猫精灵API接口信息 =========
-        ''')
+        _LOGGER.debug("======= 天猫精灵API接口信息")
+        _LOGGER.debug(data)
         # 验证权限
         token = await hass.auth.async_validate_access_token(token)
         if token is not None:

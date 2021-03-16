@@ -19,18 +19,25 @@ setting:
       description: 视频播放器（电视投屏要用）
       example: 'media_player.android_tv'
       selector:
-        text:
+        entity:
+          domain: media_player
     video_path:
       description: 视频路径（支持http链接）
       example: '/home/pi/download'
       selector:
         text:
     open_mic:
+      name: 是否继续对话
       description: 语音结束后是否继续开麦（是：true，否：false）
+      default: false
       example: False
       selector:
-        text:
+        boolean:
     user_id:
       description: 小米账号加密ID（过滤其它人接入时需要）
+      selector:
+        text:
+    device_id:
+      description: 天猫精灵设备ID（过滤其它人接入时需要）
       selector:
         text:
