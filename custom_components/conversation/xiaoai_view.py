@@ -63,7 +63,7 @@ async def parse_input(event, hass):
         return await conversation_process(hass, text, cfg)
     elif req.request.type == 1:
         # 退出意图
-        if intent_name == 'Mi_Exit' or ['没事了', '退下', '没有了', '没有', '没用了', '没了', '没有呢'].count(text) > 0:
+        if intent_name == 'Mi_Exit' or ['没事', '没事了', '退下', '没有了', '没有', '没用了', '没了', '没有呢'].count(text) > 0:
             return build_text_message('再见了您！', is_session_end=True, open_mic=False)
         else:
             return await conversation_process(hass, text, cfg)
