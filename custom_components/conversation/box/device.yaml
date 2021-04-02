@@ -1,0 +1,148 @@
+LIGHT:
+  name: 电灯
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+    - setColor
+    - setColorTemperature
+    - incrementColorTemperature
+    - decrementColorTemperature
+    - setBrightnessPercentage
+    - incrementBrightnessPercentage
+    - decrementBrightnessPercentage
+AIR_CONDITION:
+  name: 空调
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+CURTAIN:
+  name: 窗帘
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+SOCKET:
+  name: 插座
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+SWITCH:
+  name: 开关
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+FRIDGE:
+  name: 冰箱
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+WATER_PURIFIER:
+  name: 净水器
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+AIR_PURIFIER:
+  name: 空气净化器
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+TV_SET:
+  name: 电视机
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+    - pause
+    - continue
+    - incrementVolume
+    - decrementVolume
+    - setVolume
+    - setVolumeMute
+    - decrementTVChannel
+    - incrementTVChannel
+    - setTVChannel
+    - returnTVChannel
+RICE_COOKER:
+  name: 电饭煲
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+CLOTHES_RACK:
+  name: 晾衣架
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+    - incrementHeight
+    - decrementHeight
+    - getLocation
+    - pause
+    - continue
+WEBCAM:
+  name: 摄像头
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+SCENE_TRIGGER:
+  name: 场景触发
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions
+ACTIVITY_TRIGGER:
+  name: 活动触发
+  action:
+    - turnOn
+    - turnOff
+    - timingTurnOn
+    - timingTurnOff
+    - getTurnOnState
+    - setComplexActions

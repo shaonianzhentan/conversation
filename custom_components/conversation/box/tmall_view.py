@@ -1,6 +1,6 @@
 import logging, json
 from homeassistant.components.http import HomeAssistantView
-from .util import DOMAIN, TMALL_API
+from ..util import DOMAIN, TMALL_API
 from .tmall import discoveryDevice, controlDevice, queryDevice
 
 _LOGGER = logging.getLogger(__name__)

@@ -2,8 +2,10 @@ import json
 import logging
 from homeassistant.components.http import HomeAssistantView
 
-from .util import DOMAIN, XIAODU_API
+from ..util import DOMAIN, XIAODU_API
 from .xiaodu import discoveryDevice, controlDevice, queryDevice
+
+_LOGGER = logging.getLogger(__name__)
 
 class XiaoduGateView(HomeAssistantView):
 
@@ -21,28 +23,27 @@ class XiaoduGateView(HomeAssistantView):
         properties = None
         name = header['name']
 
-        token = await _hass.auth.async_validate_access_token(payload['accessToken'])
+        token = await hass.auth.async_validate_access_token(payload['accessToken'])
         if token is not None:
             namespace = header['namespace']
             if namespace == 'DuerOS.ConnectedHome.Discovery':
-                # 回应名称
-                header['name'] = 'DiscoverAppliancesResponse'
                 # 发现设备
-                result = discoveryDevice(hass)
+                result = await discoveryDevice(hass)
+                name = 'DiscoverAppliancesResponse'
             elif namespace == 'DuerOS.ConnectedHome.Control':
                 # 控制设备
-                result = await controlDevice(name, payload)
+                result = await controlDevice(hass, name, payload)
+                name = name.replace('Request', 'Confirmation')
             elif namespace == 'DuerOS.ConnectedHome.Query':
                 # 查询设备
-                result = queryDevice(name, payload)
-                if not 'errorCode' in result:
-                    properties = result
-                    result = {}
+                result = queryDevice(hass, name, payload)
+                name = name.replace('Request', 'Response')
             else:
                 result = errorResult('SERVICE_ERROR')
         else:
             result = errorResult('ACCESS_TOKEN_INVALIDATE')
 
+        header['name'] = name
         # Fill response deviceId
         if 'deviceId' in payload:
             result['deviceId'] = payload['deviceId']
