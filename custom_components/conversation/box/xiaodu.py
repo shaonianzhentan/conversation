@@ -1,9 +1,8 @@
-import time
+import time, re
 from homeassistant.helpers import template, entity_registry, area_registry, device_registry
 
 # 发现设备
 async def discoveryDevice(hass):
-    devices = []
     # 获取所有区域
     area_entity = {}
     area = await area_registry.async_get_registry(hass)
@@ -11,8 +10,7 @@ async def discoveryDevice(hass):
     for area_item in area_list:
         # 获取设备
         # entity = await device_registry.async_get_registry(hass)
-        # entity_list = device_registry.async_entries_for_area(entity, area_item.id)
-        
+        # entity_list = device_registry.async_entries_for_area(entity, area_item.id)        
         # 获取区域实体
         entity = await entity_registry.async_get_registry(hass)
         entity_list = entity_registry.async_entries_for_area(entity, area_item.id)
@@ -27,19 +25,23 @@ async def discoveryDevice(hass):
                         "legalValue": "STRING"
                     }
             })
-    # 获取所有设备
+    
+    # 获取所有设备    
+    devices = []
     states = hass.states.async_all()
     for state in states:
-        state = hass.states.get(entity_item.entity_id)
         # 过滤无效设置
         if state.state == 'unavailable':
             continue
         attributes = state.attributes
         entity_id = state.entity_id
-        domain = state.domain
-        # 过滤名称
-        friendly_name = attributes.get('device_name', attributes.get('friendly_name'))
+        domain = attributes.get('xiaodu_domain', state.domain)
+        # 过滤空名称
+        friendly_name = attributes.get('xiaodu_name', attributes.get('friendly_name'))
         if friendly_name is None:
+            continue
+        # 过滤非中文名称
+        if re.match(r'^[\u4e00-\u9fff]+$', friendly_name) is None:
             continue
         # 设备类型
         device_type = None
@@ -82,11 +84,13 @@ async def discoveryDevice(hass):
                 device_type = 'FAN'
         elif domain == 'scene':
             device_type = 'SCENE_TRIGGER'
-        elif domain == 'sensor':
-            if '温度' in friendly_name or '湿度' in friendly_name:
-                device_type = 'AIR_MONITOR'
-                actions.extend(['getTemperature', 'getTemperatureReading', 'getTargetTemperature', \
-                    'getHumidity', 'getTargetHumidity'])
+        # elif domain == 'script':
+        #    device_type = 'ACTIVITY_TRIGGER'
+        # elif domain == 'sensor':
+        #     if '温度' in friendly_name or '湿度' in friendly_name:
+        #         device_type = 'AIR_MONITOR'
+        #         actions =['getTemperature', 'getTemperatureReading', 'getTargetTemperature', \
+        #             'getHumidity', 'getTargetHumidity']
 
         # 不支持设备
         if device_type is None:
@@ -127,13 +131,23 @@ async def controlDevice(hass, action, payload):
     # 增量百分比
     if 'deltaPercentage' in payload:
         deltaPercentage = payload['deltaPercentage']['value']
+    # 模式
+    if 'mode' in payload:
+        mode = payload['mode']['value']
+    # 风速
+    if 'fanSpeed' in payload:
+        fanSpeed = payload['fanSpeed']['value']    
     # 定时
     timeInterval = payload.get('timeInterval')
     # 高度
     deltValue = payload.get('deltValue')
+    if isinstance(deltValue, dict):
+        deltValue = deltValue['value']
     # 色温
     colorTemperatureInKelvin = payload.get('colorTemperatureInKelvin')
-    print(action)
+    # 温度
+    if 'targetTemperature' in payload:
+        targetTemperature = payload['targetTemperature']['value']
     # 服务名称
     ################ 打开关闭设备
     if action == 'TurnOnRequest':
@@ -217,16 +231,31 @@ async def controlDevice(hass, action, payload):
     elif action == 'DecrementColorTemperatureRequest':
         print('减少色温')
     elif action == 'SetColorTemperatureRequest':
-        # '设置色温'
+        # 设置色温
+        state = hass.states.get(entity_id)
         return call_service(hass, 'light.turn_on', {
             'entity_id': entity_id,
-            'kelvin': colorTemperatureInKelvin
+            'color_temp': int(colorTemperatureInKelvin / 6500 * state.attributes.get('max_mireds', 6500))
         })
-    '''
     ################ 可控温度设备    
     elif action == 'IncrementTemperatureRequest':
+        state = hass.states.get(entity_id)
+        return call_service(hass, 'climate.set_temperature', {
+            'entity_id': entity_id,
+            'temperature': state.attributes.get('temperature') - deltValue
+        })
     elif action == 'DecrementTemperatureRequest':
+        state = hass.states.get(entity_id)
+        return call_service(hass, 'climate.set_temperature', {
+            'entity_id': entity_id,
+            'temperature': state.attributes.get('temperature') - deltValue
+        })
     elif action == 'SetTemperatureRequest':
+        return call_service(hass, 'climate.set_temperature', {
+            'entity_id': entity_id,
+            'temperature': targetTemperature
+        })
+    '''
     ################ 可控风速设备
     elif action == 'IncrementFanSpeedRequest':
     elif action == 'DecrementFanSpeedRequest':
@@ -237,6 +266,7 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetSpeedRequest':
     ################ 设备模式设置
     elif action == 'SetModeRequest':
+
     elif action == 'UnsetModeRequest':
     elif action == 'TimingSetModeRequest':
     ################ 电视频道设置
@@ -284,7 +314,7 @@ async def controlDevice(hass, action, payload):
     ################ 可控湿度类设备
     elif action == 'SetHumidityRequest':
     '''
-    return errorResult('IOT_DEVICE_OFFLINE')
+    return errorResult('DEVICE_NOT_SUPPORT_FUNCTION')
 
 # 查询设备
 def queryDevice(hass, name, payload):
@@ -294,17 +324,22 @@ def queryDevice(hass, name, payload):
     entity_id = applianceDic['applianceId']
     state = hass.states.get(entity_id)
     attributes = state.attributes
+    value = state.state
     if name == 'GetTemperatureReadingRequest' or name == 'GetTargetTemperatureRequest':
         # 查询设备温度
+        if state.domain == 'fan':
+            value = attributes.get('temperature')
         return {
             "temperatureReading": {
-                "value": state.state,
+                "value": value,
                 "scale": "CELSIUS"
             },
             "applianceResponseTimestamp": date_now()
         }
     elif name == 'GetTemperatureReadingRequest' or name == 'GetTargetHumidityRequest':
         # 查询设备湿度
+        if state.domain == 'fan':
+            value = attributes.get('humidity')
         return {
             "attributes": [{
                 "name": "humidity",
