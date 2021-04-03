@@ -2,15 +2,16 @@ import time, re
 from homeassistant.helpers import template, entity_registry, area_registry, device_registry
 
 # 发现设备
-async def discoveryDevice(hass):
+area_entity = {}
+async def discoveryDevice(hass):    
+    timestampOfSample = date_now()
     # 获取所有区域
-    area_entity = {}
     area = await area_registry.async_get_registry(hass)
     area_list = area.async_list_areas()
     for area_item in area_list:
         # 获取设备
         # entity = await device_registry.async_get_registry(hass)
-        # entity_list = device_registry.async_entries_for_area(entity, area_item.id)        
+        # entity_list = device_registry.async_entries_for_area(entity, area_item.id)
         # 获取区域实体
         entity = await entity_registry.async_get_registry(hass)
         entity_list = entity_registry.async_entries_for_area(entity, area_item.id)
@@ -20,7 +21,7 @@ async def discoveryDevice(hass):
                         "name": "location",
                         "value": area_item.name,
                         "scale": "",
-                        "timestampOfSample": date_now(),
+                        "timestampOfSample": timestampOfSample,
                         "uncertaintyInMilliseconds": 10,
                         "legalValue": "STRING"
                     }
@@ -37,7 +38,7 @@ async def discoveryDevice(hass):
         entity_id = state.entity_id
         domain = attributes.get('xiaodu_domain', state.domain)
         # 过滤空名称
-        friendly_name = attributes.get('xiaodu_name', attributes.get('friendly_name'))
+        friendly_name = get_friendly_name(attributes)
         if friendly_name is None:
             continue
         # 过滤非中文名称
@@ -78,9 +79,9 @@ async def discoveryDevice(hass):
                 'setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode', \
                 'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature', \
                 'getTargetTemperature', 'getHumidity', 'getTargetHumidity'])
-            if '空气净化器' in friendly_name:
+            if '净化' in friendly_name:
                 device_type = 'AIR_PURIFIER'
-            if '风扇' in friendly_name:
+            if '扇' in friendly_name:
                 device_type = 'FAN'
         elif domain == 'scene':
             device_type = 'SCENE_TRIGGER'
@@ -95,11 +96,57 @@ async def discoveryDevice(hass):
         # 不支持设备
         if device_type is None:
             continue
-        attrs = entity_attributes(hass, entity_id)
-        # 判断是否区域
+        # 获取默认属性
+        attrs = [
+            {
+                "name": "name",
+                "value": friendly_name,
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "STRING"
+            },
+            {
+                "name": "powerState",
+                "value": state.state.upper(),
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "(ON, OFF)"
+            },
+            {
+                "name": "turnOnState",
+                "value": state.state.upper(),
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10
+            },
+            {
+                "name": "connectivity",
+                "value": "REACHABLE",
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "(UNREACHABLE, REACHABLE)"
+            }
+        ]
+        if domain == 'light':
+            brightness = attributes.get('brightness', 255)
+            attrs.append(
+                {
+                    "name": "brightness",
+                    "value": int(brightness / 255 * 100),
+                    "scale": "%",
+                    "timestampOfSample": timestampOfSample,
+                    "uncertaintyInMilliseconds": 10,
+                    "legalValue": "[0, 100]"
+                }
+            )
+        # 加入区域属性
         area_entity_attrs = area_entity.get(entity_id)
         if area_entity_attrs is not None:
             attrs.append(area_entity_attrs)
+        # 添加设备
         devices.append({
             'applianceId': entity_id,
             'friendlyName': friendly_name,
@@ -314,7 +361,6 @@ async def controlDevice(hass, action, payload):
     ################ 可控湿度类设备
     elif action == 'SetHumidityRequest':
     '''
-    return errorResult('DEVICE_NOT_SUPPORT_FUNCTION')
 
 # 查询设备
 def queryDevice(hass, name, payload):
@@ -363,7 +409,9 @@ def queryDevice(hass, name, payload):
         ]
     }
 
-
+# 获取名称
+def get_friendly_name(attributes):
+    return attributes.get('xiaodu_name', attributes.get('friendly_name'))
 
 # 10位时间戳
 def date_now():
@@ -378,7 +426,7 @@ def call_service(hass, service, data={}):
     entity_id = data['entity_id']
     state = hass.states.get(entity_id)
     attributes = state.attributes
-    friendly_name = attributes.get('device_name', attributes.get('friendly_name'))
+    friendly_name = get_friendly_name(attributes)
     timestampOfSample = date_now()
     powerState = state.state.upper()
     if action == 'turn_off':
@@ -418,6 +466,10 @@ def call_service(hass, service, data={}):
             "legalValue": "(UNREACHABLE, REACHABLE)"
         }
     ]
+    # 判断是否区域
+    area_entity_attrs = area_entity.get(entity_id)
+    if area_entity_attrs is not None:
+        attrs.append(area_entity_attrs)
     if domain == 'light':
         brightness = attributes.get('brightness', 255)
         attrs.extend([
@@ -433,71 +485,3 @@ def call_service(hass, service, data={}):
     return {
         'attributes': attrs
     }
-
-# 错误结果
-def errorResult(errorCode, messsage=None):
-    """Generate error result"""
-    messages = {
-        'INVALIDATE_CONTROL_ORDER':    'invalidate control order',
-        'SERVICE_ERROR': 'service error',
-        'DEVICE_NOT_SUPPORT_FUNCTION': 'device not support',
-        'INVALIDATE_PARAMS': 'invalidate params',
-        'DEVICE_IS_NOT_EXIST': 'device is not exist',
-        'IOT_DEVICE_OFFLINE': 'device is offline',
-        'ACCESS_TOKEN_INVALIDATE': ' access_token is invalidate'
-    }
-    return {'errorCode': errorCode, 'message': messsage if messsage else messages[errorCode]}
-
-# 实体属性
-def entity_attributes(hass, entity_id):
-    domain = entity_id.split('.')[0]
-    state = hass.states.get(entity_id)
-    attributes = state.attributes
-    friendly_name = attributes.get('device_name', attributes.get('friendly_name'))
-    timestampOfSample = date_now()
-    attrs = [
-        {
-            "name": "name",
-            "value": friendly_name,
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "STRING"
-        },
-        {
-            "name": "powerState",
-            "value": state.state.upper(),
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "(ON, OFF)"
-        },
-        {
-            "name": "turnOnState",
-            "value": state.state.upper(),
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10
-        },
-        {
-            "name": "connectivity",
-            "value": "REACHABLE",
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "(UNREACHABLE, REACHABLE)"
-        }
-    ]
-    if domain == 'light':
-        brightness = attributes.get('brightness', 255)
-        attrs.append(
-            {
-                "name": "brightness",
-                "value": int(brightness / 255 * 100),
-                "scale": "%",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "[0, 100]"
-            }
-        )
-    return attrs

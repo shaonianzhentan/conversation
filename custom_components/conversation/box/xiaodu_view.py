@@ -3,7 +3,7 @@ import logging
 from homeassistant.components.http import HomeAssistantView
 
 from ..util import DOMAIN, XIAODU_API
-from .xiaodu import discoveryDevice, controlDevice, queryDevice, errorResult
+from .xiaodu import discoveryDevice, controlDevice, queryDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,8 @@ class XiaoduGateView(HomeAssistantView):
             elif namespace == 'DuerOS.ConnectedHome.Control':
                 # 控制设备
                 result = await controlDevice(hass, name, payload)
+                if result is None:
+                    result = errorResult('DEVICE_NOT_SUPPORT_FUNCTION')
                 name = name.replace('Request', 'Confirmation')
             elif namespace == 'DuerOS.ConnectedHome.Query':
                 # 查询设备
@@ -54,3 +56,18 @@ class XiaoduGateView(HomeAssistantView):
         _LOGGER.info("Respnose: %s", response)
     
         return self.json(response)
+
+
+# 错误结果
+def errorResult(errorCode, messsage=None):
+    """Generate error result"""
+    messages = {
+        'INVALIDATE_CONTROL_ORDER':    'invalidate control order',
+        'SERVICE_ERROR': 'service error',
+        'DEVICE_NOT_SUPPORT_FUNCTION': 'device not support',
+        'INVALIDATE_PARAMS': 'invalidate params',
+        'DEVICE_IS_NOT_EXIST': 'device is not exist',
+        'IOT_DEVICE_OFFLINE': 'device is offline',
+        'ACCESS_TOKEN_INVALIDATE': ' access_token is invalidate'
+    }
+    return {'errorCode': errorCode, 'message': messsage if messsage else messages[errorCode]}
