@@ -60,6 +60,7 @@ async def discoveryDevice(hass):
             # 空调
             device_type = 'AIR_CONDITION'
             actions.extend(["incrementTemperature", "decrementTemperature", "setTemperature", \
+                'getTemperatureReading', 'getTemperature', 'getTargetTemperature', 'getHumidity', 'getTargetHumidity', \
                 "incrementFanSpeed", "decrementFanSpeed", "setFanSpeed", "setGear", "setMode"])
         elif domain == 'cover':
             actions.extend(['pause'])
@@ -373,8 +374,14 @@ def queryDevice(hass, name, payload):
     value = state.state
     if name == 'GetTemperatureReadingRequest' or name == 'GetTargetTemperatureRequest':
         # 查询设备温度
-        if state.domain == 'fan':
-            value = attributes.get('temperature')
+        xiaodu_entity_id = attributes.get('xiaodu_temperature')
+        if xiaodu_entity_id is not None:
+            value = hass.states.get(xiaodu_entity_id).state
+        else:
+            if state.domain == 'fan':
+                value = attributes.get('temperature')
+            if state.domain == 'climate':
+                value = attributes.get('current_temperature', 0)
         return {
             "temperatureReading": {
                 "value": value,
@@ -384,12 +391,16 @@ def queryDevice(hass, name, payload):
         }
     elif name == 'GetTemperatureReadingRequest' or name == 'GetTargetHumidityRequest':
         # 查询设备湿度
-        if state.domain == 'fan':
-            value = attributes.get('humidity')
+        xiaodu_entity_id = attributes.get('xiaodu_humidity')
+        if xiaodu_entity_id is not None:
+            value = hass.states.get(xiaodu_entity_id).state
+        else:
+            if state.domain == 'fan':
+                value = attributes.get('humidity')
         return {
             "attributes": [{
                 "name": "humidity",
-                "value": state.state,
+                "value": value,
                 "scale": "%",
                 "timestampOfSample":date_now(),
                 "uncertaintyInMilliseconds": 10,
