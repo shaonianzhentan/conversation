@@ -3,7 +3,7 @@ import logging
 from homeassistant.components.http import HomeAssistantView
 
 from ..util import DOMAIN, XIAODU_API
-from .xiaodu import discoveryDevice, controlDevice, queryDevice
+from .xiaodu import discoveryDevice, controlDevice, queryDevice, errorResult
 
 _LOGGER = logging.getLogger(__name__)
 
