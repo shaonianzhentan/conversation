@@ -78,7 +78,7 @@ async def discoveryDevice(hass):
                 device_type = 'TV_SET'
                 actions.extend(['decrementTVChannel', 'incrementTVChannel', 'setTVChannel', 'returnTVChannel'])
         elif domain == 'fan':
-            actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \                
+            actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \
                 'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature', \
                 'getTargetTemperature', 'getHumidity', 'getTargetHumidity'])
             if '净化' in friendly_name:
@@ -131,27 +131,32 @@ async def controlDevice(hass, action, payload):
     additionalApplianceDetails = applianceDic.get('additionalApplianceDetails', {})
     # 实体ID
     entity_id = applianceDic['applianceId']
-    domain = entity_id.split('.')[0]
-   
-    # 高度
-    deltValue = payload.get('deltValue')
-    if isinstance(deltValue, dict):
-        deltValue = deltValue['value']
-
+    state = hass.states.get(entity_id)
+    domain = entity_id.split('.')[0]   
     # 小度事件数据
     xiaodu_data = {
+        'type': action
         'domain': domain,
-        'entity_id': entity_id,
-        # 定时
-        'timeInterval': payload.get('timeInterval'),
-        # 单位秒
-        'timestamp': payload.get('timestamp'),
-        'deltValue': deltValue,
-        # 色温
-        'colorTemperatureInKelvin': payload.get('colorTemperatureInKelvin'),
-        # 颜色
-        'color': payload.get('color')
+        'entity_id': entity_id
     }
+    # 高度
+    if 'deltValue' in payload:
+        deltValue = payload.get('deltValue')
+        if isinstance(deltValue, dict):
+            deltValue = deltValue['value']
+        xiaodu_data.update({'deltValue': deltValue})
+    # 颜色
+    if 'color' in payload:
+        xiaodu_data.update({'color': payload['color']})
+    # 色温
+    if 'colorTemperatureInKelvin' in payload:
+        xiaodu_data.update({'colorTemperatureInKelvin': payload['colorTemperatureInKelvin']})
+    # 单位秒
+    if 'timestamp' in payload:
+        xiaodu_data.update({'timestamp': payload['timestamp']})
+    # 定时
+    if 'timeInterval' in payload:
+        xiaodu_data.update({'timeInterval': payload['timeInterval']})
     # 亮度
     if 'brightness' in payload:
         xiaodu_data.update({'brightness': payload['brightness']['value']})
@@ -212,7 +217,6 @@ async def controlDevice(hass, action, payload):
             'entity_id': entity_id,
             'brightness_step_pct': xiaodu_data['deltaPercentage']
         })
-        state = hass.states.get(entity_id)
         result.update({
             "previousState": {
                 "brightness": {
@@ -230,7 +234,6 @@ async def controlDevice(hass, action, payload):
             'entity_id': entity_id,
             'brightness_step_pct': -xiaodu_data['deltaPercentage']
         })
-        state = hass.states.get(entity_id)
         result.update({
             "previousState": {
                 "brightness": {
@@ -247,7 +250,7 @@ async def controlDevice(hass, action, payload):
         color = xiaodu_data['color']
         return call_service(hass, 'light.turn_on', {
             'entity_id': entity_id,
-            'rgb_color': color_util.color_hsv_to_RGB(color['hue'], color['saturation'], color['brightness'])
+            'rgb_color': color_util.color_hsb_to_RGB(color['hue'], color['saturation'], color['brightness'])
         }) 
     elif action == 'IncrementColorTemperatureRequest':
         print('增加色温')
@@ -258,7 +261,6 @@ async def controlDevice(hass, action, payload):
         print('设置色温', xiaodu_data['colorTemperatureInKelvin'])
     ################ 可控温度设备    
     elif action == 'IncrementTemperatureRequest':
-        state = hass.states.get(entity_id)
         return call_service(hass, 'climate.set_temperature', {
             'entity_id': entity_id,
             'temperature': state.attributes.get('temperature') - deltValue
@@ -332,7 +334,7 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetHumidityRequest':
     '''
     # 发送事件
-    hass.bus.async_fire("xiaodu_event", {'type': action, 'data': xiaodu_data })
+    hass.bus.async_fire("xiaodu_event", xiaodu_data)
     return {
         "attributes": []
     }
