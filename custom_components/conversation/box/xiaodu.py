@@ -1,4 +1,5 @@
 import time, re
+import homeassistant.util.color as color_util
 from homeassistant.helpers import template, entity_registry, area_registry, device_registry
 
 # 发现设备
@@ -95,63 +96,19 @@ async def discoveryDevice(hass):
             # ['getTargetHumidity', 'getTemperatureReading', 'getTargetTemperature']
             if '温度传感器' == friendly_name:
                 device_type = 'AIR_MONITOR'
-                actions =['getTemperature']
+                actions = ['getTemperature', 'getTemperatureReading']
             elif '湿度传感器' == friendly_name:
                 device_type = 'AIR_MONITOR'
-                actions =['getHumidity']
+                actions = ['getHumidity']
         # 不支持设备
         if device_type is None:
             continue
-        # 获取默认属性
-        attrs = [
-            {
-                "name": "name",
-                "value": friendly_name,
-                "scale": "",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "STRING"
-            },
-            {
-                "name": "powerState",
-                "value": state.state.upper(),
-                "scale": "",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "(ON, OFF)"
-            },
-            {
-                "name": "turnOnState",
-                "value": state.state.upper(),
-                "scale": "",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10
-            },
-            {
-                "name": "connectivity",
-                "value": "REACHABLE",
-                "scale": "",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "(UNREACHABLE, REACHABLE)"
-            }
-        ]
-        if domain == 'light':
-            brightness = attributes.get('brightness', 255)
-            attrs.append(
-                {
-                    "name": "brightness",
-                    "value": int(brightness / 255 * 100),
-                    "scale": "%",
-                    "timestampOfSample": timestampOfSample,
-                    "uncertaintyInMilliseconds": 10,
-                    "legalValue": "[0, 100]"
-                }
-            )
-        # 加入区域属性
-        area_entity_attrs = area_entity.get(entity_id)
-        if area_entity_attrs is not None:
-            attrs.append(area_entity_attrs)
+
+        # 移除开关操作
+        if ['sensor', 'scene'].count(domain) > 0:
+            actions.remove("turnOff")
+            actions.remove("timingTurnOff")
+
         # 添加设备
         devices.append({
             'applianceId': entity_id,
@@ -164,7 +121,7 @@ async def discoveryDevice(hass):
             'modelName': domain,
             'version': '1.0',
             'actions': actions,
-            'attributes': attrs
+            'attributes': get_attributes(state)
         })
     return {'discoveredAppliances': devices}
 
@@ -192,7 +149,9 @@ async def controlDevice(hass, action, payload):
         'timestamp': payload.get('timestamp'),
         'deltValue': deltValue,
         # 色温
-        'colorTemperatureInKelvin': payload.get('colorTemperatureInKelvin')
+        'colorTemperatureInKelvin': payload.get('colorTemperatureInKelvin'),
+        # 颜色
+        'color': payload.get('color')
     }
     # 亮度
     if 'brightness' in payload:
@@ -286,18 +245,31 @@ async def controlDevice(hass, action, payload):
         return result
     elif action == 'SetColorRequest':
         # 启动
-        color = payload['color']
-        print(color['hue'], color['saturation'], color['brightness'])
+        color = xiaodu_data['color']
+        return call_service(hass, 'light.turn_on', {
+            'entity_id': entity_id,
+            'rgb_color': color_util.color_hsv_to_RGB(color['hue'], color['saturation'], color['brightness'])
+        }) 
     elif action == 'IncrementColorTemperatureRequest':
-        print('增加色温')
+        # 增加色温
+        state = hass.states.get(entity_id)
+        return call_service(hass, 'light.turn_on', {
+            'entity_id': entity_id,
+            'color_temp': state.attributes.get('color_temp') + 10
+        })
     elif action == 'DecrementColorTemperatureRequest':
-        print('减少色温')
+        # 减少色温
+        state = hass.states.get(entity_id)
+        return call_service(hass, 'light.turn_on', {
+            'entity_id': entity_id,
+            'color_temp': state.attributes.get('color_temp') - 10
+        })
     elif action == 'SetColorTemperatureRequest':
         # 设置色温
         state = hass.states.get(entity_id)
         return call_service(hass, 'light.turn_on', {
             'entity_id': entity_id,
-            'color_temp': int(colorTemperatureInKelvin / 6500 * state.attributes.get('max_mireds', 6500))
+            'color_temp': color_util.color_temperature_kelvin_to_mired(xiaodu_data['colorTemperatureInKelvin'])
         })
     ################ 可控温度设备    
     elif action == 'IncrementTemperatureRequest':
@@ -406,7 +378,7 @@ def queryDevice(hass, name, payload):
             },
             "applianceResponseTimestamp": date_now()
         }
-    elif name == 'GetTemperatureReadingRequest' or name == 'GetTargetHumidityRequest':
+    elif name == 'GetHumidityRequest' or name == 'GetTargetHumidityRequest':
         # 查询设备湿度
         xiaodu_entity_id = attributes.get('xiaodu_humidity')
         if xiaodu_entity_id is not None:
@@ -441,6 +413,70 @@ def queryDevice(hass, name, payload):
 def get_friendly_name(attributes):
     return attributes.get('xiaodu_name', attributes.get('friendly_name'))
 
+# 获取默认属性
+def get_attributes(state, default_state=None):
+    attributes = state.attributes
+    friendly_name = get_friendly_name(attributes)
+    timestampOfSample = date_now()
+    attrs = [
+        {
+            "name": "name",
+            "value": friendly_name,
+            "scale": "",
+            "timestampOfSample": timestampOfSample,
+            "uncertaintyInMilliseconds": 10,
+            "legalValue": "STRING"
+        },            
+        {
+            "name": "connectivity",
+            "value": "REACHABLE",
+            "scale": "",
+            "timestampOfSample": timestampOfSample,
+            "uncertaintyInMilliseconds": 10,
+            "legalValue": "(UNREACHABLE, REACHABLE)"
+        }
+    ]
+    if default_state is None:
+        default_state = state.state.upper()
+    # [传感器、场景]没有开关
+    if ['sensor', 'scene'].count(domain) == 0:
+        attrs.extend([
+            {
+                "name": "powerState",
+                "value": default_state,
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "(ON, OFF)"
+            },
+            {
+                "name": "turnOnState",
+                "value": default_state,
+                "scale": "",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10
+            },
+        ])
+
+    if domain == 'light':
+        brightness = attributes.get('brightness', 255)
+        attrs.append(
+            {
+                "name": "brightness",
+                "value": int(brightness / 255 * 100),
+                "scale": "%",
+                "timestampOfSample": timestampOfSample,
+                "uncertaintyInMilliseconds": 10,
+                "legalValue": "[0, 100]"
+            }
+        )
+    # 加入区域属性
+    area_entity_attrs = area_entity.get(state.entity_id)
+    if area_entity_attrs is not None:
+        attrs.append(area_entity_attrs)
+    return attrs
+
+
 # 10位时间戳
 def date_now():
     return int(time.time())
@@ -452,9 +488,6 @@ def call_service(hass, service, data={}):
     action = arr[1]
     entity_id = data['entity_id']
     state = hass.states.get(entity_id)
-    attributes = state.attributes
-    friendly_name = get_friendly_name(attributes)
-    timestampOfSample = date_now()
     powerState = state.state.upper()
     if action == 'turn_off':
         powerState = 'OFF'
@@ -469,55 +502,7 @@ def call_service(hass, service, data={}):
         action = 'trigger'
 
     hass.async_create_task(hass.services.async_call(domain, action, data))
-    attrs = [
-        {
-            "name": "name",
-            "value": friendly_name,
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "STRING"
-        },
-        {
-            "name": "powerState",
-            "value": powerState,
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "(ON, OFF)"
-        },
-        {
-            "name": "turnOnState",
-            "value": powerState,
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10
-        },
-        {
-            "name": "connectivity",
-            "value": "REACHABLE",
-            "scale": "",
-            "timestampOfSample": timestampOfSample,
-            "uncertaintyInMilliseconds": 10,
-            "legalValue": "(UNREACHABLE, REACHABLE)"
-        }
-    ]
-    # 判断是否区域
-    area_entity_attrs = area_entity.get(entity_id)
-    if area_entity_attrs is not None:
-        attrs.append(area_entity_attrs)
-    if domain == 'light':
-        brightness = attributes.get('brightness', 255)
-        attrs.extend([
-            {
-                "name": "brightness",
-                "value": int(brightness / 255 * 100),
-                "scale": "%",
-                "timestampOfSample": timestampOfSample,
-                "uncertaintyInMilliseconds": 10,
-                "legalValue": "[0, 100]"
-            }
-        ])
+    
     return {
-        'attributes': attrs
+        'attributes': get_attributes(state, powerState)
     }
