@@ -135,7 +135,7 @@ async def controlDevice(hass, action, payload):
     domain = entity_id.split('.')[0]   
     # 小度事件数据
     xiaodu_data = {
-        'type': action
+        'type': action,
         'domain': domain,
         'entity_id': entity_id
     }
