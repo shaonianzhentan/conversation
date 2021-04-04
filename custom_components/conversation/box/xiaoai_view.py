@@ -2,7 +2,7 @@ import json
 import logging
 from homeassistant.components.http import HomeAssistantView
 
-from .util import DOMAIN, XIAOAI_API, matcher_query_state, find_entity
+from ..util import DOMAIN, XIAOAI_API, matcher_query_state, find_entity
 from .xiaoai import (XiaoAIAudioItem, XiaoAIDirective, XiaoAIOpenResponse,
                     XiaoAIResponse, XiaoAIStream, XiaoAIToSpeak, XiaoAITTSItem,
                     xiaoai_request, xiaoai_response)

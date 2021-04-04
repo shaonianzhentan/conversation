@@ -47,10 +47,10 @@ async def discoveryDevice(hass):
         # 设备类型
         device_type = None
         # 默认开关操作
-        actions = ["turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState"]
+        actions = ["turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "setComplexActions", "getLocation"]
         if domain == 'switch' or domain == 'input_boolean':
             # 开关
-            device_type = 'SWITCH'
+            device_type = attributes.get('xiaodu_type', 'SWITCH')
         elif domain == 'light':
             # 灯
             device_type = 'LIGHT'
@@ -63,7 +63,7 @@ async def discoveryDevice(hass):
                 'getTemperatureReading', 'getTemperature', 'getTargetTemperature', 'getHumidity', 'getTargetHumidity', \
                 "incrementFanSpeed", "decrementFanSpeed", "setFanSpeed", "setGear", "setMode"])
         elif domain == 'cover':
-            actions.extend(['pause'])
+            actions.extend(['pause', 'continue', 'setDirection'])
             # 窗帘 和 晾衣架
             if '窗帘' in friendly_name:
                 device_type = 'CURTAIN'
@@ -86,14 +86,18 @@ async def discoveryDevice(hass):
                 device_type = 'FAN'
         elif domain == 'scene':
             device_type = 'SCENE_TRIGGER'
+        elif domain == 'camera':
+            device_type = attributes.get('xiaodu_type', 'WEBCAM')
+            actions.extend(['setMode', 'setDirection', 'reset'])
         # elif domain == 'script':
         #    device_type = 'ACTIVITY_TRIGGER'
-        # elif domain == 'sensor':
-        #     if '温度' in friendly_name or '湿度' in friendly_name:
-        #         device_type = 'AIR_MONITOR'
-        #         actions =['getTemperature', 'getTemperatureReading', 'getTargetTemperature', \
-        #             'getHumidity', 'getTargetHumidity']
-
+        elif domain == 'sensor':
+            if '温度传感器' == friendly_name:
+                device_type = 'AIR_MONITOR'
+                actions =['getTemperature', 'getTemperatureReading', 'getTargetTemperature']
+            elif '湿度传感器' == friendly_name:
+                device_type = 'AIR_MONITOR'
+                actions =['getHumidity', 'getTargetHumidity']
         # 不支持设备
         if device_type is None:
             continue

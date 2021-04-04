@@ -4,9 +4,9 @@ import homeassistant.config as conf_util
 from homeassistant.helpers import template, entity_registry, area_registry
 from homeassistant.helpers.network import get_url
 
-from .xiaoai_view import XiaoaiGateView
 from .xunfei_view import XunfeiView
-from .aligenie_view import AliGenieView
+from .box.aligenie_view import AliGenieView
+from .box.xiaoai_view import XiaoaiGateView
 from .box.xiaodu_view import XiaoduGateView
 
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, ALIGENIE_API, XIAODU_API, VIDEO_API, \

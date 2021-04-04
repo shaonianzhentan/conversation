@@ -1,7 +1,7 @@
 import logging, json
 from homeassistant.components.http import HomeAssistantView
 
-from .util import DOMAIN, ALIGENIE_API, matcher_query_state, find_entity
+from ..util import DOMAIN, ALIGENIE_API, matcher_query_state, find_entity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -140,3 +140,25 @@ voice_time: 2
 声音@{text}
 小@{text}
 ```
+
+## 小度自定义通用属性
+
+```yaml
+# 开关类型改为插座类型
+xiaodu_name: 插座
+xiaodu_type: SOCKET
+
+# script模拟电视
+xiaodu_name: 电视
+xiaodu_domain: media_player
+
+# sensor传感器
+xiaodu_name: 温度传感器
+
+xiaodu_name: 湿度传感器
+
+# 摄像头（CAMERA、WEBCAM）
+xiaodu_name: 摄像头
+xiaodu_type: WEBCAM
+xiaodu_domain: camera
+```
