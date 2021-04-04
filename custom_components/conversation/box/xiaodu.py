@@ -48,7 +48,8 @@ async def discoveryDevice(hass):
         # 设备类型
         device_type = None
         # 默认开关操作
-        actions = ["turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "setComplexActions", "getLocation"]
+        actions = ['setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode', \
+            "turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "setComplexActions", "getLocation"]
         if domain == 'switch' or domain == 'input_boolean':
             # 开关
             device_type = attributes.get('xiaodu_type', 'SWITCH')
@@ -62,7 +63,7 @@ async def discoveryDevice(hass):
             device_type = 'AIR_CONDITION'
             actions.extend(["incrementTemperature", "decrementTemperature", "setTemperature", \
                 'getTemperatureReading', 'getTemperature', 'getTargetTemperature', 'getHumidity', 'getTargetHumidity', \
-                "incrementFanSpeed", "decrementFanSpeed", "setFanSpeed", "setGear", "setMode"])
+                "incrementFanSpeed", "decrementFanSpeed", "setFanSpeed", "setGear"])
         elif domain == 'cover':
             actions.extend(['pause', 'continue', 'setDirection'])
             # 窗帘 和 晾衣架
@@ -77,8 +78,7 @@ async def discoveryDevice(hass):
                 device_type = 'TV_SET'
                 actions.extend(['decrementTVChannel', 'incrementTVChannel', 'setTVChannel', 'returnTVChannel'])
         elif domain == 'fan':
-            actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \
-                'setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode', \
+            actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \                
                 'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature', \
                 'getTargetTemperature', 'getHumidity', 'getTargetHumidity'])
             if '净化' in friendly_name:
@@ -89,7 +89,6 @@ async def discoveryDevice(hass):
             device_type = 'SCENE_TRIGGER'
         elif domain == 'camera':
             device_type = attributes.get('xiaodu_type', 'WEBCAM')
-            actions.extend(['setMode'])
         # elif domain == 'script':
         #    device_type = 'ACTIVITY_TRIGGER'
         elif domain == 'sensor':
@@ -106,8 +105,8 @@ async def discoveryDevice(hass):
 
         # 移除开关操作
         if ['sensor', 'scene'].count(domain) > 0:
-            actions.remove("turnOff")
-            actions.remove("timingTurnOff")
+            remove_action(actions, 'turnOff')
+            remove_action(actions, 'timingTurnOff')
 
         # 添加设备
         devices.append({
@@ -251,26 +250,12 @@ async def controlDevice(hass, action, payload):
             'rgb_color': color_util.color_hsv_to_RGB(color['hue'], color['saturation'], color['brightness'])
         }) 
     elif action == 'IncrementColorTemperatureRequest':
-        # 增加色温
-        state = hass.states.get(entity_id)
-        return call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'color_temp': state.attributes.get('color_temp') + 10
-        })
+        print('增加色温')
     elif action == 'DecrementColorTemperatureRequest':
-        # 减少色温
-        state = hass.states.get(entity_id)
-        return call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'color_temp': state.attributes.get('color_temp') - 10
-        })
+        print('减少色温')
     elif action == 'SetColorTemperatureRequest':
         # 设置色温
-        state = hass.states.get(entity_id)
-        return call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'color_temp': color_util.color_temperature_kelvin_to_mired(xiaodu_data['colorTemperatureInKelvin'])
-        })
+        print('设置色温', xiaodu_data['colorTemperatureInKelvin'])
     ################ 可控温度设备    
     elif action == 'IncrementTemperatureRequest':
         state = hass.states.get(entity_id)
@@ -409,12 +394,18 @@ def queryDevice(hass, name, payload):
         ]
     }
 
+# 移除操作
+def remove_action(actions, name):
+    if actions.count(name) > 0:
+        actions.remove(name)
+        
 # 获取名称
 def get_friendly_name(attributes):
     return attributes.get('xiaodu_name', attributes.get('friendly_name'))
 
 # 获取默认属性
 def get_attributes(state, default_state=None):
+    domain = state.domain
     attributes = state.attributes
     friendly_name = get_friendly_name(attributes)
     timestampOfSample = date_now()
