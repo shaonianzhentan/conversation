@@ -145,7 +145,6 @@ voice_time: 2
 
 ```yaml
 # 开关类型改为插座类型
-xiaodu_name: 插座
 xiaodu_type: SOCKET
 
 # script模拟电视

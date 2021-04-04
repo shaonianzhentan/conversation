@@ -88,16 +88,17 @@ async def discoveryDevice(hass):
             device_type = 'SCENE_TRIGGER'
         elif domain == 'camera':
             device_type = attributes.get('xiaodu_type', 'WEBCAM')
-            actions.extend(['setMode', 'setDirection', 'reset'])
+            actions.extend(['setMode'])
         # elif domain == 'script':
         #    device_type = 'ACTIVITY_TRIGGER'
         elif domain == 'sensor':
+            # ['getTargetHumidity', 'getTemperatureReading', 'getTargetTemperature']
             if '温度传感器' == friendly_name:
                 device_type = 'AIR_MONITOR'
-                actions =['getTemperature', 'getTemperatureReading', 'getTargetTemperature']
+                actions =['getTemperature']
             elif '湿度传感器' == friendly_name:
                 device_type = 'AIR_MONITOR'
-                actions =['getHumidity', 'getTargetHumidity']
+                actions =['getHumidity']
         # 不支持设备
         if device_type is None:
             continue
@@ -175,31 +176,40 @@ async def controlDevice(hass, action, payload):
     # 实体ID
     entity_id = applianceDic['applianceId']
     domain = entity_id.split('.')[0]
-    # 单位秒
-    timestamp = payload.get('timestamp')
-    # 亮度
-    if 'brightness' in payload:
-        brightness = payload['brightness']['value']
-    # 增量百分比
-    if 'deltaPercentage' in payload:
-        deltaPercentage = payload['deltaPercentage']['value']
-    # 模式
-    if 'mode' in payload:
-        mode = payload['mode']['value']
-    # 风速
-    if 'fanSpeed' in payload:
-        fanSpeed = payload['fanSpeed']['value']    
-    # 定时
-    timeInterval = payload.get('timeInterval')
+   
     # 高度
     deltValue = payload.get('deltValue')
     if isinstance(deltValue, dict):
         deltValue = deltValue['value']
-    # 色温
-    colorTemperatureInKelvin = payload.get('colorTemperatureInKelvin')
+
+    # 小度事件数据
+    xiaodu_data = {
+        'domain': domain,
+        'entity_id': entity_id,
+        # 定时
+        'timeInterval': payload.get('timeInterval'),
+        # 单位秒
+        'timestamp': payload.get('timestamp'),
+        'deltValue': deltValue,
+        # 色温
+        'colorTemperatureInKelvin': payload.get('colorTemperatureInKelvin')
+    }
+    # 亮度
+    if 'brightness' in payload:
+        xiaodu_data.update({'brightness': payload['brightness']['value']})
+    # 增量百分比
+    if 'deltaPercentage' in payload:
+        xiaodu_data.update({'deltaPercentage': payload['deltaPercentage']['value']})
+    # 模式
+    if 'mode' in payload:
+        xiaodu_data.update({'mode': payload['mode']['value']})
+    # 风速
+    if 'fanSpeed' in payload:
+        xiaodu_data.update({'fanSpeed': payload['fanSpeed']['value']})
     # 温度
     if 'targetTemperature' in payload:
-        targetTemperature = payload['targetTemperature']['value']
+        xiaodu_data.update({'targetTemperature': payload['targetTemperature']['value']})
+    
     # 服务名称
     ################ 打开关闭设备
     if action == 'TurnOnRequest':
@@ -225,7 +235,7 @@ async def controlDevice(hass, action, payload):
         # 亮度
         result = call_service(hass, 'light.turn_on', {
             'entity_id': entity_id,
-            'brightness_pct': brightness
+            'brightness_pct': xiaodu_data['brightness']
         })
         result.update({
             "previousState": {
@@ -242,7 +252,7 @@ async def controlDevice(hass, action, payload):
         # 增加亮度
         result = call_service(hass, 'light.turn_on', {
             'entity_id': entity_id,
-            'brightness_step_pct': deltaPercentage
+            'brightness_step_pct': xiaodu_data['deltaPercentage']
         })
         state = hass.states.get(entity_id)
         result.update({
@@ -260,7 +270,7 @@ async def controlDevice(hass, action, payload):
         # 减少亮度
         result = call_service(hass, 'light.turn_on', {
             'entity_id': entity_id,
-            'brightness_step_pct': -deltaPercentage
+            'brightness_step_pct': -xiaodu_data['deltaPercentage']
         })
         state = hass.states.get(entity_id)
         result.update({
@@ -305,7 +315,7 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetTemperatureRequest':
         return call_service(hass, 'climate.set_temperature', {
             'entity_id': entity_id,
-            'temperature': targetTemperature
+            'temperature': xiaodu_data['targetTemperature']
         })
     '''
     ################ 可控风速设备
@@ -318,7 +328,6 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetSpeedRequest':
     ################ 设备模式设置
     elif action == 'SetModeRequest':
-
     elif action == 'UnsetModeRequest':
     elif action == 'TimingSetModeRequest':
     ################ 电视频道设置
@@ -354,7 +363,6 @@ async def controlDevice(hass, action, payload):
     ################ 可控定时设备
     elif action == 'SetTimerRequest':
         # 定时
-        timeInterval = payload['timeInterval']
     elif action == 'TimingCancelRequest':
         # 取消定时
     ################ 可复位设备
@@ -366,6 +374,11 @@ async def controlDevice(hass, action, payload):
     ################ 可控湿度类设备
     elif action == 'SetHumidityRequest':
     '''
+    # 发送事件
+    hass.bus.async_fire("xiaodu_event", {'type': action, 'data': xiaodu_data })
+    return {
+        "attributes": []
+    }
 
 # 查询设备
 def queryDevice(hass, name, payload):
