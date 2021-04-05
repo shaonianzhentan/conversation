@@ -46,7 +46,7 @@ async def discoveryDevice(hass):
         if re.match(r'^[\u4e00-\u9fff]+$', friendly_name) is None:
             continue
         # 设备类型
-        device_type = None
+        device_type = attributes.get('xiaodu_type')
         # 默认开关操作
         actions = ['setMode', 'unSetMode', 'timingSetMode', 'timingUnsetMode', \
             "turnOn", "timingTurnOn", "turnOff", "timingTurnOff", "getTurnOnState", "setComplexActions", "getLocation"]
@@ -89,6 +89,7 @@ async def discoveryDevice(hass):
             device_type = 'SCENE_TRIGGER'
         elif domain == 'camera':
             device_type = attributes.get('xiaodu_type', 'WEBCAM')
+            actions.extend(['setDirection', 'reset'])
         # elif domain == 'script':
         #    device_type = 'ACTIVITY_TRIGGER'
         elif domain == 'sensor':
@@ -104,7 +105,7 @@ async def discoveryDevice(hass):
             continue
 
         # 移除开关操作
-        if ['sensor', 'scene'].count(domain) > 0:
+        if ['sensor'].count(domain) > 0:
             remove_action(actions, 'turnOff')
             remove_action(actions, 'timingTurnOff')
 
@@ -432,7 +433,7 @@ def get_attributes(state, default_state=None):
     if default_state is None:
         default_state = state.state.upper()
     # [传感器、场景]没有开关
-    if ['sensor', 'scene'].count(domain) == 0:
+    if ['sensor'].count(domain) == 0:
         attrs.extend([
             {
                 "name": "powerState",
