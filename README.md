@@ -160,6 +160,14 @@ xiaodu_name: 湿度传感器
 xiaodu_name: 摄像头
 xiaodu_type: WEBCAM
 xiaodu_domain: camera
+
+# automation场景（打开、关闭）
+xiaodu_name: 音乐模式
+xiaodu_domain: scene
+
+# automation场景（打开、关闭）
+xiaodu_name: 音乐模式
+xiaodu_domain: scene
 ```
 
 > 小度开发相关文档

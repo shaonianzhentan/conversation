@@ -488,12 +488,10 @@ def call_service(hass, service, data={}):
     if action == 'turn_on':
         powerState = 'ON'
     
-    # 脚本执行、自动化触发
+    # 脚本执行
     if domain == 'script':
         action = entity_id.split('.')[1]
         data = {}
-    if domain == 'automation':
-        action = 'trigger'
 
     hass.async_create_task(hass.services.async_call(domain, action, data))
     
