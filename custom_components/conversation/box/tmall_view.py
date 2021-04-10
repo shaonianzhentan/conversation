@@ -1,7 +1,7 @@
 import logging, json
 from homeassistant.components.http import HomeAssistantView
 from ..util import DOMAIN, TMALL_API
-from .tmall import discoveryDevice, controlDevice, queryDevice
+from .tmall import discoveryDevice, controlDevice, queryDevice, errorResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,9 +18,8 @@ class TmallView(HomeAssistantView):
             """Handle request"""
             header = data['header']
             payload = data['payload']
-            properties = None
             name = header['name']
-            _LOGGER.info("Handle Request: %s", data)
+            _LOGGER.debug("Handle Request: %s", data)
             # 验证权限
             token = await hass.auth.async_validate_access_token(payload['accessToken'])
             if token is not None:
@@ -30,13 +29,10 @@ class TmallView(HomeAssistantView):
                     result = discoveryDevice(hass)
                 elif namespace == 'AliGenie.Iot.Device.Control':
                     # 控制设备
-                    result = await controlDevice(name, payload)
+                    result = await controlDevice(hass, name, payload)
                 elif namespace == 'AliGenie.Iot.Device.Query':
                     # 查询设备
                     result = queryDevice(name, payload)
-                    if not 'errorCode' in result:
-                        properties = result
-                        result = {}
                 else:
                     result = errorResult('SERVICE_ERROR')
             else:
@@ -46,13 +42,11 @@ class TmallView(HomeAssistantView):
             header['name'] = ('Error' if 'errorCode' in result else name) + 'Response'
 
             # Fill response deviceId
-            if 'deviceId' in payload:
-                result['deviceId'] = payload['deviceId']
+            if 'deviceIds' in payload:
+                result['deviceIds'] = payload['deviceIds']
 
             response = {'header': header, 'payload': result}
-            if properties:
-                response['properties'] = properties
-            _LOGGER.info("Respnose: %s", response)
+            _LOGGER.debug("Respnose: %s", response)
         except:
             import traceback
             _LOGGER.error(traceback.format_exc())

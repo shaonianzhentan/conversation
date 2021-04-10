@@ -6,10 +6,11 @@ from homeassistant.helpers.network import get_url
 
 from .xunfei_view import XunfeiView
 from .box.aligenie_view import AliGenieView
+from .box.tmall_view import TmallView
 from .box.xiaoai_view import XiaoaiGateView
 from .box.xiaodu_view import XiaoduGateView
 
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, ALIGENIE_API, XIAODU_API, VIDEO_API, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_API, ALIGENIE_API, XIAODU_API, VIDEO_API, \
     ApiConfig, find_entity, trim_char, get_video_url, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
@@ -45,6 +46,7 @@ class Voice():
         hass.http.register_view(XunfeiView)
         hass.http.register_view(AliGenieView)
         hass.http.register_view(XiaoduGateView)
+        hass.http.register_view(TmallView)
                 
     # 获取基础url
     def get_base_url(self, url):
@@ -591,5 +593,6 @@ class Voice():
             'XiaoAi': self.get_base_url(XIAOAI_API),
             'AliGenie': self.get_base_url(ALIGENIE_API),
             'XiaoDu': self.get_base_url(XIAODU_API),
+            'Tmall': self.get_base_url(TMALL_API),
             'github': 'https://github.com/shaonianzhentan/conversation'
         })

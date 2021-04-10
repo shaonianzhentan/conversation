@@ -50,6 +50,7 @@
 - [ ] 支持重置还原操作 - 误操作可撤回
 - 支持天猫精灵自定义技能
 - 增加新命令`把【实体名称】【开关命令】`
+- 支持小度音箱
 
 ### v1.4
 - 播放电视剧命令修改为`打开电视剧xxx`
@@ -173,3 +174,13 @@ xiaodu_domain: scene
 > 小度开发相关文档
 
 - [设备类型与模式表](https://dueros.baidu.com/didp/doc/dueros-bot-platform/dbp-smart-home/protocol/control-message_markdown#%E8%AE%BE%E5%A4%87%E7%B1%BB%E5%9E%8B%E4%B8%8E%E6%A8%A1%E5%BC%8F%E8%A1%A8)
+
+
+## 天猫精灵2.0
+
+配置注意事项：`技能图文内容`要全部填写才能生效
+
+```yaml
+# 开关类型改为插座类型
+tmall_type: outlet
+```
