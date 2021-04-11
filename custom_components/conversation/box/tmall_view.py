@@ -27,9 +27,11 @@ class TmallView(HomeAssistantView):
                 if namespace == 'AliGenie.Iot.Device.Discovery':
                     # 发现设备
                     result = discoveryDevice(hass)
+                    name = 'DiscoveryDevicesResponse'
                 elif namespace == 'AliGenie.Iot.Device.Control':
                     # 控制设备
                     result = await controlDevice(hass, name, payload)
+                    name = 'CorrectResponse'
                 elif namespace == 'AliGenie.Iot.Device.Query':
                     # 查询设备
                     result = queryDevice(name, payload)
@@ -39,12 +41,8 @@ class TmallView(HomeAssistantView):
                 result = errorResult('ACCESS_TOKEN_INVALIDATE')
 
             # Check error and fill response name
-            header['name'] = ('Error' if 'errorCode' in result else name) + 'Response'
-
-            # Fill response deviceId
-            if 'deviceIds' in payload:
-                result['deviceIds'] = payload['deviceIds']
-
+            header['name'] = name
+            
             response = {'header': header, 'payload': result}
             _LOGGER.debug("Respnose: %s", response)
         except:

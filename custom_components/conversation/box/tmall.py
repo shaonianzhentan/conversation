@@ -1,6 +1,11 @@
+import time, re
+import homeassistant.util.color as color_util
+from homeassistant.helpers import template, entity_registry, area_registry, device_registry
+
 '''
 区域：https://open.bot.tmall.com/oauth/api/placelist
 设备类型：https://doc-bot.tmall.com/docs/doc.htm?treeId=393&articleId=108271&docType=1
+新版文档：https://www.yuque.com/qw5nze/ga14hc/cmhq2c
 '''
 
 def discoveryDevice(hass):
@@ -61,29 +66,47 @@ def discoveryDevice(hass):
             'brand': 'HASSKIT',
             'model': 'x1',
             'zone': '',
-            "status": {},
+            "status": get_attributes(state),
             "extensions": {}
         })
     return {'devices': devices}
 
 async def controlDevice(hass, action, payload):
-    # 根据设备ID，找到对应的实体ID
+    deviceResponseList = []
     deviceIds = payload['deviceIds']
     params = payload['params']
-    if action == 'thing.attribute.set':
-        print(params)
-        powerstate = params['powerstate']
-        for entity_id in deviceIds:
-            service_name = None
+    powerstate = params.get('powerstate')
+    brightness = params.get('brightness')
+    # 根据设备ID，找到对应的实体ID
+    for entity_id in deviceIds:
+        service_name = None
+        service_data = {'entity_id': entity_id}
+        state = hass.states.get(entity_id)
+        attributes = state.attributes
+        # 设置属性
+        if action == 'thing.attribute.set':
             if powerstate == 1:
                 service_name = 'turn_on'
             elif powerstate == 0:
                 service_name = 'turn_off'
-            if service_name is not None:
-                state = hass.states.get(entity_id)
-                hass.async_create_task(hass.services.async_call(state.domain, service_name, {'entity_id': entity_id}))
-        return payload
-    return errorResult('DEVICE_NOT_SUPPORT_FUNCTION')
+            # 设置亮度
+            if brightness is not None:
+                service_data.update({'brightness_pct': brightness})
+        elif action == 'thing.attribute.adjust':
+            # 增加/减少亮度
+            if brightness is not None:
+                service_data.update({'brightness_pct': int(attributes.get('brightness', 255) / 255 * 100) + brightness})
+
+        if service_name is not None:
+            hass.async_create_task(hass.services.async_call(state.domain, service_name, service_data))
+        
+        # 返回结果
+        deviceResponseList.append({
+            "deviceId": entity_id,
+            "errorCode": "SUCCESS",
+            "message": "SUCCESS"
+        })
+    return deviceResponseList
 
 def queryDevice(name, payload):
     deviceId = payload['deviceId']
@@ -106,3 +129,19 @@ def errorResult(errorCode, messsage=None):
         'ACCESS_TOKEN_INVALIDATE': ' access_token is invalidate'
     }
     return {'errorCode': errorCode, 'message': messsage if messsage else messages[errorCode]}
+
+# 获取默认属性
+def get_attributes(state, default_state=None):
+    status = {}
+    domain = state.domain
+    attributes = state.attributes
+    if state.state.upper() == 'ON':
+        status.update({ powerstate: 1 })
+    else if state.state.upper() == 'OFF':
+        status.update({ powerstate: 0 })
+
+    if domain == 'light':
+        brightness = attributes.get('brightness', 255)
+        status.update({ brightness: int(brightness / 255 * 100) })
+        
+    return status
