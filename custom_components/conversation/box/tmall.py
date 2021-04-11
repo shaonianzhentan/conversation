@@ -1,4 +1,4 @@
-import time, re
+import time, re, logging
 import homeassistant.util.color as color_util
 from homeassistant.helpers import template, entity_registry, area_registry, device_registry
 
