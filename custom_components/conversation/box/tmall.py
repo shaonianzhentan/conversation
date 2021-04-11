@@ -65,8 +65,10 @@ async def discoveryDevice(hass):
                 device_type = 'fan'
         elif domain == 'camera':
             device_type = 'camera'
+        '''
         elif domain == 'sensor':
             device_type = 'sensor'
+        '''
         # 不支持设备
         if device_type is None:
             continue
@@ -96,6 +98,7 @@ async def controlDevice(hass, action, payload):
         service_data = {'entity_id': entity_id}
         state = hass.states.get(entity_id)
         attributes = state.attributes
+        domain = state.domain
         # 查询属性
         if action == 'thing.attribute.get':
             print('查询')
@@ -118,11 +121,19 @@ async def controlDevice(hass, action, payload):
 
             if service_name is not None:
                 # 脚本执行
-                if state.domain == 'script':
+                if domain == 'script':
                     service_name = entity_id.split('.')[1]
                     service_data = {}
-                hass.async_create_task(hass.services.async_call(state.domain, service_name, service_data))
-        
+                hass.async_create_task(hass.services.async_call(domain, service_name, service_data))
+            else:        
+                # 天猫事件数据
+                tmall_data = {
+                    'type': action,
+                    'domain': domain,
+                    'entity_id': entity_id
+                }
+                tmall_data.update(params)
+                hass.bus.async_fire("tmall_event", tmall_data)
         # 返回结果
         deviceResponseList.append({
             "deviceId": entity_id,
