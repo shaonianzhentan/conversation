@@ -57,13 +57,15 @@ class Voice():
 
     # 创建刷新token
     async def async_create_refresh_token(
-            user: models.User, 
-            client_id: Optional[str] = None,
-            client_name: Optional[str] = None,
-            client_icon: Optional[str] = None,
-            token_type: str = models.TOKEN_TYPE_NORMAL,
-            access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION) \
-            -> models.RefreshToken:
+        self,
+        user: models.User, 
+        client_id: Optional[str] = None,
+        client_name: Optional[str] = None,
+        client_icon: Optional[str] = None,
+        token_type: str = models.TOKEN_TYPE_NORMAL,
+        access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
+        credential: models.Credentials = None,
+    ) -> models.RefreshToken:
         # 如果是小度或天猫精灵，则给它们十年的授权
         if ['https://open.bot.tmall.com', 'https://xiaodu.baidu.com'].count(client_id.strip('/')) > 0:
             access_token_expiration = timedelta(hours=87600)

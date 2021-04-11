@@ -2,6 +2,7 @@ import time, re
 import homeassistant.util.color as color_util
 from homeassistant.helpers import template, entity_registry, area_registry, device_registry
 
+_LOGGER = logging.getLogger(__name__)
 '''
 区域：https://open.bot.tmall.com/oauth/api/placelist
 设备类型：https://doc-bot.tmall.com/docs/doc.htm?treeId=393&articleId=108271&docType=1
@@ -92,6 +93,8 @@ async def controlDevice(hass, action, payload):
     params = payload['params']
     powerstate = params.get('powerstate')
     brightness = params.get('brightness')
+    # 颜色转换
+    color = get_color_name(params.get('color'))
     # 根据设备ID，找到对应的实体ID
     for entity_id in deviceIds:
         service_name = None
@@ -113,6 +116,10 @@ async def controlDevice(hass, action, payload):
                 if brightness is not None:
                     service_name = 'turn_on'
                     service_data.update({'brightness_pct': brightness})
+                # 设置颜色
+                if color is not None:
+                    service_name = 'turn_on'
+                    service_data.update({'rgb_color': color_util.color_name_to_rgb(color)})
             elif action == 'thing.attribute.adjust':
                 # 增加/减少亮度
                 if brightness is not None:
@@ -124,6 +131,7 @@ async def controlDevice(hass, action, payload):
                 if domain == 'script':
                     service_name = entity_id.split('.')[1]
                     service_data = {}
+                _LOGGER.debug('执行服务：' + domain + '.' + service_name)
                 hass.async_create_task(hass.services.async_call(domain, service_name, service_data))
             else:        
                 # 天猫事件数据
@@ -175,3 +183,18 @@ def get_attributes(state, default_state=None):
         status.update({ 'brightness': int(brightness / 255 * 100) })
         
     return status
+
+def get_color_name(tmall_color):
+    obj = {
+        16711680: 'red',
+        16753920: 'orange',
+        16776960: 'yellow',
+        65280: 'green',
+        65535: 'cyan',
+        255: 'blue',
+        8388736: 'purple',
+        16761035: 'pink',
+        16777215: 'white',
+        0: 'black',
+    }
+    return obj.get(tmall_color)
