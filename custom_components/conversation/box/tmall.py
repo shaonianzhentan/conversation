@@ -8,7 +8,20 @@ from homeassistant.helpers import template, entity_registry, area_registry, devi
 新版文档：https://www.yuque.com/qw5nze/ga14hc/cmhq2c
 '''
 
-def discoveryDevice(hass):
+# 发现设备
+area_entity = {}
+async def discoveryDevice(hass):
+    # 获取所有区域
+    area = await area_registry.async_get_registry(hass)
+    area_list = area.async_list_areas()
+    for area_item in area_list:
+        # 获取区域实体
+        entity = await entity_registry.async_get_registry(hass)
+        entity_list = entity_registry.async_entries_for_area(entity, area_item.id)
+        for entity_item in entity_list:
+            area_entity.update({
+                entity_item.entity_id: area_item.name
+            })
     # 获取所有设备    
     devices = []
     states = hass.states.async_all()
@@ -65,7 +78,7 @@ def discoveryDevice(hass):
             'deviceType': device_type,
             'brand': 'HASSKIT',
             'model': 'x1',
-            'zone': '',
+            'zone': area_entity.get(entity_id, ''),
             "status": get_attributes(state),
             "extensions": {}
         })
@@ -83,22 +96,31 @@ async def controlDevice(hass, action, payload):
         service_data = {'entity_id': entity_id}
         state = hass.states.get(entity_id)
         attributes = state.attributes
-        # 设置属性
-        if action == 'thing.attribute.set':
-            if powerstate == 1:
-                service_name = 'turn_on'
-            elif powerstate == 0:
-                service_name = 'turn_off'
-            # 设置亮度
-            if brightness is not None:
-                service_data.update({'brightness_pct': brightness})
-        elif action == 'thing.attribute.adjust':
-            # 增加/减少亮度
-            if brightness is not None:
-                service_data.update({'brightness_pct': int(attributes.get('brightness', 255) / 255 * 100) + brightness})
+        # 查询属性
+        if action == 'thing.attribute.get':
+            print('查询')
+        else:
+            # 设置属性
+            if action == 'thing.attribute.set':
+                if powerstate == 1:
+                    service_name = 'turn_on'
+                elif powerstate == 0:
+                    service_name = 'turn_off'
+                # 设置亮度
+                if brightness is not None:
+                    service_data.update({'brightness_pct': brightness})
+            elif action == 'thing.attribute.adjust':
+                # 增加/减少亮度
+                if brightness is not None:
+                    service_name = 'turn_on'
+                    service_data.update({'brightness_pct': int(attributes.get('brightness', 255) / 255 * 100) + brightness})
 
-        if service_name is not None:
-            hass.async_create_task(hass.services.async_call(state.domain, service_name, service_data))
+            if service_name is not None:
+                # 脚本执行
+                if state.domain == 'script':
+                    service_name = entity_id.split('.')[1]
+                    service_data = {}
+                hass.async_create_task(hass.services.async_call(state.domain, service_name, service_data))
         
         # 返回结果
         deviceResponseList.append({
@@ -106,12 +128,7 @@ async def controlDevice(hass, action, payload):
             "errorCode": "SUCCESS",
             "message": "SUCCESS"
         })
-    return deviceResponseList
-
-def queryDevice(name, payload):
-    deviceId = payload['deviceId']
-    deviceType = payload['deviceType']
-    return errorResult('IOT_DEVICE_OFFLINE')
+    return { "deviceResponseList": deviceResponseList }
 
 # 获取名称
 def get_friendly_name(attributes):
@@ -135,13 +152,14 @@ def get_attributes(state, default_state=None):
     status = {}
     domain = state.domain
     attributes = state.attributes
-    if state.state.upper() == 'ON':
-        status.update({ powerstate: 1 })
-    else if state.state.upper() == 'OFF':
-        status.update({ powerstate: 0 })
+    state_value = state.state.upper()
+    if state_value == 'ON':
+        status.update({ 'powerstate': 1 })
+    elif state_value == 'OFF':
+        status.update({ 'powerstate': 0 })
 
     if domain == 'light':
         brightness = attributes.get('brightness', 255)
-        status.update({ brightness: int(brightness / 255 * 100) })
+        status.update({ 'brightness': int(brightness / 255 * 100) })
         
     return status
