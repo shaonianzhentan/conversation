@@ -196,5 +196,8 @@ def get_color_name(tmall_color):
         16761035: 'pink',
         16777215: 'white',
         0: 'black',
+        8900331: 'skyblue', # 天蓝色
+        139: 'darkblue', # 深蓝色
+        35723: 'darkcyan', # 深青色
     }
     return obj.get(tmall_color)
