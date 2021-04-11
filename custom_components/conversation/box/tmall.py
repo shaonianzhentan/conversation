@@ -108,6 +108,7 @@ async def controlDevice(hass, action, payload):
                     service_name = 'turn_off'
                 # 设置亮度
                 if brightness is not None:
+                    service_name = 'turn_on'
                     service_data.update({'brightness_pct': brightness})
             elif action == 'thing.attribute.adjust':
                 # 增加/减少亮度
