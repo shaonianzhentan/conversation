@@ -45,7 +45,7 @@ class Voice():
         项目地址：https://github.com/shaonianzhentan/conversation
 
     -------------------------------------------------------------------''')
-        local = hass.config.path("custom_components/conversation/local")
+        local = hass.config.path("custom_components/conversation/dist")
         hass.http.register_static_path('/conversation', local, False)
         hass.http.register_view(XiaoaiGateView)
         hass.http.register_view(XunfeiView)
@@ -112,9 +112,9 @@ class Voice():
         return tpl.async_render(None)
 
     # 返回意图结果
-    def intent_result(self, message):
+    def intent_result(self, message, extra_data = None):
         intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(message)
+        intent_result.async_set_speech(message, 'plain', extra_data)
         return intent_result
 
     # 重新加载配置
