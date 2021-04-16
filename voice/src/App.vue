@@ -24,6 +24,7 @@
       placeholder="请输入文字命令"
       v-model:value.trim="msg"
       @keydown.enter="sendMsgKeydown"
+      :disabled="loading"
     >
       <template #prefix>
         <BarsOutlined type="user" />
@@ -66,6 +67,7 @@ import CardMessage from "./components/CardMessage.vue";
 import CardVideo from "./components/CardVideo.vue";
 import CardState from "./components/CardState.vue";
 import CardAttributes from "./components/CardAttributes.vue";
+import CardLoading from "./components/CardLoading.vue";
 
 export default defineComponent({
   components: {
@@ -75,7 +77,8 @@ export default defineComponent({
     EditOutlined,
     CardMessage,
     CardVideo,
-    CardState
+    CardState,
+    CardLoading
   },
   setup: () => {
     let list = ref<Array<any>>([]);
@@ -89,6 +92,7 @@ export default defineComponent({
   data() {
     return {
       msg: "",
+      loading: false,
       throttle: throttle(
         () => {
           this.sendMsg(this.msg);
@@ -239,7 +243,18 @@ export default defineComponent({
     },
     sendMsg(msg) {
       this.msg = "";
+      const comData = {
+        name: "CardLoading",
+        cmd: msg,
+        data: {
+          text: "",
+          list: []
+        }
+      };
+      this.list.push(comData);
+
       // 发送指令
+      this.loading = true;
       this.hass
         .sendMessagePromise({
           conversation_id: `${Math.random()
@@ -251,15 +266,9 @@ export default defineComponent({
           type: "conversation/process"
         })
         .then(({ speech }: any) => {
+          // console.log(speech);
+          comData.data.text = speech.plain.speech;
           const extra_data = speech.plain.extra_data;
-          const comData = {
-            name: "CardMessage",
-            cmd: msg,
-            data: {
-              text: speech.plain.speech,
-              list: []
-            }
-          };
           // 更多信息
           if (extra_data) {
             const entity_list = extra_data.data;
@@ -269,10 +278,15 @@ export default defineComponent({
               comData.name = "CardAttributes";
             }
             comData.data.list = entity_list;
+          } else {
+            comData.name = "CardMessage";
           }
-          this.list.push(comData);
-          this.scrollIntoView();
+          this.list[this.list.length - 1] = JSON.parse(JSON.stringify(comData));
+        })
+        .finally(() => {
+          this.loading = false;
         });
+      this.scrollIntoView();
     },
     toggleVoiceClick() {
       this.isVoice = !this.isVoice;

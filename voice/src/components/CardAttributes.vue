@@ -5,32 +5,24 @@
       :key="index"
     >{{ item.name }}
       <template #actions>
-        <a-switch
-          :checked="item.value === 'on'"
-          @click="toggleClick(item)"
-          v-if="
-              index === 0 &&
-              [
-                'input_boolean',
-                'light',
-                'switch',
-                'fan',
-                'automation',
-                'climate',
-              ].includes(item.domain)
-            "
+        <ActionButton
+          :domain="item.domain"
+          :value="item.value"
+          @trigger="triggerClick(item)"
+          @toggle="toggleClick(item)"
         />
-        <span v-else>
-          {{ item.value }}
-        </span>
       </template>
     </a-list-item>
   </a-list>
 </template>
 <script lang="ts">
 import { defineComponent } from "vue";
+import ActionButton from "./ActionButton.vue";
 
 export default defineComponent({
+  components: {
+    ActionButton
+  },
   props: {
     data: {
       type: Object,
