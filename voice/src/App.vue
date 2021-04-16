@@ -4,6 +4,7 @@
     :key="index"
     :is="item.name"
     :data="item.data"
+    :hass="hass"
   />
   <div
     style="
@@ -54,11 +55,13 @@ import { defineComponent, ref } from "vue";
 import CardMessage from "./components/CardMessage.vue";
 import CardVideo from "./components/CardVideo.vue";
 import CardState from "./components/CardState.vue";
+import CardAttributes from "./components/CardAttributes.vue";
 
 export default defineComponent({
   components: {
     BarsOutlined,
     AudioOutlined,
+    CardAttributes,
     EditOutlined,
     CardMessage,
     CardVideo,
@@ -174,14 +177,64 @@ export default defineComponent({
           type: "conversation/process",
         })
         .then(({ speech }: any) => {
+          const extra_data = speech.plain.extra_data;
           const data: any = {
-            cmd: String(msg),
+            cmd: msg,
             text: speech.plain.speech,
+            list: [],
           };
-          this.list.push({
-            name: "CardMessage",
-            data,
-          });
+          if (extra_data) {
+            // 获取当前实体
+            // 语音助手的状态
+            this.hass
+              .sendMessagePromise({ type: "get_states" })
+              .then((states: any) => {
+                const arr = states
+                  .filter((ele) => extra_data.data.includes(ele.entity_id))
+                  .map((ele) => {
+                    ele["domain"] = ele.entity_id.split(".")[0];
+                    return ele;
+                  });
+                // console.log(arr);
+                if (arr.length === 1) {
+                  const { attributes, state, domain, entity_id } = arr[0];
+                  data.list = Object.keys(attributes).map((key) => {
+                    return {
+                      name: key,
+                      value: attributes[key],
+                    };
+                  });
+                  data.list.unshift({
+                    domain,
+                    entity_id,
+                    name: attributes.friendly_name,
+                    value: state,
+                  });
+                  this.list.push({
+                    name: "CardAttributes",
+                    data,
+                  });
+                } else {
+                  data.list = arr.map((state) => {
+                    return {
+                      domain: state.domain,
+                      entity_id: state.entity_id,
+                      name: state.attributes.friendly_name,
+                      value: state.state,
+                    };
+                  });
+                  this.list.push({
+                    name: "CardState",
+                    data,
+                  });
+                }
+              });
+          } else {
+            this.list.push({
+              name: "CardMessage",
+              data,
+            });
+          }
         });
     },
     toggleVoiceClick() {
@@ -193,7 +246,7 @@ export default defineComponent({
 
 <style>
 #app {
-  padding: 10px;
+  padding: 10px 10px 50px 10px;
 }
 #app .ant-card {
   margin-bottom: 10px;

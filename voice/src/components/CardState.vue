@@ -1,15 +1,10 @@
 <template>
-  <a-card title="我想看司藤">
+  <a-card :title="data.cmd">
     <a-list bordered>
-      <a-list-item>测试</a-list-item>
-      <a-list-item
-        >测试
-        <template #actions> 10 </template>
-      </a-list-item>
-      <a-list-item
-        >测试
+      <a-list-item v-for="(item, index) in data.list" :key="index"
+        >{{ item.name }}
         <template #actions>
-          <a-switch v-model:checked="checked" />
+          {{ item.value }}
         </template>
       </a-list-item>
     </a-list>
@@ -20,7 +15,16 @@ import { defineComponent, ref } from "vue";
 
 export default defineComponent({
   props: {
-    data: {},
+    data: {
+      type: Object,
+      default() {
+        return {
+          cmd: "",
+          text: "",
+          list: [],
+        };
+      },
+    },
   },
   setup() {
     const checked = ref(false);
