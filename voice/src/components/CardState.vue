@@ -6,9 +6,7 @@
     >{{ item.name }}
       <template #actions>
         <ActionButton
-          :domain="item.domain"
-          :value="item.value"
-          @trigger="triggerClick(item)"
+          :data="item"
           @toggle="toggleClick(item)"
         />
       </template>
@@ -42,27 +40,12 @@ export default defineComponent({
       list: []
     };
   },
-  inject: ["callService"],
   async mounted() {
     this.list = await this.load({ entity_list: this.data.list });
   },
   methods: {
     toggleClick(item) {
-      console.log(item);
-      const { entity_id, domain, value } = item;
-      item.value = value === "on" ? "off" : "on";
-      // 发送指令
-      this.callService(`${domain}.turn_${item.value}`, {
-        entity_id
-      });
-    },
-    // 触发
-    triggerClick({ domain, entity_id }) {
-      if (domain === "script") {
-        this.callService(entity_id);
-      } else if (domain === "automation") {
-        this.callService("automation.trigger", { entity_id });
-      }
+      item.value = item.value === "on" ? "off" : "on";
     }
   }
 });
