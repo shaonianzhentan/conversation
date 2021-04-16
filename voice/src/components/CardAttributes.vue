@@ -1,13 +1,14 @@
 <template>
-  <a-card :title="data.cmd">
-    <a-list bordered>
-      <a-list-item v-for="(item, index) in data.list" :key="index"
-        >{{ item.name }}
-        <template #actions>
-          <a-switch
-            :checked="item.value === 'on'"
-            @click="toggleClick(item)"
-            v-if="
+  <a-list bordered>
+    <a-list-item
+      v-for="(item, index) in list"
+      :key="index"
+    >{{ item.name }}
+      <template #actions>
+        <a-switch
+          :checked="item.value === 'on'"
+          @click="toggleClick(item)"
+          v-if="
               index === 0 &&
               [
                 'input_boolean',
@@ -18,14 +19,13 @@
                 'climate',
               ].includes(item.domain)
             "
-          />
-          <span v-else>
-            {{ item.value }}
-          </span>
-        </template>
-      </a-list-item>
-    </a-list>
-  </a-card>
+        />
+        <span v-else>
+          {{ item.value }}
+        </span>
+      </template>
+    </a-list-item>
+  </a-list>
 </template>
 <script lang="ts">
 import { defineComponent } from "vue";
@@ -38,11 +38,20 @@ export default defineComponent({
         return {
           cmd: "",
           text: "",
-          list: [],
+          list: []
         };
-      },
+      }
     },
     hass: {},
+    load: Function
+  },
+  data() {
+    return {
+      list: []
+    };
+  },
+  async mounted() {
+    this.list = await this.load({ entity_list: this.data.list });
   },
   methods: {
     toggleClick(item) {
@@ -54,12 +63,12 @@ export default defineComponent({
           type: "call_service",
           domain: item.domain,
           service: `turn_${item.value}`,
-          service_data: { entity_id: item.entity_id },
+          service_data: { entity_id: item.entity_id }
         })
-        .then((res) => {
+        .then(res => {
           console.log(res);
         });
-    },
-  },
+    }
+  }
 });
 </script>

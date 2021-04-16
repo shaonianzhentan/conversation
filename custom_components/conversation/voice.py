@@ -247,6 +247,17 @@ class Voice():
             attributes = state.attributes
             state_value = state.state
             friendly_name = attributes.get('friendly_name')
+            # 执行自定义脚本
+            if entity_id.find('script.') == 0:
+                cmd = friendly_name.split('=')
+                if cmd.count(text) > 0:
+                    arr = entity_id.split('.')
+                    # _LOGGER.debug('执行脚本：' + entity_id)
+                    await hass.services.async_call(arr[0], arr[1])
+                    return self.intent_result(f"正在执行自定义脚本：{entity_id}", {
+                        'type': 'entity',
+                        'data': [ entity_id ]
+                    })
             # 查询设备状态
             if friendly_name is not None:
                 friendly_name_lower = friendly_name.lower()
@@ -520,10 +531,10 @@ class Voice():
         try:
             async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text) as r:
                 res = await r.json(content_type=None)
-                _LOGGER.info(res)
+                _LOGGER.debug(res)
                 message = res['data']['info']['text']
         except Exception as e:
-            _LOGGER.info(e)        
+            _LOGGER.debug(e)        
         return message
 
     # 配置设置

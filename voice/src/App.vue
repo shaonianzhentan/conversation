@@ -1,25 +1,29 @@
 <template>
-  <component
+  <a-card
+    size="small"
     v-for="(item, index) in list"
     :key="index"
-    :is="item.name"
-    :data="item.data"
-    :hass="hass"
-  />
-  <div
-    style="
+    :title="item.cmd"
+  >
+    <component
+      :is="item.name"
+      :data="item.data"
+      :hass="hass"
+      :load="loadData"
+    />
+  </a-card>
+  <div style="
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
       padding: 10px;
       background: white;
-    "
-  >
+    ">
     <a-input
       placeholder="请输入文字命令"
-      v-model:value="msg"
-      @keydown="sendMsgKeydown($event)"
+      v-model:value.trim="msg"
+      @keydown.enter="sendMsgKeydown"
     >
       <template #prefix>
         <BarsOutlined type="user" />
@@ -27,8 +31,14 @@
       <template #suffix>
         <a-tooltip :title="isVoice ? '自动发送' : '手动发送'">
           <span @click="toggleVoiceClick">
-            <AudioOutlined style="color: rgba(0, 0, 0, 0.45)" v-if="isVoice" />
-            <EditOutlined style="color: rgba(0, 0, 0, 0.45)" v-else />
+            <AudioOutlined
+              style="color: rgba(0, 0, 0, 0.45)"
+              v-if="isVoice"
+            />
+            <EditOutlined
+              style="color: rgba(0, 0, 0, 0.45)"
+              v-else
+            />
           </span>
         </a-tooltip>
       </template>
@@ -43,13 +53,13 @@ import {
   createConnection,
   subscribeEntities,
   ERR_HASS_HOST_REQUIRED,
-  Connection,
+  Connection
 } from "home-assistant-js-websocket";
 import { throttle } from "lodash";
 import {
   BarsOutlined,
   AudioOutlined,
-  EditOutlined,
+  EditOutlined
 } from "@ant-design/icons-vue";
 import { defineComponent, ref } from "vue";
 import CardMessage from "./components/CardMessage.vue";
@@ -65,7 +75,7 @@ export default defineComponent({
     EditOutlined,
     CardMessage,
     CardVideo,
-    CardState,
+    CardState
   },
   setup: () => {
     let list = ref<Array<any>>([]);
@@ -73,7 +83,7 @@ export default defineComponent({
     return {
       hass,
       list,
-      isVoice: ref<boolean>(false),
+      isVoice: ref<boolean>(false)
     };
   },
   data() {
@@ -85,7 +95,19 @@ export default defineComponent({
         },
         2000,
         { leading: false, trailing: true }
-      ),
+      )
+    };
+  },
+  watch: {
+    msg(val) {
+      if (val && this.isVoice) {
+        this.throttle();
+      }
+    }
+  },
+  provide() {
+    return {
+      callService: this.callService
     };
   },
   created() {
@@ -102,9 +124,9 @@ export default defineComponent({
               return JSON.parse(localStorage["hassTokens"]);
             } catch {}
           },
-          saveTokens: (data) => {
+          saveTokens: data => {
             localStorage["hassTokens"] = JSON.stringify(data);
-          },
+          }
         });
       } catch (err) {
         if (err === ERR_HASS_HOST_REQUIRED) {
@@ -126,14 +148,14 @@ export default defineComponent({
       }
       this.hass = connection;
       // 初始化登录信息
-      getUser(connection).then((user) => {
+      getUser(connection).then(user => {
         console.log("Logged in as", user);
         // 获取当前组件版本
         connection
           .sendMessagePromise({ type: "get_states" })
           .then((res: any) => {
             let entity = res.find(
-              (ele) => ele.entity_id === "conversation.voice"
+              ele => ele.entity_id === "conversation.voice"
             );
             let query = new URLSearchParams(location.search);
             let ver = entity.attributes["version"];
@@ -143,25 +165,75 @@ export default defineComponent({
             } else {
               this.list.push({
                 name: "CardMessage",
+                cmd: `HomeAssistant服务连接成功`,
                 data: {
-                  cmd: "HomeAssistant服务连接成功",
-                  text: `【${user.name}】你好，欢迎使用语音小助手`,
-                },
+                  text: `【${
+                    user.name
+                  }】你好，欢迎使用语音小助手，当前版本${ver}`
+                }
               });
             }
           });
       });
     },
+    async callService(serviceName, service_data = {}) {
+      let arr = serviceName.split(".");
+      const result = await this.hass.sendMessagePromise({
+        type: "call_service",
+        domain: arr[0],
+        service: arr[1],
+        service_data
+      });
+      console.log(result);
+      return result;
+    },
+    // 获取当前数据
+    async loadData({ entity_list }) {
+      const states = await this.hass.sendMessagePromise({ type: "get_states" });
+      // 获取当前实体
+      const arr = states
+        .filter(ele => entity_list.includes(ele.entity_id))
+        .map(ele => {
+          ele["domain"] = ele.entity_id.split(".")[0];
+          return ele;
+        });
+      let list = [];
+      // 单个实体
+      if (arr.length === 1) {
+        const { attributes, state, domain, entity_id } = arr[0];
+        list = Object.keys(attributes).map(key => {
+          return {
+            name: key,
+            value: attributes[key]
+          };
+        });
+        list.unshift({
+          domain,
+          entity_id,
+          name: attributes.friendly_name,
+          value: state
+        });
+      } else {
+        list = arr.map(state => {
+          return {
+            domain: state.domain,
+            entity_id: state.entity_id,
+            name: state.attributes.friendly_name,
+            value: state.state
+          };
+        });
+      }
+      return list;
+    },
+    scrollIntoView() {
+      setTimeout(() => {
+        const sv = document.querySelector("#app .ant-card:nth-last-child(2)");
+        sv && sv.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+    },
     sendMsgKeydown(event) {
-      const { msg, isVoice } = this;
-      if (!msg) {
-        return;
-      }
-      if (isVoice) {
-        return this.throttle();
-      }
-      // 回车
-      if (event.keyCode === 13) {
+      const { msg } = this;
+      if (msg) {
         this.sendMsg(msg);
       }
     },
@@ -172,75 +244,40 @@ export default defineComponent({
         .sendMessagePromise({
           conversation_id: `${Math.random()
             .toString(16)
-            .substr(2, 10)}${Math.random().toString(16).substr(2, 10)}`,
+            .substr(2, 10)}${Math.random()
+            .toString(16)
+            .substr(2, 10)}`,
           text: msg,
-          type: "conversation/process",
+          type: "conversation/process"
         })
         .then(({ speech }: any) => {
           const extra_data = speech.plain.extra_data;
-          const data: any = {
+          const comData = {
+            name: "CardMessage",
             cmd: msg,
-            text: speech.plain.speech,
-            list: [],
+            data: {
+              text: speech.plain.speech,
+              list: []
+            }
           };
+          // 更多信息
           if (extra_data) {
-            // 获取当前实体
-            // 语音助手的状态
-            this.hass
-              .sendMessagePromise({ type: "get_states" })
-              .then((states: any) => {
-                const arr = states
-                  .filter((ele) => extra_data.data.includes(ele.entity_id))
-                  .map((ele) => {
-                    ele["domain"] = ele.entity_id.split(".")[0];
-                    return ele;
-                  });
-                // console.log(arr);
-                if (arr.length === 1) {
-                  const { attributes, state, domain, entity_id } = arr[0];
-                  data.list = Object.keys(attributes).map((key) => {
-                    return {
-                      name: key,
-                      value: attributes[key],
-                    };
-                  });
-                  data.list.unshift({
-                    domain,
-                    entity_id,
-                    name: attributes.friendly_name,
-                    value: state,
-                  });
-                  this.list.push({
-                    name: "CardAttributes",
-                    data,
-                  });
-                } else {
-                  data.list = arr.map((state) => {
-                    return {
-                      domain: state.domain,
-                      entity_id: state.entity_id,
-                      name: state.attributes.friendly_name,
-                      value: state.state,
-                    };
-                  });
-                  this.list.push({
-                    name: "CardState",
-                    data,
-                  });
-                }
-              });
-          } else {
-            this.list.push({
-              name: "CardMessage",
-              data,
-            });
+            const entity_list = extra_data.data;
+            if (entity_list.length > 1) {
+              comData.name = "CardState";
+            } else {
+              comData.name = "CardAttributes";
+            }
+            comData.data.list = entity_list;
           }
+          this.list.push(comData);
+          this.scrollIntoView();
         });
     },
     toggleVoiceClick() {
       this.isVoice = !this.isVoice;
-    },
-  },
+    }
+  }
 });
 </script>
 
