@@ -40,7 +40,7 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.4.1'
+VERSION = '1.4.2'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -242,9 +242,9 @@ def matcher_script(text):
     if matchObj is not None:
         return matchObj.group(1)
 
-########################################## (执行|触发|打开|关闭)自动化
+########################################## (执行|触发|打开|关闭|切换)自动化
 def matcher_automation(text):
-    matchObj = re.match(r'(执行|触发|打开|关闭)自动化(.*)', text)
+    matchObj = re.match(r'(执行|触发|打开|关闭|切换)自动化(.*)', text)
     if matchObj is not None:
         return (matchObj.group(1), trim_char(matchObj.group(2)))
 

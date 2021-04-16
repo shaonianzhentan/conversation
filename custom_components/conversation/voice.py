@@ -222,28 +222,10 @@ class Voice():
             device_type = '.scene'
 
         if device_type is not None:
-            return self.intent_result(self.template('''
-                <table border cellpadding="5" style="border-collapse: collapse;">
-                    <tr><th>名称</th><th>状态</th><th>操作</th></tr>
-                    {% for state in states''' + device_type + ''' -%}
-                    <tr>
-                        <td>{{state.attributes.friendly_name}}</td>
-                        <td>{{state.state}}</td>                        
-                        <td>
-                            {% if 'light.' in state.entity_id or 
-                                  'switch.' in state.entity_id or
-                                  'script.' in state.entity_id or
-                                  'automation.' in state.entity_id or
-                                  'scene.' in state.entity_id -%}
-                                <a onclick="triggerDevice('{{state.entity_id}}', '正在执行', `{{state.attributes.friendly_name}}`)" style="color:#03a9f4;">触发</a>
-                            {%- else -%}
-                 
-                            {%- endif %}
-                        </td>
-                    </tr>
-                    {%- endfor %}
-                </table>
-            '''))
+            return self.intent_result(text.replace('查看', ''), {
+                'type': 'entity',
+                'data': self.template('{%- for state in states' + device_type + ' -%} "{{ state.entity_id }}",{%- endfor -%}')
+            })
         return None
 
     # 执行动作
@@ -265,44 +247,21 @@ class Voice():
             attributes = state.attributes
             state_value = state.state
             friendly_name = attributes.get('friendly_name')
-            # 执行自定义脚本
-            if entity_id.find('script.') == 0:
-                cmd = friendly_name.split('=')
-                if cmd.count(text) > 0:
-                    arr = entity_id.split('.')
-                    _LOGGER.info('执行脚本：' + entity_id)
-                    await hass.services.async_call(arr[0], arr[1])
-                    return self.intent_result("正在执行自定义脚本：" + entity_id)
             # 查询设备状态
             if friendly_name is not None:
                 friendly_name_lower = friendly_name.lower()
-                if text.lower() == friendly_name_lower + '的状态':
-                    return self.intent_result(friendly_name + '的状态：' + state.state)
                 # 查询设备属性
                 if text.lower() == friendly_name_lower + '的属性':
-                    message = self.template('''
-                    {% set entity_id = "''' + entity_id + '''" -%}
-                    <table border cellpadding="5" style="border-collapse: collapse;">
-                        <tr>
-                            <th>{{entity_id}}</th>
-                            <th>{{states(entity_id)}}</th>
-                        </tr>
-                        {% for state in states[entity_id].attributes -%}
-                        <tr>
-                            <td>{{state}}</td>
-                            <td>{{states[entity_id].attributes[state]}}</td>
-                        </tr>  
-                        {%- endfor %}
-                    </table>
-                    ''')
-                    return self.intent_result(message)
+                    return self.intent_result(friendly_name + '的属性', {
+                        'type': 'entity',
+                        'data': [ entity_id ]
+                    })
                 # 查询摄像监控画面
                 if text.lower() == '查看' + friendly_name_lower + '的画面':
-                    return self.intent_result(self.template('''
-                    {% set image = states['camera.generic_camera'].attributes['entity_picture'] %}
-                    <a href="{{ image }}" target="_blank">  <img src="{{ image }}" style="max-width:100%;" /> </a>
-                    '''))
-
+                    return self.intent_result(friendly_name_lower + '的画面', {
+                        'type': 'entity',
+                        'data': [ entity_id ]
+                    })
         return None
     
     # 执行灯光调色
@@ -315,7 +274,10 @@ class Voice():
                     'entity_id': state.entity_id,
                     'color_name': result[1]
                 })
-                return self.intent_result(f"已经设置为{result[2]}色")
+                return self.intent_result(f"已经设置为{result[2]}色", {
+                        'type': 'entity',
+                        'data': [ state.entity_id ]
+                    })
 
     # 执行灯光模式
     async def execute_light_mode(self, text):
@@ -327,7 +289,10 @@ class Voice():
                     'entity_id': state.entity_id,
                     'effect': result[1]
                 })
-                return self.intent_result(f"已经设置为{result[2]}模式")
+                return self.intent_result(f"已经设置为{result[2]}模式", {
+                        'type': 'entity',
+                        'data': [ state.entity_id ]
+                    })
     
     # 执行灯光亮度
     async def execute_light_brightness(self, text):
@@ -339,7 +304,10 @@ class Voice():
                     'entity_id': state.entity_id,
                     'brightness_pct': result[1]
                 })
-                return self.intent_result(f"亮度已经设置为{result[1]}%")
+                return self.intent_result(f"亮度已经设置为{result[1]}%", {
+                        'type': 'entity',
+                        'data': [ state.entity_id ]
+                    })
     # 执行脚本
     async def execute_script(self, text):
         result = matcher_script(text)
@@ -356,25 +324,36 @@ class Voice():
                     cmd = friendly_name.split('=')
                     if cmd.count(text) > 0:
                         self.call_service(entity_id)
-                        return self.intent_result("正在执行自定义脚本：" + entity_id)
+                        return self.intent_result("正在执行自定义脚本：" + entity_id, {
+                            'type': 'entity',
+                            'data': [ entity_id ]
+                        })
 
-    # (执行|触发|打开|关闭)自动化
+    # (执行|触发|打开|关闭|切换)自动化
     async def execute_automation(self, text):
         result = matcher_automation(text)
         if result is not None:
             action = result[0]
             state = await find_entity(self.hass, result[1], 'automation')
             if state is not None:
-                service_data = {'entity_id': state.entity_id}
+                entity_id = state.entity_id
+                extra_data = {
+                    'type': 'entity',
+                    'data': [ entity_id ]
+                }
+                service_data = {'entity_id': entity_id}
                 if action == '执行' or action == '触发':
                     self.call_service('automation.trigger', service_data)
-                    return self.intent_result("正在触发自动化：" + entity_id)
+                    return self.intent_result("正在触发自动化：" + entity_id, extra_data)
                 elif action == '打开':
                     self.call_service('automation.turn_on', service_data)
-                    return self.intent_result("正在打开自动化：" + entity_id)
+                    return self.intent_result("正在打开自动化：" + entity_id, extra_data)
                 elif action == '关闭':
                     self.call_service('automation.turn_off', service_data)
-                    return self.intent_result("正在关闭自动化：" + entity_id)
+                    return self.intent_result("正在关闭自动化：" + entity_id, extra_data)
+                elif action == '切换':
+                    self.call_service('automation.toggle', service_data)
+                    return self.intent_result("正在切换自动化：" + entity_id, extra_data)
 
     # 查看设备状态
     async def execute_query_state(self, text):
@@ -384,7 +363,10 @@ class Voice():
             if state is not None:
                 attributes = state.attributes
                 friendly_name = attributes.get('friendly_name')
-                return self.intent_result(f"{friendly_name}的状态是：{state.state}")
+                return self.intent_result(f"{friendly_name}的状态是：{state.state}", {
+                    'type': 'entity',
+                    'data': [ state.entity_id ]
+                })
 
     # 看电视
     async def execute_watch_tv(self, text):
@@ -469,18 +451,10 @@ class Voice():
                 if switch_entity != '':
                     self.call_service(f'switch.{service_type}', { 'entity_id': switch_entity})
 
-                return self.intent_result("正在" + _text + self.template('''
-                    <hr />
-                    <table border cellpadding="5" style="border-collapse: collapse;">
-                        <tr><th>名称</th><th>状态</th></tr>
-                        {% for state in states.light -%}
-                        <tr>
-                            <td>{{state.attributes.friendly_name}}</td>
-                            <td>{{state.state}}</td>  
-                        </tr>
-                        {%- endfor %}
-                    </table>
-                '''))
+                return self.intent_result("正在" + _text, {
+                            'type': 'entity',
+                            'data': self.template('{%- for state in states.light -%} "{{ state.entity_id }}",{%- endfor -%}')
+                        })
             elif _name == '所有开关' or _name == '所有的开关' or _name == '全部开关' or _name == '全部的开关':
                 self.call_service(f'switch.{service_type}', {
                     'entity_id': self.template('{% for state in states.switch -%}{{ state.entity_id }},{%- endfor %}').strip(',')
@@ -488,24 +462,13 @@ class Voice():
                 self.call_service(f'input_boolean.{service_type}', {
                     'entity_id': self.template('{% for state in states.input_boolean -%}{{ state.entity_id }},{%- endfor %}').strip(',')
                 })
-                return self.intent_result("正在" + _text + self.template('''
-                    <hr />
-                    <table border cellpadding="5" style="border-collapse: collapse;">
-                        <tr><th>名称</th><th>状态</th></tr>
-                        {% for state in states.switch -%}
-                        <tr>
-                            <td>{{state.attributes.friendly_name}}</td>
-                            <td>{{state.state}}</td>  
-                        </tr>
-                        {%- endfor %}
-                        {% for state in states.input_boolean -%}
-                        <tr>
-                            <td>{{state.attributes.friendly_name}}</td>
-                            <td>{{state.state}}</td>  
-                        </tr>
-                        {%- endfor %}
-                    </table>
-                '''))
+                return self.intent_result("正在" + _text, {
+                            'type': 'entity',
+                            'data': self.template('''
+                                {%- for state in states.switch -%} "{{ state.entity_id }}",{%- endfor -%}
+                                {%- for state in states.input_boolean -%} "{{ state.entity_id }}",{%- endfor -%}
+                            ''')
+                        })
             else:
                 # 当名称包含多个设备时执行
                 result = await self.matcher_multiple_switch(_name, service_type)
@@ -519,7 +482,10 @@ class Voice():
                         return None
                     # 调用服务执行
                     self.call_service(f'{state.domain}.{service_type}', { 'entity_id': state.entity_id})
-                    return self.intent_result(f"正在{action_text}{state.name}")
+                    return self.intent_result(f"正在{action_text}{state.name}", {
+                        'type': 'entity',
+                        'data': [ state.entity_id ]
+                    })
 
     # 执行多个开关
     async def matcher_multiple_switch(self, text, service_type):
