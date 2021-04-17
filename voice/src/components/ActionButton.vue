@@ -21,6 +21,12 @@
     type="link"
     @click="triggerClick"
   >触发</a-button>
+  <a-select
+    v-else-if="data.name === 'source_list'"
+    style="width:200px;"
+    :options="format_source_list(data.value)"
+    @change="sourceListChange"
+  > </a-select>
   <span v-else>
     {{ data.value }}
   </span>
@@ -63,6 +69,20 @@ export default {
       }
       this.$message.success("触发成功");
       this.$emit("trigger");
+    },
+    sourceListChange(source) {
+      const { domain, entity_id } = this.data;
+      this.callService("media_player.select_source", { entity_id, source });
+      this.$message.success(`选择【${source}】`);
+    },
+    // 云音乐的属性
+    format_source_list(value) {
+      return value.map(ele => {
+        return {
+          value: ele,
+          label: ele
+        };
+      });
     }
   }
 };

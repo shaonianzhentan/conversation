@@ -207,6 +207,8 @@ export default defineComponent({
         const { attributes, state, domain, entity_id } = arr[0];
         list = Object.keys(attributes).map(key => {
           return {
+            domain,
+            entity_id,
             name: key,
             value: attributes[key]
           };
