@@ -261,6 +261,12 @@ class Voice():
             # 查询设备状态
             if friendly_name is not None:
                 friendly_name_lower = friendly_name.lower()
+                # 设备状态
+                if text.lower() == friendly_name_lower:
+                    return self.intent_result(friendly_name + '的信息', {
+                        'type': 'entity',
+                        'data': [ entity_id ]
+                    })
                 # 查询设备属性
                 if text.lower() == friendly_name_lower + '的属性':
                     return self.intent_result(friendly_name + '的属性', {
