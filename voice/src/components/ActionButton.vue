@@ -1,6 +1,6 @@
 <template>
   <a-switch
-    v-if="[
+    v-if="data.isAction && [
                 'input_boolean',
                 'light',
                 'switch',
@@ -13,7 +13,7 @@
     @click="toggleClick"
   />
   <a-button
-    v-else-if="[
+    v-else-if="data.isAction && [
                 'script',
                 'scene',
                 'automation'
@@ -34,7 +34,8 @@ export default {
         return {
           domain: "",
           value: "",
-          entity_id: ""
+          entity_id: "",
+          isAction: false
         };
       }
     }
@@ -45,23 +46,23 @@ export default {
   inject: ["callService"],
   methods: {
     toggleClick() {
-      this.$emit("toggle");
-      const { value, domain, entity_id } = data;
+      const { value, domain, entity_id } = this.data;
       // 发送指令
       this.callService(`${domain}.turn_${value === "on" ? "off" : "on"}`, {
         entity_id
       });
       this.$message.success("切换成功");
+      this.$emit("toggle");
     },
     triggerClick() {
-      this.$emit("trigger");
-      const { domain, entity_id } = data;
+      const { domain, entity_id } = this.data;
       if (domain === "script") {
         this.callService(entity_id);
       } else if (domain === "automation") {
         this.callService("automation.trigger", { entity_id });
       }
       this.$message.success("触发成功");
+      this.$emit("trigger");
     }
   }
 };

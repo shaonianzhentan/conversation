@@ -66,14 +66,12 @@ import { defineComponent, ref } from "vue";
 import CardMessage from "./components/CardMessage.vue";
 import CardVideo from "./components/CardVideo.vue";
 import CardState from "./components/CardState.vue";
-import CardAttributes from "./components/CardAttributes.vue";
 import CardLoading from "./components/CardLoading.vue";
 
 export default defineComponent({
   components: {
     BarsOutlined,
     AudioOutlined,
-    CardAttributes,
     EditOutlined,
     CardMessage,
     CardVideo,
@@ -193,6 +191,8 @@ export default defineComponent({
     },
     // 获取当前数据
     async loadData({ entity_list }) {
+      // 延时一秒获取数据
+      await this.sleep(1);
       const states = await this.hass.sendMessagePromise({ type: "get_states" });
       // 获取当前实体
       const arr = states
@@ -215,7 +215,8 @@ export default defineComponent({
           domain,
           entity_id,
           name: attributes.friendly_name,
-          value: state
+          value: state,
+          isAction: true
         });
       } else {
         list = arr.map(state => {
@@ -223,7 +224,8 @@ export default defineComponent({
             domain: state.domain,
             entity_id: state.entity_id,
             name: state.attributes.friendly_name,
-            value: state.state
+            value: state.state,
+            isAction: true
           };
         });
       }
@@ -236,10 +238,15 @@ export default defineComponent({
       }, 500);
     },
     sendMsgKeydown(event) {
-      const { msg } = this;
-      if (msg) {
+      const { msg, isVoice } = this;
+      if (msg && !isVoice) {
         this.sendMsg(msg);
       }
+    },
+    async sleep(s) {
+      return new Promise(resolve => {
+        setTimeout(resolve, s * 1000);
+      });
     },
     sendMsg(msg) {
       this.msg = "";
@@ -272,11 +279,7 @@ export default defineComponent({
           // 更多信息
           if (extra_data) {
             const entity_list = extra_data.data;
-            if (entity_list.length > 1) {
-              comData.name = "CardState";
-            } else {
-              comData.name = "CardAttributes";
-            }
+            comData.name = "CardState";
             comData.data.list = entity_list;
           } else {
             comData.name = "CardMessage";

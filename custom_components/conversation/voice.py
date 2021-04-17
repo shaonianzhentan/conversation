@@ -206,19 +206,19 @@ class Voice():
     def query_device(self, text):
         hass = self.hass
         device_type = None
-        if text == '查看全部设备':
+        if text == '查看全部设备' or text == '查看所有设备':
             device_type = ''
-        elif text == '查看全部灯':
+        elif text == '查看全部灯' or text == '查看所有灯':
             device_type = '.light'
-        elif text == '查看全部传感器':
+        elif text == '查看全部传感器' or text == '查看所有传感器':
             device_type = '.sensor'
-        elif text == '查看全部开关':
+        elif text == '查看全部开关' or text == '查看所有开关':
             device_type = '.switch'
-        elif text == '查看全部脚本':
+        elif text == '查看全部脚本' or text == '查看所有脚本':
             device_type = '.script'
-        elif text == '查看全部自动化':
+        elif text == '查看全部自动化' or text == '查看所有自动化':
             device_type = '.automation'
-        elif text == '查看全部场景':
+        elif text == '查看全部场景' or text == '查看所有场景':
             device_type = '.scene'
 
         if device_type is not None:
