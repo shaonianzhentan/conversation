@@ -390,18 +390,19 @@ class Voice():
     async def execute_watch_tv(self, text):
         # 电视直播
         result = matcher_watch_tv(text)
+        video_title = ''
         video_url = None
         video_list = []
         if result is not None:
             obj = await http_get('http://localhost:8123/conversation/iptv.json')
             if result in obj:
+                video_title = result
                 video_url = obj[result]
                 for key in obj:
                     video_list.append({
                         'name': key,
                         'value': obj[key]
                     })
-            print(video_url)
         '''
         # 电影
         result = matcher_watch_movie(text)
@@ -432,7 +433,8 @@ class Voice():
                 })
             return self.intent_result(f"正在{text}，请查看是否成功", {
                 'type': 'video',
-                'list': video_list,
+                'title': video_title,
+                'data': video_list,
                 'entity_id': entity_id
             })
 

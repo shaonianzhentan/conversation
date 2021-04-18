@@ -12,14 +12,16 @@
       :load="loadData"
     />
   </a-card>
-  <div style="
+  <div
+    style="
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
       padding: 10px;
       background: white;
-    ">
+    "
+  >
     <a-input
       placeholder="请输入文字命令"
       v-model:value.trim="msg"
@@ -32,14 +34,8 @@
       <template #suffix>
         <a-tooltip :title="isVoice ? '自动发送' : '手动发送'">
           <span @click="toggleVoiceClick">
-            <AudioOutlined
-              style="color: rgba(0, 0, 0, 0.45)"
-              v-if="isVoice"
-            />
-            <EditOutlined
-              style="color: rgba(0, 0, 0, 0.45)"
-              v-else
-            />
+            <AudioOutlined style="color: rgba(0, 0, 0, 0.45)" v-if="isVoice" />
+            <EditOutlined style="color: rgba(0, 0, 0, 0.45)" v-else />
           </span>
         </a-tooltip>
       </template>
@@ -54,13 +50,13 @@ import {
   createConnection,
   subscribeEntities,
   ERR_HASS_HOST_REQUIRED,
-  Connection
+  Connection,
 } from "home-assistant-js-websocket";
 import { throttle } from "lodash";
 import {
   BarsOutlined,
   AudioOutlined,
-  EditOutlined
+  EditOutlined,
 } from "@ant-design/icons-vue";
 import { defineComponent, ref } from "vue";
 import CardMessage from "./components/CardMessage.vue";
@@ -76,7 +72,7 @@ export default defineComponent({
     CardMessage,
     CardVideo,
     CardState,
-    CardLoading
+    CardLoading,
   },
   setup: () => {
     let list = ref<Array<any>>([]);
@@ -84,7 +80,7 @@ export default defineComponent({
     return {
       hass,
       list,
-      isVoice: ref<boolean>(false)
+      isVoice: ref<boolean>(false),
     };
   },
   data() {
@@ -97,7 +93,7 @@ export default defineComponent({
         },
         2000,
         { leading: false, trailing: true }
-      )
+      ),
     };
   },
   watch: {
@@ -105,11 +101,11 @@ export default defineComponent({
       if (val && this.isVoice) {
         this.throttle();
       }
-    }
+    },
   },
   provide() {
     return {
-      callService: this.callService
+      callService: this.callService,
     };
   },
   created() {
@@ -126,9 +122,9 @@ export default defineComponent({
               return JSON.parse(localStorage["hassTokens"]);
             } catch {}
           },
-          saveTokens: data => {
+          saveTokens: (data) => {
             localStorage["hassTokens"] = JSON.stringify(data);
-          }
+          },
         });
       } catch (err) {
         if (err === ERR_HASS_HOST_REQUIRED) {
@@ -150,14 +146,14 @@ export default defineComponent({
       }
       this.hass = connection;
       // 初始化登录信息
-      getUser(connection).then(user => {
+      getUser(connection).then((user) => {
         console.log("Logged in as", user);
         // 获取当前组件版本
         connection
           .sendMessagePromise({ type: "get_states" })
           .then((res: any) => {
             let entity = res.find(
-              ele => ele.entity_id === "conversation.voice"
+              (ele) => ele.entity_id === "conversation.voice"
             );
             let query = new URLSearchParams(location.search);
             let ver = entity.attributes["version"];
@@ -169,10 +165,8 @@ export default defineComponent({
                 name: "CardMessage",
                 cmd: `HomeAssistant服务连接成功`,
                 data: {
-                  text: `【${
-                    user.name
-                  }】你好，欢迎使用语音小助手，当前版本${ver}`
-                }
+                  text: `【${user.name}】你好，欢迎使用语音小助手，当前版本${ver}`,
+                },
               });
             }
           });
@@ -184,7 +178,7 @@ export default defineComponent({
         type: "call_service",
         domain: arr[0],
         service: arr[1],
-        service_data
+        service_data,
       });
       console.log(result);
       return result;
@@ -196,8 +190,8 @@ export default defineComponent({
       const states = await this.hass.sendMessagePromise({ type: "get_states" });
       // 获取当前实体
       const arr = states
-        .filter(ele => entity_list.includes(ele.entity_id))
-        .map(ele => {
+        .filter((ele) => entity_list.includes(ele.entity_id))
+        .map((ele) => {
           ele["domain"] = ele.entity_id.split(".")[0];
           return ele;
         });
@@ -205,12 +199,12 @@ export default defineComponent({
       // 单个实体
       if (arr.length === 1) {
         const { attributes, state, domain, entity_id } = arr[0];
-        list = Object.keys(attributes).map(key => {
+        list = Object.keys(attributes).map((key) => {
           return {
             domain,
             entity_id,
             name: key,
-            value: attributes[key]
+            value: attributes[key],
           };
         });
         list.unshift({
@@ -218,16 +212,16 @@ export default defineComponent({
           entity_id,
           name: attributes.friendly_name,
           value: state,
-          isAction: true
+          isAction: true,
         });
       } else {
-        list = arr.map(state => {
+        list = arr.map((state) => {
           return {
             domain: state.domain,
             entity_id: state.entity_id,
             name: state.attributes.friendly_name,
             value: state.state,
-            isAction: true
+            isAction: true,
           };
         });
       }
@@ -246,7 +240,7 @@ export default defineComponent({
       }
     },
     async sleep(s) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         setTimeout(resolve, s * 1000);
       });
     },
@@ -257,8 +251,8 @@ export default defineComponent({
         cmd: msg,
         data: {
           text: "",
-          list: []
-        }
+          list: [],
+        },
       };
       this.list.push(comData);
 
@@ -268,11 +262,9 @@ export default defineComponent({
         .sendMessagePromise({
           conversation_id: `${Math.random()
             .toString(16)
-            .substr(2, 10)}${Math.random()
-            .toString(16)
-            .substr(2, 10)}`,
+            .substr(2, 10)}${Math.random().toString(16).substr(2, 10)}`,
           text: msg,
-          type: "conversation/process"
+          type: "conversation/process",
         })
         .then(({ speech }: any) => {
           // console.log(speech);
@@ -280,9 +272,14 @@ export default defineComponent({
           const extra_data = speech.plain.extra_data;
           // 更多信息
           if (extra_data) {
-            const entity_list = extra_data.data;
-            comData.name = "CardState";
-            comData.data.list = entity_list;
+            // 视频结果
+            if (extra_data.type === "video") {
+              comData.name = "CardVideo";
+              comData.data["entity_id"] = extra_data.entity_id;
+            } else {
+              comData.name = "CardState";
+            }
+            comData.data.list = extra_data.data;
           } else {
             comData.name = "CardMessage";
           }
@@ -295,8 +292,8 @@ export default defineComponent({
     },
     toggleVoiceClick() {
       this.isVoice = !this.isVoice;
-    }
-  }
+    },
+  },
 });
 </script>
 
