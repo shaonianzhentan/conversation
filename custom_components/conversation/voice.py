@@ -390,8 +390,18 @@ class Voice():
         # 电视直播
         result = matcher_watch_tv(text)
         video_url = None
+        video_list = []
         if result is not None:
-            video_url = result
+            obj = await http_get('http://localhost:8123/conversation/iptv.json')
+            print(obj)
+            if result in obj:
+                video_url = obj[result]
+                for key in obj:
+                    video_list.append({
+                        'name': key,
+                        'value': obj[key]
+                    })
+        '''
         # 电影
         result = matcher_watch_movie(text)
         if result is not None:
@@ -407,6 +417,7 @@ class Voice():
                     video_url = self.get_base_url(f'{VIDEO_API}/{video_url}')
                 else:
                     video_url = await get_video_url(result[0], result[1])
+        '''
         # 如果有视频地址则播放
         if video_url is not None:
             media_player = self.media_player
