@@ -24,6 +24,7 @@
   >
     <a-input
       placeholder="请输入文字命令"
+      autofocus
       v-model:value.trim="msg"
       @keydown.enter="sendMsgKeydown"
       :disabled="loading"
