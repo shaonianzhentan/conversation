@@ -180,6 +180,9 @@ xiaodu_domain: scene
 
 ## 天猫精灵2.0
 
+- [开放平台](https://iot.aligenie.com/home)
+- [开发文档](https://www.yuque.com/qw5nze/ga14hc/cmhq2c)
+
 配置注意事项：`技能图文内容`要全部填写才能生效
 
 ```yaml
