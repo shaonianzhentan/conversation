@@ -1,15 +1,13 @@
 <template>
-  <a-card title="我想看司藤" size="small">
-    <a-card title="获取所有状态值">
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第二集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-      <a-card-grid style="width: 25%; text-align: center">第一集</a-card-grid>
-    </a-card>
+  <a-card :title="data.text" size="small">
+    <a-card-grid
+      size="small"
+      style="width: 25%; text-align: center"
+      v-for="(item, index) in data.list"
+      :key="index"
+      @click="showClick(item)"
+      >{{ item.name }}</a-card-grid
+    >
   </a-card>
 </template>
 <script lang="ts">
@@ -18,5 +16,26 @@ export default defineComponent({
   props: {
     data: Object,
   },
+  inject: ["callService"],
+  methods: {
+    showClick(item) {
+      const { entity_id } = this.data;
+      if (entity_id) {
+        this.callService("media_player.play_media", {
+          media_content_type: "video",
+          media_content_id: item.value,
+          entity_id,
+        });
+        this.$message.success(`正在播放${item.name}`);
+      } else {
+        this.$message.error(`请先设置播放器`);
+      }
+    },
+  },
 });
 </script>
+<style scoped>
+.ant-card-grid {
+  padding: 14px;
+}
+</style>

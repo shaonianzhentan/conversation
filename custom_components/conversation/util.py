@@ -313,66 +313,13 @@ def matcher_watch_tv(text):
     matchObj = re.match(r'打开中央(.+)台', text)
     if matchObj is not None:
         num = format_number(matchObj.group(1))
-        if num == 1:
-            return 'http://39.134.65.162/PLTV/88888888/224/3221225686/index.m3u8'
-        elif num == 2:
-            return 'http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221225747/index.m3u8'
-        elif num == 3:
-            return 'http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221225785/index.m3u8'
-        elif num == 4:
-            return 'http://39.134.65.162/PLTV/88888888/224/3221225487/index.m3u8'
-        elif num == 5:
-            return 'http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221225753/index.m3u8'
-        elif num == 6:
-            return 'http://39.134.65.162/PLTV/88888888/224/3221225786/index.m3u8'
-        elif num == 7:
-            return 'http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221225733/index.m3u8'
-        elif num == 8:
-            return 'http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221225750/index.m3u8'
-        elif num == 9:
-            return 'http://ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221225734/index.m3u8'
-        elif num == 10:
-            return 'http://112.50.243.8/PLTV/88888888/224/3221225814/1.m3u8'
-        elif num == 11:
-            return 'http://dbiptv.sn.chinamobile.com/PLTV/88888888/224/3221225499/1.m3u8'
-        elif num == 12:
-            return 'http://39.134.65.162/PLTV/88888888/224/3221225518/index.m3u8'
-        elif num == 13:
-            return 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226316/1.m3u8'
-        elif num == 14:
-            return 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226229/1.m3u8'
-        elif num == 15:
-            return 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226333/1.m3u8'
-        elif num == 17:
-            return 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226318/1.m3u8'
+        if num >= 1 and num <= 17 and num != 16:
+            return f'CCTV-{num}'
 
     matchObj = re.match(r'打开(湖北|湖南|四川|吉林|海南|东南|广东|江苏|东方|云南|北京|浙江|天津|广西|山东|安徽|辽宁|重庆|陕西|北京)卫视', text)
     if matchObj is not None:
         name = matchObj.group(1)
-        obj = {
-            '湖北': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226240/1.m3u8',
-            '湖南': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226241/1.m3u8',
-            '四川': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226523/1.m3u8',
-            '吉林': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225886/1.m3u8',
-            '海南': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225639/1.m3u8',
-            '东南': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225876/1.m3u8',
-            '广东': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226535/1.m3u8',
-            '江苏': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225887/1.m3u8',
-            '东方': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226161/1.m3u8',
-            '云南': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226543/1.m3u8',
-            '北京': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226160/1.m3u8',
-            '浙江': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225903/1.m3u8',
-            '天津': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225899/1.m3u8',
-            '广西': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226534/1.m3u8',
-            '山东': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226487/1.m3u8',
-            '安徽': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226490/1.m3u8',
-            '辽宁': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221225889/1.m3u8',
-            '重庆': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226518/1.m3u8',
-            '陕西': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226532/1.m3u8',
-            '北京': 'http://221.179.217.9/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226224/1.m3u8'
-        }
-        if name in obj:
-            return obj[name]
+        return f'{name}卫视'
 
 def matcher_watch_video(text):
     matchObj = re.match(r'打开电视剧(.+)第(.+)集', text)

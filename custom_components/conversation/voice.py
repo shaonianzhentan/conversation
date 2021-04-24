@@ -16,7 +16,7 @@ from .box.xiaoai_view import XiaoaiGateView
 from .box.xiaodu_view import XiaoduGateView
 
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_API, ALIGENIE_API, XIAODU_API, VIDEO_API, \
-    ApiConfig, find_entity, trim_char, get_video_url, get_local_video_url, \
+    ApiConfig, find_entity, trim_char, http_get, get_video_url, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
     matcher_script, matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
@@ -100,10 +100,11 @@ class Voice():
     def media_player(self):
         ''' 媒体播放器 '''
         cfg = self.api_config.get_config()
-        entity_id = cfg.get('media_player')
-        state = self.hass.states.get(entity_id)
-        if state is not None:
-            return state
+        entity_id = cfg.get('media_player', '')
+        if entity_id != '':
+            state = self.hass.states.get(entity_id)
+            if state is not None:
+                return state
         return None
 
     # 解析模板
@@ -389,9 +390,20 @@ class Voice():
     async def execute_watch_tv(self, text):
         # 电视直播
         result = matcher_watch_tv(text)
+        video_title = ''
         video_url = None
+        video_list = []
         if result is not None:
-            video_url = result
+            obj = await http_get('http://localhost:8123/conversation/iptv.json')
+            if result in obj:
+                video_title = result
+                video_url = obj[result]
+                for key in obj:
+                    video_list.append({
+                        'name': key,
+                        'value': obj[key]
+                    })
+        '''
         # 电影
         result = matcher_watch_movie(text)
         if result is not None:
@@ -407,16 +419,24 @@ class Voice():
                     video_url = self.get_base_url(f'{VIDEO_API}/{video_url}')
                 else:
                     video_url = await get_video_url(result[0], result[1])
+        '''
         # 如果有视频地址则播放
         if video_url is not None:
             media_player = self.media_player
+            entity_id = ''
             if media_player is not None:
+                entity_id = media_player.entity_id
                 self.call_service('media_player.play_media', {
-                    'entity_id': media_player.entity_id,
+                    'entity_id': entity_id,
                     'media_content_id': video_url,
                     'media_content_type': 'video'
                 })
-                return self.intent_result(f"正在{text}，请查看是否成功")
+            return self.intent_result(f"正在{text}，请查看是否成功", {
+                'type': 'video',
+                'title': video_title,
+                'data': video_list,
+                'entity_id': entity_id
+            })
 
     # 同时开关
     async def execute_on_off(self, _text):
