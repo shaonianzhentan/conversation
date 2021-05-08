@@ -1,0 +1,8 @@
+{
+    "name": "语音小助手",
+    "country": "CN",
+    "render_readme": true,
+    "domains": [
+        "conversation"
+    ]
+}
