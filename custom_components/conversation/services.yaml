@@ -14,18 +14,6 @@ reload:
 setting:
   description: 设置相关配置
   fields:
-    media_player:
-      name: 媒体播放器
-      description: 视频播放器（电视投屏要用）
-      example: 'media_player.android_tv'
-      selector:
-        entity:
-          domain: media_player
-    video_path:
-      description: 视频路径（支持http链接）
-      example: '/home/pi/download'
-      selector:
-        text:
     open_mic:
       name: 是否继续对话
       description: 语音结束后是否继续开麦（是：true，否：false）

@@ -67,7 +67,7 @@ class Voice():
         credential: models.Credentials = None,
     ) -> models.RefreshToken:
         # 如果是小度或天猫精灵，则给它们十年的授权
-        if ['https://open.bot.tmall.com', 'https://xiaodu.baidu.com'].count(client_id.strip('/')) > 0:
+        if client_id is not None and ['https://open.bot.tmall.com', 'https://xiaodu.baidu.com'].count(client_id.strip('/')) > 0:
             access_token_expiration = timedelta(hours=87600)
             _LOGGER.debug('如果是小度或天猫精灵，则给它们十年的授权')
         """Create a new token for a user."""
@@ -135,11 +135,6 @@ class Voice():
     async def async_process(self, text):
         # 去掉前后标点符号
         _text = self.fire_text(text)
-
-        # 看电视
-        intent_result = await self.execute_watch_tv(_text)
-        if intent_result is not None:
-            return intent_result
 
         # 查询设备状态
         intent_result = await self.execute_query_state(_text)
@@ -386,58 +381,6 @@ class Voice():
                     'data': [ state.entity_id ]
                 })
 
-    # 看电视
-    async def execute_watch_tv(self, text):
-        # 电视直播
-        result = matcher_watch_tv(text)
-        video_title = ''
-        video_url = None
-        video_list = []
-        if result is not None:
-            obj = await http_get('http://localhost:8123/conversation/iptv.json')
-            if result in obj:
-                video_title = result
-                video_url = obj[result]
-                for key in obj:
-                    video_list.append({
-                        'name': key,
-                        'value': obj[key]
-                    })
-        '''
-        # 电影
-        result = matcher_watch_movie(text)
-        if result is not None:
-            video_url = await get_video_url(result[0], -1)
-        else:
-            # 电视剧
-            result = matcher_watch_video(text)
-            if result is not None:
-                print(result)
-                config_data = self.api_config.get_config()
-                video_url = await get_local_video_url(config_data.get('video_path', ''), result[0], result[1])
-                if video_url is not None and video_url[:4] != 'http':
-                    video_url = self.get_base_url(f'{VIDEO_API}/{video_url}')
-                else:
-                    video_url = await get_video_url(result[0], result[1])
-        '''
-        # 如果有视频地址则播放
-        if video_url is not None:
-            media_player = self.media_player
-            entity_id = ''
-            if media_player is not None:
-                entity_id = media_player.entity_id
-                self.call_service('media_player.play_media', {
-                    'entity_id': entity_id,
-                    'media_content_id': video_url,
-                    'media_content_type': 'video'
-                })
-            return self.intent_result(f"正在{text}，请查看是否成功", {
-                'type': 'video',
-                'title': video_title,
-                'data': video_list,
-                'entity_id': entity_id
-            })
-
     # 同时开关
     async def execute_on_off(self, _text):
         hass = self.hass
@@ -569,18 +512,6 @@ class Voice():
         is_save = False
         config_data = self.api_config.get_config()
         data = service.data
-        # 保存媒体播放器
-        media_player_entity_id = data.get('media_player', '')
-        if media_player_entity_id != '':
-            if hass.states.get(media_player_entity_id) is not None:
-                config_data.update({'media_player': media_player_entity_id})
-                is_save = True
-            else:
-                self.call_service('persistent_notification.create', {
-                    'message': '选择的媒体播放器在系统中不存在',
-                    'title': '语音小助手',
-                    'notification_id': 'conversation-error'
-                })
         # 保存user_id
         user_id = data.get('user_id')
         if user_id is not None:
@@ -601,15 +532,6 @@ class Voice():
         if open_mic is not None:
             config_data.update({'open_mic': open_mic})
             is_save = True
-        # 保存video_path
-        video_path = data.get('video_path')
-        if video_path is not None:
-            video_path = video_path.rstrip('/')
-            config_data.update({'video_path': video_path})
-            is_save = True
-            # 如果是文件夹，则设置静态目录访问
-            if os.path.exists(video_path):
-                self.hass.http.register_static_path(VIDEO_API, video_path, False)
         # 保存配置
         if is_save:
             self.api_config.save_config(config_data)
@@ -629,8 +551,6 @@ class Voice():
             "timestamp": timestamp,
             "source": source,
             "version": VERSION,
-            "media_player": config_data.get("media_player", ""),
-            "video_path": config_data.get("video_path", ""),
             "open_mic": config_data.get("open_mic", True),
             'link': self.get_base_url('/conversation/index.html?ver=' + VERSION),
             'XiaoAi': self.get_base_url(XIAOAI_API),
