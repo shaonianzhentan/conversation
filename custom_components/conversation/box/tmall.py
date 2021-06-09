@@ -93,6 +93,7 @@ async def controlDevice(hass, action, payload):
     params = payload['params']
     powerstate = params.get('powerstate')
     brightness = params.get('brightness')
+    motorControl = params.get('motorControl')
     # 颜色转换
     color = get_color_name(params.get('color'))
     # 根据设备ID，找到对应的实体ID
@@ -120,6 +121,16 @@ async def controlDevice(hass, action, payload):
                 if color is not None:
                     service_name = 'turn_on'
                     service_data.update({'rgb_color': color_util.color_name_to_rgb(color)})
+                # 设置电机控制
+                if motorControl is not None:
+                    # 判断是否晾衣架
+                    if domain == 'cover':
+                        if motorControl == 0:
+                            service_name = 'stop_cover'
+                        elif motorControl == 1:
+                            service_name = 'open_cover'
+                        elif motorControl == 2:
+                            service_name = 'close_cover'
             elif action == 'thing.attribute.adjust':
                 # 增加/减少亮度
                 if brightness is not None:
