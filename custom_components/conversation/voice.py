@@ -326,7 +326,7 @@ class Voice():
         result = matcher_script(text)
         if result is not None:
             # 遍历所有实体
-            states = hass.states.async_all()
+            states = self.hass.states.async_all()
             for state in states:
                 entity_id = state.entity_id
                 attributes = state.attributes
