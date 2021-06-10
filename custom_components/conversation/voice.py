@@ -335,7 +335,7 @@ class Voice():
                 # 执行自定义脚本
                 if entity_id.find('script.') == 0:
                     cmd = friendly_name.split('=')
-                    if cmd.count(text) > 0:
+                    if cmd.count(result) > 0:
                         self.call_service(entity_id)
                         return self.intent_result("正在执行自定义脚本：" + entity_id, {
                             'type': 'entity',
