@@ -277,19 +277,35 @@ async def controlDevice(hass, action, payload):
             'entity_id': entity_id,
             'temperature': xiaodu_data['targetTemperature']
         })
-    '''
+    ################ 设备模式设置
+    elif action == 'SetModeRequest':
+        # 空调
+        if domain == 'climate':
+            return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': xiaodu_data['mode'].lower()})
+    elif action == 'UnsetModeRequest':
+        # 空调
+        if domain == 'climate':
+            return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': 'auto'})
+    elif action == 'TimingSetModeRequest':
+        # 空调
+        if domain == 'climate':
+            return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': xiaodu_data['mode'].lower() })
     ################ 可控风速设备
     elif action == 'IncrementFanSpeedRequest':
+        # 空调
+        if domain == 'climate':
+            return call_service(hass, 'climate.set_fan_mode', {'entity_id': entity_id, 'hvac_mode': 'high'})
     elif action == 'DecrementFanSpeedRequest':
+        # 空调
+        if domain == 'climate':
+            return call_service(hass, 'climate.set_fan_mode', {'entity_id': entity_id, 'hvac_mode': 'low'})
     elif action == 'SetFanSpeedRequest':
+        print('设置风速')
+    '''
     ################ 可控速度设备
     elif action == 'IncrementSpeedRequest':
     elif action == 'DecrementSpeedRequest':
     elif action == 'SetSpeedRequest':
-    ################ 设备模式设置
-    elif action == 'SetModeRequest':
-    elif action == 'UnsetModeRequest':
-    elif action == 'TimingSetModeRequest':
     ################ 电视频道设置
     elif action == 'IncrementTVChannelRequest':
     elif action == 'DecrementTVChannelRequest':
