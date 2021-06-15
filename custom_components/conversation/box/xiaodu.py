@@ -146,6 +146,12 @@ async def controlDevice(hass, action, payload):
         if isinstance(deltValue, dict):
             deltValue = deltValue['value']
         xiaodu_data.update({'deltValue': deltValue})
+    # 温度
+    if 'deltaValue' in payload:
+        deltaValue = payload.get('deltaValue')
+        if isinstance(deltaValue, dict):
+            deltaValue = deltaValue['value']
+        xiaodu_data.update({'deltaValue': deltaValue})
     # 颜色
     if 'color' in payload:
         xiaodu_data.update({'color': payload['color']})
@@ -264,13 +270,13 @@ async def controlDevice(hass, action, payload):
     elif action == 'IncrementTemperatureRequest':
         return call_service(hass, 'climate.set_temperature', {
             'entity_id': entity_id,
-            'temperature': state.attributes.get('temperature') - deltValue
+            'temperature': state.attributes.get('temperature') - deltaValue
         })
     elif action == 'DecrementTemperatureRequest':
         state = hass.states.get(entity_id)
         return call_service(hass, 'climate.set_temperature', {
             'entity_id': entity_id,
-            'temperature': state.attributes.get('temperature') - deltValue
+            'temperature': state.attributes.get('temperature') - deltaValue
         })
     elif action == 'SetTemperatureRequest':
         return call_service(hass, 'climate.set_temperature', {
@@ -281,7 +287,17 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetModeRequest':
         # 空调
         if domain == 'climate':
-            return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': xiaodu_data['mode'].lower()})
+            mode = xiaodu_data['mode']
+            '''
+            # 上下摆风
+            if mode == 'UP_DOWN_SWING':
+                return call_service(hass, 'climate.set_swing_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
+            # 左右摆风
+            elif mode == 'LEFT_RIGHT_SWING':
+                return call_service(hass, 'climate.set_swing_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
+            '''
+            if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
+                return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
     elif action == 'UnsetModeRequest':
         # 空调
         if domain == 'climate':
@@ -289,7 +305,9 @@ async def controlDevice(hass, action, payload):
     elif action == 'TimingSetModeRequest':
         # 空调
         if domain == 'climate':
-            return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': xiaodu_data['mode'].lower() })
+            mode = xiaodu_data['mode']
+            if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
+                return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
     ################ 可控风速设备
     elif action == 'IncrementFanSpeedRequest':
         # 空调
