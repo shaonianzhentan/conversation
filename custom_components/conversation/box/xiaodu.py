@@ -270,7 +270,7 @@ async def controlDevice(hass, action, payload):
     elif action == 'IncrementTemperatureRequest':
         return call_service(hass, 'climate.set_temperature', {
             'entity_id': entity_id,
-            'temperature': state.attributes.get('temperature') - deltaValue
+            'temperature': state.attributes.get('temperature') + deltaValue
         })
     elif action == 'DecrementTemperatureRequest':
         state = hass.states.get(entity_id)
