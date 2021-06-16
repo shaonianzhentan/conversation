@@ -132,6 +132,8 @@ async def controlDevice(hass, action, payload):
     additionalApplianceDetails = applianceDic.get('additionalApplianceDetails', {})
     # 实体ID
     entity_id = applianceDic['applianceId']
+    # 服务数据
+    service_data = { 'entity_id': entity_id }
     state = hass.states.get(entity_id)
     domain = entity_id.split('.')[0]   
     # 小度事件数据
@@ -183,14 +185,13 @@ async def controlDevice(hass, action, payload):
     # 服务名称
     ################ 打开关闭设备
     if action == 'TurnOnRequest':
-        return call_service(hass, domain + '.turn_on', {'entity_id': entity_id})
+        return call_service(hass, domain + '.turn_on', service_data)
     elif action == 'TurnOffRequest':
-        return call_service(hass, domain + '.turn_off', {'entity_id': entity_id})
+        return call_service(hass, domain + '.turn_off', service_data)
     elif action == 'TimingTurnOnRequest':
-        print('定时打开')
+        return call_service(hass, domain + '.turn_on', service_data)
     elif action == 'TimingTurnOffRequest':
-        print('定时关闭')
-        service_name = 'turn_off'
+        return call_service(hass, domain + '.turn_off', service_data)
     elif action == 'PauseRequest':
         # 暂停
         print('暂停')
@@ -203,10 +204,8 @@ async def controlDevice(hass, action, payload):
     ################ 可控灯光设备
     elif action == 'SetBrightnessPercentageRequest':
         # 亮度
-        result = call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'brightness_pct': xiaodu_data['brightness']
-        })
+        service_data.update({ 'brightness_pct': xiaodu_data['brightness'] })
+        result = call_service(hass, 'light.turn_on', service_data)
         result.update({
             "previousState": {
                 "brightness": {
@@ -220,10 +219,8 @@ async def controlDevice(hass, action, payload):
         return result
     elif action == 'IncrementBrightnessPercentageRequest':
         # 增加亮度
-        result = call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'brightness_step_pct': xiaodu_data['deltaPercentage']
-        })
+        service_data.update({ 'brightness_step_pct': xiaodu_data['deltaPercentage'] })
+        result = call_service(hass, 'light.turn_on', service_data)
         result.update({
             "previousState": {
                 "brightness": {
@@ -237,10 +234,8 @@ async def controlDevice(hass, action, payload):
         return result
     elif action == 'DecrementBrightnessPercentageRequest':
         # 减少亮度
-        result = call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'brightness_step_pct': -xiaodu_data['deltaPercentage']
-        })
+        service_data.update({ 'brightness_step_pct': -xiaodu_data['deltaPercentage'] })
+        result = call_service(hass, 'light.turn_on', service_data)
         result.update({
             "previousState": {
                 "brightness": {
@@ -255,10 +250,8 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetColorRequest':
         # 启动
         color = xiaodu_data['color']
-        return call_service(hass, 'light.turn_on', {
-            'entity_id': entity_id,
-            'rgb_color': color_util.color_hsb_to_RGB(color['hue'], color['saturation'], color['brightness'])
-        }) 
+        service_data.update({ 'rgb_color': color_util.color_hsb_to_RGB(color['hue'], color['saturation'], color['brightness']) })
+        return call_service(hass, 'light.turn_on', service_data) 
     elif action == 'IncrementColorTemperatureRequest':
         print('增加色温')
     elif action == 'DecrementColorTemperatureRequest':
@@ -268,21 +261,14 @@ async def controlDevice(hass, action, payload):
         print('设置色温', xiaodu_data['colorTemperatureInKelvin'])
     ################ 可控温度设备    
     elif action == 'IncrementTemperatureRequest':
-        return call_service(hass, 'climate.set_temperature', {
-            'entity_id': entity_id,
-            'temperature': state.attributes.get('temperature') + deltaValue
-        })
+        service_data.update({ 'temperature': state.attributes.get('temperature') + deltaValue })
+        return call_service(hass, 'climate.set_temperature', service_data)
     elif action == 'DecrementTemperatureRequest':
-        state = hass.states.get(entity_id)
-        return call_service(hass, 'climate.set_temperature', {
-            'entity_id': entity_id,
-            'temperature': state.attributes.get('temperature') - deltaValue
-        })
+        service_data.update({ 'temperature': state.attributes.get('temperature') - deltaValue })
+        return call_service(hass, 'climate.set_temperature', service_data)
     elif action == 'SetTemperatureRequest':
-        return call_service(hass, 'climate.set_temperature', {
-            'entity_id': entity_id,
-            'temperature': xiaodu_data['targetTemperature']
-        })
+        service_data.update({ 'temperature': xiaodu_data['targetTemperature'] })
+        return call_service(hass, 'climate.set_temperature', service_data)
     ################ 设备模式设置
     elif action == 'SetModeRequest':
         # 空调
@@ -297,43 +283,74 @@ async def controlDevice(hass, action, payload):
                 return call_service(hass, 'climate.set_swing_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
             '''
             if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
-                return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
+                service_data.update({ 'hvac_mode': mode.lower() })
+                return call_service(hass, 'climate.set_hvac_mode', service_data)
     elif action == 'UnsetModeRequest':
         # 空调
         if domain == 'climate':
-            return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': 'auto'})
+            service_data.update({ 'hvac_mode': 'auto' })
+            return call_service(hass, 'climate.set_hvac_mode', service_data)
     elif action == 'TimingSetModeRequest':
         # 空调
         if domain == 'climate':
             mode = xiaodu_data['mode']
             if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
-                return call_service(hass, 'climate.set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': mode.lower()})
+                service_data.update({ 'hvac_mode': mode.lower() })
+                return call_service(hass, 'climate.set_hvac_mode', service_data)
     ################ 可控风速设备
     elif action == 'IncrementFanSpeedRequest':
         # 空调
         if domain == 'climate':
-            return call_service(hass, 'climate.set_fan_mode', {'entity_id': entity_id, 'hvac_mode': 'high'})
+            service_data.update({ 'hvac_mode': 'high' })
+            return call_service(hass, 'climate.set_fan_mode', service_data)
     elif action == 'DecrementFanSpeedRequest':
         # 空调
         if domain == 'climate':
-            return call_service(hass, 'climate.set_fan_mode', {'entity_id': entity_id, 'hvac_mode': 'low'})
+            service_data.update({ 'hvac_mode': 'low' })
+            return call_service(hass, 'climate.set_fan_mode', service_data)
     elif action == 'SetFanSpeedRequest':
         print('设置风速')
+    ################ 可控音量设备
+    elif action == 'IncrementVolumeRequest':
+        # 电视
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.volume_up', service_data)
+    elif action == 'DecrementVolumeRequest':
+        # 电视
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.volume_down', service_data)
+    elif action == 'SetVolumeRequest':
+        # 电视
+        if domain == 'media_player':
+            service_data.update({ 'volume_level': deltaValue / 100 })
+            return call_service(hass, 'media_player.volume_set', service_data)
+    elif action == 'SetVolumeMuteRequest':
+        # 电视
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.volume_mute', service_data)
+    ################ 电视频道设置
+    elif action == 'IncrementTVChannelRequest':
+        print('上一个频道')
+    elif action == 'DecrementTVChannelRequest':
+        print('下一个频道')
+    elif action == 'SetTVChannelRequest':
+        print('播放指定频道:' + deltaValue)
+    elif action == 'ReturnTVChannelRequest':
+        print('返回上一个观看频道')
+    ################ 可控高度设备
+    elif action == 'IncrementHeightRequest':
+        # 晾衣架调高
+        if domain == 'cover':
+            return call_service(hass, 'cover.close_cover', service_data)
+    elif action == 'DecrementHeightRequest':
+        # 晾衣架调低
+        if domain == 'cover':
+            return call_service(hass, 'cover.open_cover', service_data)
     '''
     ################ 可控速度设备
     elif action == 'IncrementSpeedRequest':
     elif action == 'DecrementSpeedRequest':
     elif action == 'SetSpeedRequest':
-    ################ 电视频道设置
-    elif action == 'IncrementTVChannelRequest':
-    elif action == 'DecrementTVChannelRequest':
-    elif action == 'SetTVChannelRequest':
-    elif action == 'ReturnTVChannelRequest':
-    ################ 可控音量设备
-    elif action == 'IncrementVolumeRequest':
-    elif action == 'DecrementVolumeRequest':
-    elif action == 'SetVolumeRequest':
-    elif action == 'SetVolumeMuteRequest':
     ################ 可锁定设备
     elif action == 'SetLockStateRequest':
     ################ 打印设备
@@ -349,11 +366,6 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetDirectionRequest':
     elif action == 'SetCleaningLocationRequest':
     elif action == 'SetComplexActionsRequest':
-    ################ 可控高度设备
-    elif action == 'IncrementHeightRequest':
-        # 晾衣架调高
-    elif action == 'DecrementHeightRequest':
-        # 晾衣架调低
     ################ 可控定时设备
     elif action == 'SetTimerRequest':
         # 定时

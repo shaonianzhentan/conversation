@@ -94,6 +94,8 @@ async def controlDevice(hass, action, payload):
     powerstate = params.get('powerstate')
     brightness = params.get('brightness')
     motorControl = params.get('motorControl')
+    volume = params.get('volume')
+    playControl = params.get('playControl')
     # 颜色转换
     color = get_color_name(params.get('color'))
     # 根据设备ID，找到对应的实体ID
@@ -131,6 +133,20 @@ async def controlDevice(hass, action, payload):
                             service_name = 'open_cover'
                         elif motorControl == 2:
                             service_name = 'close_cover'
+                # 设置音量
+                if volume is not None:
+                    if domain == 'media_player'
+                        service_name = 'volume_set'
+                        service_data.update({'volume_level': volume / 100})
+                # 播放控制
+                '''
+                if playControl is not None:
+                    if domain == 'media_player'
+                        if playControl == 1:
+                            service_name = 'media_play'
+                        elif playControl == 2:
+                            service_name = 'media_pause'
+                '''
             elif action == 'thing.attribute.adjust':
                 # 增加/减少亮度
                 if brightness is not None:
