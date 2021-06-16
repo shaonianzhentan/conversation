@@ -271,9 +271,9 @@ async def controlDevice(hass, action, payload):
         return call_service(hass, 'climate.set_temperature', service_data)
     ################ 设备模式设置
     elif action == 'SetModeRequest':
+        mode = xiaodu_data['mode']
         # 空调
         if domain == 'climate':
-            mode = xiaodu_data['mode']
             '''
             # 上下摆风
             if mode == 'UP_DOWN_SWING':
@@ -285,6 +285,11 @@ async def controlDevice(hass, action, payload):
             if mode == 'COOL' or mode == 'HEAT' or mode == 'AUTO':
                 service_data.update({ 'hvac_mode': mode.lower() })
                 return call_service(hass, 'climate.set_hvac_mode', service_data)
+        # 电视
+        elif domain == 'media_player':
+            if mode == 'MUTE':
+                service_data.update({ 'is_volume_muted': True })
+                return call_service(hass, 'media_player.volume_mute', service_data)
     elif action == 'UnsetModeRequest':
         # 空调
         if domain == 'climate':
@@ -327,6 +332,7 @@ async def controlDevice(hass, action, payload):
     elif action == 'SetVolumeMuteRequest':
         # 电视
         if domain == 'media_player':
+            service_data.update({ 'is_volume_muted': deltaValue == 'on' })
             return call_service(hass, 'media_player.volume_mute', service_data)
     ################ 电视频道设置
     elif action == 'IncrementTVChannelRequest':
