@@ -135,7 +135,7 @@ async def controlDevice(hass, action, payload):
                             service_name = 'close_cover'
                 # 设置音量
                 if volume is not None:
-                    if domain == 'media_player'
+                    if domain == 'media_player':
                         service_name = 'volume_set'
                         service_data.update({'volume_level': volume / 100})
                 # 播放控制
