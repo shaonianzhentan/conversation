@@ -23,7 +23,7 @@ action:
   data:
     media_content_type: video
     media_content_id: >
-      {%- set type = trigger.event.data.deltaValue.upper() -%}
+      {% set type = trigger.event.data.deltaValue.upper() %}
       {%- if type == "CCTV1" -%}
         http://183.207.248.71:80/cntv/live1/HD-8000k-1080P-cctv1/HD-8000k-1080P-cctv1
       {%- elif type == "CCTV2" -%}
