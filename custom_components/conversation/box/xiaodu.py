@@ -388,6 +388,9 @@ async def controlDevice(hass, action, payload):
     '''
     # 发送事件
     hass.bus.async_fire("xiaodu_event", xiaodu_data)
+    # 调用python_script
+    if hass.services.has_service('python_script', 'xiaodu_event'):
+        hass.services.async_call('python_script', 'xiaodu_event', xiaodu_data)
     return {
         "attributes": []
     }
