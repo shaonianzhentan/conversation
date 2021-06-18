@@ -340,7 +340,7 @@ async def controlDevice(hass, action, payload):
     elif action == 'DecrementTVChannelRequest':
         print('下一个频道')
     elif action == 'SetTVChannelRequest':
-        print('播放指定频道:' + deltaValue)
+        print(f'播放指定频道: {deltaValue}')
     elif action == 'ReturnTVChannelRequest':
         print('返回上一个观看频道')
     ################ 可控高度设备
