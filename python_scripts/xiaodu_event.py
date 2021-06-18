@@ -1,7 +1,7 @@
 # IPTV资源：https://github.com/BurningC4/Chinese-IPTV
-_type = data.get("type")
-_domain = data.get("domain")
-if _type == "SetTVChannelRequest" and _domain == "media_player":
+type = data.get("type")
+domain = data.get("domain")
+if type == "SetTVChannelRequest" and domain == "media_player":
     deltaValue = data.get("deltaValue")
     if isinstance(deltaValue, str):
         # 中文频道
