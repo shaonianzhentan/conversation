@@ -1,0 +1,33 @@
+blueprint:
+  name: 小度空气净化器模式控制
+  description: 控制小米空气净化器
+  domain: automation
+  source_url: https://github.com/shaonianzhentan/conversation
+  input:
+    fan_entity:
+      name: 空气净化器
+      description: 小米空气净化器2s
+      default: []
+      selector:
+        target:
+          entity:
+            domain: fan
+trigger:
+- platform: event
+  event_type: xiaodu_event
+  event_data:
+    type: SetModeRequest
+    domain: fan
+    entity_id: !input fan_entity
+action:
+- service: fan.set_preset_mode
+  data:
+    preset_mode: >
+      {% set modes = {
+            "SLEEP": "Silent",
+            "AUTO": "Auto",
+            "INTELLIGENT": "Favorite"
+          } 
+      %}
+      {{modes[trigger.event.data.mode]}}
+  target: !input fan_entity
