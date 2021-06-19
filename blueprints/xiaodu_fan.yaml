@@ -9,9 +9,8 @@ blueprint:
       description: 小米空气净化器2s
       default: []
       selector:
-        target:
-          entity:
-            domain: fan
+        entity:
+          domain: fan
 trigger:
 - platform: event
   event_type: xiaodu_event
@@ -30,4 +29,4 @@ action:
           } 
       %}
       {{modes[trigger.event.data.mode]}}
-  target: !input fan_entity
+    entity_id: !input fan_entity
