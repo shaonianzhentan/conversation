@@ -117,7 +117,7 @@ async def discoveryDevice(hass):
             'additionalApplianceDetails': {},
             'applianceTypes': [ device_type ],
             'isReachable': True,
-            'manufacturerName': 'HomeAssistant',
+            'manufacturerName': 'HassLink',
             'modelName': domain,
             'version': '1.0',
             'actions': actions,
