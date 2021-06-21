@@ -21,8 +21,18 @@ class XiaoduGateView(HomeAssistantView):
         header = data['header']
         payload = data['payload']
         name = header['name']
-
-        token = await hass.auth.async_validate_access_token(payload['accessToken'])
+        accessToken = payload['accessToken']
+        # 正常授权验证
+        token = await hass.auth.async_validate_access_token(accessToken)
+        # 进行自定义服务验证
+        if token is None:
+            voice = hass.data["conversation_voice"]
+            config_data = voice.api_config.get_config()
+            apiKey = config_data.get('apiKey', '')
+            # 判断是否定义apiKey
+            if apiKey != '' and accessToken == f'apiKey{apiKey}':
+                token = accessToken
+        # 走正常流程
         result = {}
         if token is not None:
             namespace = header['namespace']
@@ -43,8 +53,12 @@ class XiaoduGateView(HomeAssistantView):
                 name = name.replace('Request', 'Response')
         else:
             name = 'InvalidAccessTokenError'
-            
+
         header['name'] = name
+        # 如果包含Uid则返回用户ID
+        if 'openUid' in payload:
+            result['openUid'] = payload['openUid']
         response = {'header': header, 'payload': result}
-        _LOGGER.info("Respnose: %s", response)    
+
+        _LOGGER.debug("Respnose: %s", response)    
         return self.json(response)

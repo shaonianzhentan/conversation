@@ -532,6 +532,11 @@ class Voice():
         if open_mic is not None:
             config_data.update({'open_mic': open_mic})
             is_save = True
+        # 保存apiKey
+        apiKey = data.get('apiKey')
+        if user_id is not None:
+            config_data.update({'apiKey': apiKey})
+            is_save = True
         # 保存配置
         if is_save:
             self.api_config.save_config(config_data)
