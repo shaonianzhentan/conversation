@@ -534,7 +534,7 @@ class Voice():
             is_save = True
         # 保存apiKey
         apiKey = data.get('apiKey')
-        if user_id is not None:
+        if apiKey is not None:
             config_data.update({'apiKey': apiKey})
             is_save = True
         # 保存配置

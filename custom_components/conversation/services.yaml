@@ -37,3 +37,8 @@ setting:
       default: 请帮我
       selector:
         text:
+    apiKey:
+      name: 服务密钥
+      description: 用户私钥
+      selector:
+        text:
