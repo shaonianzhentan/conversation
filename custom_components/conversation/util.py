@@ -40,7 +40,7 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.4.4'
+VERSION = '1.4.5'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -314,7 +314,7 @@ def matcher_watch_tv(text):
     if matchObj is not None:
         num = format_number(matchObj.group(1))
         if num >= 1 and num <= 17 and num != 16:
-            return f'CCTV-{num}'
+            return f'CCTV{num}'
 
     matchObj = re.match(r'打开(湖北|湖南|四川|吉林|海南|东南|广东|江苏|东方|云南|北京|浙江|天津|广西|山东|安徽|辽宁|重庆|陕西|北京)卫视', text)
     if matchObj is not None:

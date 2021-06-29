@@ -192,6 +192,11 @@ class Voice():
         _text = trim_char(text)
         # 发送事件，共享给其他组件
         text_data = { 'text': _text }
+        # 语义解析
+        result = matcher_watch_tv(_text)
+        if result is not None:
+            text_data.update({ 'type': 'iptv', 'value': result })
+
         hass.bus.fire('ha_voice_text_event', text_data)
         # 调用python_script.conversation
         if hass.services.has_service('python_script', 'conversation'):
