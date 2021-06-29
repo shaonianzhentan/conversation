@@ -538,8 +538,8 @@ class Voice():
             config_data.update({'open_mic': open_mic})
             is_save = True
         # 保存apiKey
-        apiKey = data.get('apiKey')
-        if apiKey is not None:
+        apiKey = data.get('apiKey', '')
+        if apiKey != '':
             config_data.update({'apiKey': apiKey})
             is_save = True
         # 保存配置
