@@ -266,10 +266,10 @@ def matcher_switch(text):
     if action is not None:
         service_type = ''
         intent_type = ''
-        if ['打开', '开启', '启动'].count(action) == 1:
+        if ['打开', '开启', '启动', '开一下'].count(action) == 1:
             service_type = 'turn_on'
             intent_type = 'HassTurnOn'
-        elif ['关闭', '关掉', '关上'].count(action) == 1:
+        elif ['关闭', '关掉', '关上', '关一下'].count(action) == 1:
             service_type = 'turn_off'
             intent_type = 'HassTurnOff'
         elif action == '切换':
@@ -287,8 +287,8 @@ def matcher_on_off(text):
         name1 = matchObj.group(2)
         name2 = matchObj.group(4)
         if name1 is not None and name2 is not None:
-            type1 = matchObj.group(1) == '打开' and 'turn_on' or 'turn_off'
-            type2 = matchObj.group(3) == '打开' and 'turn_on' or 'turn_off'
+            type1 = ['打开', '开一下'].count(matchObj.group(1)) == 1 and 'turn_on' or 'turn_off'
+            type2 = ['打开', '开一下'].count(matchObj.group(3)) == 1 and 'turn_on' or 'turn_off'
             _list1 = list(filter(lambda x: x != '', name1.split('和')))
             _list2 = list(filter(lambda x: x != '', name2.split('和')))
             return ((type1, _list1), (type2, _list2))
