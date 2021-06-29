@@ -253,12 +253,12 @@ def matcher_switch(text):
     action = None
     name = None
     # 把 设备 操作
-    matchObj = re.match(r'.*把((.+)(打开|开启|启动|关闭|关掉|关上|切换))', text)
+    matchObj = re.match(r'.*把((.+)(打开|开启|启动|开一下|关闭|关掉|关上|关一下|切换))', text)
     if matchObj is not None:
         action = matchObj.group(3)
         name = matchObj.group(2)
     else:
-        matchObj = re.match(r'.*((打开|开启|启动|关闭|关掉|关上|切换)(.+))', text)
+        matchObj = re.match(r'.*((打开|开启|启动|开一下|关闭|关掉|关上|关一下|切换)(.+))', text)
         if matchObj is not None: 
             action = matchObj.group(2)
             name = matchObj.group(3)
@@ -282,7 +282,7 @@ def matcher_switch(text):
 
 ########################################## (打开|关闭)设备(打开|关闭)设备
 def matcher_on_off(text):
-    matchObj = re.match(r'(打开|关闭)(.+)(打开|关闭)(.+)', text)
+    matchObj = re.match(r'(打开|开一下|关闭|关一下)(.+)(打开|开一下|关闭|关一下)(.+)', text)
     if matchObj is not None:
         name1 = matchObj.group(2)
         name2 = matchObj.group(4)
