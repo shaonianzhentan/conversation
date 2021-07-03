@@ -1,0 +1,26 @@
+blueprint:
+  name: 小度小米飞利浦灯泡色温控制
+  description: 控制小米飞利浦灯泡的色温
+  domain: automation
+  source_url: https://github.com/shaonianzhentan/conversation
+  input:
+    light_entity:
+      name: 小米灯泡
+      description: 小米飞利浦灯泡
+      default: []
+      selector:
+        entity:
+          domain: light
+trigger:
+- platform: event
+  event_type: xiaodu_event
+  event_data:
+    type: SetColorTemperatureRequest
+    domain: light
+    entity_id: !input light_entity
+action:
+- service: light.turn_on
+  data:
+    color_temp: >
+      {{ 333 - ((6500 - trigger.event.data.colorTemperatureInKelvin) / 3800 * (333 - 175)) | int }}
+    entity_id: !input light_entity

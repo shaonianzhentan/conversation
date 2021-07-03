@@ -1,5 +1,5 @@
 """Util for Conversation."""
-import re
+import re, yaml
 import string
 import random
 import json, os, aiohttp, uuid
@@ -410,7 +410,7 @@ class ApiConfig():
         self.dir = _dir
 
     def get_config(self):
-        content = self.read('conversation.json')
+        content = self.read('conversation.yaml')
         if content is None:
             content = {}
         return content
@@ -418,7 +418,7 @@ class ApiConfig():
     def save_config(self, data):
         content = self.get_config()
         content.update(data)
-        self.write('conversation.json', content)
+        self.write('conversation.yaml', content)
 
     # 创建文件夹
     def mkdir(self, path):
@@ -439,11 +439,11 @@ class ApiConfig():
         fn = self.get_path(name)
         if os.path.isfile(fn):
             with open(fn,'r', encoding='utf-8') as f:
-                content = json.load(f)
+                content = yaml.load(f, Loader=yaml.FullLoader)
                 return content
         return None
 
     # 写入文件内容
     def write(self, name, obj):
         with open(self.get_path(name), 'w', encoding='utf-8') as f:
-            json.dump(obj, f, ensure_ascii=False)
+            yaml.dump(dict, f)

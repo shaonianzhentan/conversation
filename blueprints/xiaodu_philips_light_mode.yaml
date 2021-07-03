@@ -1,0 +1,33 @@
+blueprint:
+  name: 小度小米飞利浦灯泡模式控制
+  description: 控制小米飞利浦灯泡的模式（照明模式、休闲/放松模式、阅读模式、夜灯模式）
+  domain: automation
+  source_url: https://github.com/shaonianzhentan/conversation
+  input:
+    light_entity:
+      name: 小米灯泡
+      description: 小米飞利浦灯泡
+      default: []
+      selector:
+        entity:
+          domain: light
+trigger:
+- platform: event
+  event_type: xiaodu_event
+  event_data:
+    type: SetModeRequest
+    domain: light
+    entity_id: !input light_entity
+action:
+- service: light.turn_on
+  data:
+    scene: >
+      {% set modes = {
+            "LIGHTING": 1,
+            "RELAX": 2,
+            "READING": 3,
+            "NIGHT_LIGHT": 4
+          } 
+      %}
+      {{modes[trigger.event.data.mode]}}
+    entity_id: !input light_entity
