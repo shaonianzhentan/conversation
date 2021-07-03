@@ -446,4 +446,4 @@ class ApiConfig():
     # 写入文件内容
     def write(self, name, obj):
         with open(self.get_path(name), 'w', encoding='utf-8') as f:
-            yaml.dump(dict, f)
+            yaml.dump(obj, f)
