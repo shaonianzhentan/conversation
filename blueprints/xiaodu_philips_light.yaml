@@ -22,5 +22,5 @@ action:
 - service: light.turn_on
   data:
     color_temp: >
-      {{ 333 - ((6500 - trigger.event.data.colorTemperatureInKelvin) / 3800 * (333 - 175)) | int }}
+      {{ (333 + 175) - (333 - ((6500 - trigger.event.data.colorTemperatureInKelvin) / (6500 - 2700) * (333 - 175))) | int }}
     entity_id: !input light_entity

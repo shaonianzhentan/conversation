@@ -19,7 +19,7 @@ trigger:
     domain: light
     entity_id: !input light_entity
 action:
-- service: light.turn_on
+- service: xiaomi_miio.light_set_scene
   data:
     scene: >
       {% set modes = {
