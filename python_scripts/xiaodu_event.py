@@ -59,7 +59,10 @@ if type == "SetTVChannelRequest" and domain == "media_player":
             "嘉佳卡通": "http://183.207.248.71:80/cntv/live1/SD-4000k-576P-jiajiakaton/SD-4000k-576P-jiajiakaton",
             "炫动卡通": "http://183.207.248.71:80/cntv/live1/n-xuandongkaton/n-xuandongkaton",
             "金鹰卡通": "http://183.207.248.71:80/cntv/live1/n-jinyingkaton/n-jinyingkaton",
-            "优漫卡通": "http://183.207.248.71:80/cntv/live1/n-youmankaton/n-youmankaton"
+            "优漫卡通": "http://183.207.248.71:80/cntv/live1/n-youmankaton/n-youmankaton",
+            "点掌财经": "http://cclive.aniu.tv/live/anzb.m3u8",
+            "凤凰电影": "",
+            "家庭影院频道": ""
         }
         if deltaValue in iptv:
             hass.services.call("media_player", "play_media", {

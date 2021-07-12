@@ -440,11 +440,16 @@ def queryDevice(hass, name, payload):
             }]
         }
 
+    turnOnState = state.state.upper()
+    # 如果是播放器
+    if state.domain == 'media_player':
+        turnOnState = ['unavailable', 'off', 'idle'].count(state.state) > 0 and 'OFF' or 'ON'
+
     return {
         'attributes': [
             {
                 "name": "turnOnState",
-                "value": state.state.upper(),
+                "value": turnOnState,
                 "scale": "",
                 "timestampOfSample":date_now(),
                 "uncertaintyInMilliseconds": 10
