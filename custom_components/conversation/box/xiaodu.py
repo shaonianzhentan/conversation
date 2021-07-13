@@ -73,10 +73,11 @@ async def discoveryDevice(hass):
                 device_type = 'CLOTHES_RACK'
                 actions.extend(['incrementHeight', 'decrementHeight'])
         elif domain == 'media_player':
-            actions.extend(['pause', 'continue', 'incrementVolume', 'decrementVolume', 'setVolume', 'setVolumeMute', 'decrementTVChannel', 'incrementTVChannel'])
+            actions.extend(['pause', 'continue', 'incrementVolume', 'decrementVolume', 'setVolume', 'setVolumeMute', \
+                'decrementTVChannel', 'incrementTVChannel', 'setTVChannel'])
             if '电视' in friendly_name:
                 device_type = 'TV_SET'
-                actions.extend(['setTVChannel', 'returnTVChannel'])
+                actions.extend(['returnTVChannel'])
         elif domain == 'fan':
             actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \
                 'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature', \
