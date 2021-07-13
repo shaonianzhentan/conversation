@@ -73,10 +73,10 @@ async def discoveryDevice(hass):
                 device_type = 'CLOTHES_RACK'
                 actions.extend(['incrementHeight', 'decrementHeight'])
         elif domain == 'media_player':
-            actions.extend(['pause', 'continue', 'incrementVolume', 'decrementVolume', 'setVolume', 'setVolumeMute'])
+            actions.extend(['pause', 'continue', 'incrementVolume', 'decrementVolume', 'setVolume', 'setVolumeMute', 'decrementTVChannel', 'incrementTVChannel'])
             if '电视' in friendly_name:
                 device_type = 'TV_SET'
-                actions.extend(['decrementTVChannel', 'incrementTVChannel', 'setTVChannel', 'returnTVChannel'])
+                actions.extend(['setTVChannel', 'returnTVChannel'])
         elif domain == 'fan':
             actions.extend(['incrementFanSpeed', 'decrementFanSpeed', 'setFanSpeed', 'setGear', \
                 'getTemperatureReading', 'getAirPM25', 'getAirPM10', 'getCO2Quantity', 'getAirQualityIndex', 'getTemperature', \
@@ -195,9 +195,13 @@ async def controlDevice(hass, action, payload):
     elif action == 'PauseRequest':
         # 暂停
         print('暂停')
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.media_pause', service_data)
     elif action == 'ContinueRequest':
         # 继续
         print('继续')
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.media_play', service_data)
     elif action == 'StartUpRequest':
         # 启动
         print('启动')
@@ -248,7 +252,6 @@ async def controlDevice(hass, action, payload):
         })
         return result
     elif action == 'SetColorRequest':
-        # 启动
         color = xiaodu_data['color']
         service_data.update({ 'rgb_color': color_util.color_hsb_to_RGB(color['hue'], color['saturation'], color['brightness']) })
         return call_service(hass, 'light.turn_on', service_data) 
@@ -337,8 +340,12 @@ async def controlDevice(hass, action, payload):
     ################ 电视频道设置
     elif action == 'IncrementTVChannelRequest':
         print('上一个频道')
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.media_previous_track', service_data)
     elif action == 'DecrementTVChannelRequest':
         print('下一个频道')
+        if domain == 'media_player':
+            return call_service(hass, 'media_player.media_next_track', service_data)
     elif action == 'SetTVChannelRequest':
         print(f'播放指定频道: {deltaValue}')
     elif action == 'ReturnTVChannelRequest':
