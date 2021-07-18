@@ -103,17 +103,22 @@ if type == "SetTVChannelRequest" and domain == "media_player":
             hass.services.call("media_player", "play_media", {
                 "media_content_type": "video",
                 "media_content_id": iptv[deltaValue],
-                "entity_id": "media_player.android"
+                "entity_id": "media_player.xiao_mi_dian_shi"
             }, False)
     elif isinstance(deltaValue, int):
         # 频道号码
         apps = [
-            'org.xbmc.kodi',
-            'com.ktcp.video',
-            'com.gitvdideo.aliapp'
+            '银河奇异果',
+            '云视听极光',
+            '云视听小电视',
+            'CIBN酷喵',
+            '芒果TV',
+            '视频头条',
+            'Kodi',
+            'Kodi'
         ]
         if len(apps) >= deltaValue:
             hass.services.call("media_player", "select_source", {
                 "source": apps[deltaValue - 1],
-                "entity_id": "media_player.tian_mao_mo_he"
+                "entity_id": "media_player.xiao_mi_dian_shi"
             }, False)
