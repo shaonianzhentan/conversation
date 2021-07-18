@@ -1,6 +1,7 @@
 import time, re
 import homeassistant.util.color as color_util
 from homeassistant.helpers import template, entity_registry, area_registry, device_registry
+from ..shaonianzhentan import md5
 
 # 发现设备
 area_entity = {}
@@ -124,6 +125,28 @@ async def discoveryDevice(hass):
             'actions': actions,
             'attributes': get_attributes(state)
         })
+
+        # 自定义设备
+        xiaodu_devices = attributes.get('xiaodu_devices', [])
+        for xd in xiaodu_devices:
+            name = xd['name']
+            devices.append({
+                'applianceId': md5(name),
+                'friendlyName': name,
+                'friendlyDescription': name,
+                'additionalApplianceDetails': {
+                    'service': xd['service'],
+                    'data': xd.get('data', {})
+                },
+                'applianceTypes': [ "ACTIVITY_TRIGGER" ],
+                'isReachable': True,
+                'manufacturerName': 'HassLink',
+                'modelName': "xiaodu",
+                'version': '1.0',
+                'actions': ["turnOn", "timingTurnOn"],
+                'attributes': {}
+            })
+
     return {'discoveredAppliances': devices}
 
 
@@ -131,6 +154,8 @@ async def discoveryDevice(hass):
 async def controlDevice(hass, action, payload):
     applianceDic = payload['appliance']
     additionalApplianceDetails = applianceDic.get('additionalApplianceDetails', {})
+    if 'service' in additionalApplianceDetails:
+        return call_service(hass, additionalApplianceDetails['service'], additionalApplianceDetails['data'])
     # 实体ID
     entity_id = applianceDic['applianceId']
     # 服务数据
