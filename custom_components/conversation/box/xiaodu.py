@@ -155,7 +155,8 @@ async def controlDevice(hass, action, payload):
     applianceDic = payload['appliance']
     additionalApplianceDetails = applianceDic.get('additionalApplianceDetails', {})
     if 'service' in additionalApplianceDetails:
-        return call_service(hass, additionalApplianceDetails['service'], additionalApplianceDetails['data'])
+        call_service(hass, additionalApplianceDetails['service'], additionalApplianceDetails['data'])
+        return {'attributes': []}
     # 实体ID
     entity_id = applianceDic['applianceId']
     # 服务数据
