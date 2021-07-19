@@ -213,7 +213,7 @@ xiaodu_domain: scene
 tmall_type: outlet
 ```
 
-## 捐赠
+## 如果这个项目对你有帮助，欢迎请我喝杯<del><small>咖啡</small></del><b>奶茶</b>😘
 |支付宝|微信|
 |---|---|
 <img src="pay/alipay.png" align="left" height="160" width="160">  |  <img src="pay/wechat.png" align="left" height="160" width="160">
