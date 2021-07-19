@@ -212,3 +212,8 @@ xiaodu_domain: scene
 # 开关类型改为插座类型
 tmall_type: outlet
 ```
+
+## 捐赠
+|支付宝|微信|
+|---|---|
+<img src="pay/alipay.png" align="left" height="160" width="160">  |  <img src="pay/wechat.png" align="left" height="160" width="160">
