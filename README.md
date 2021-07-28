@@ -147,24 +147,22 @@ voice_time: 2
 ## 意图配置
 注意：小爱自定义技能配置没有@符号
 ```
-把@{text}
 打开@{text}
 启动@{text}
-开@{text}
-关@{text}
 切换@{text}
 触发@{text}
 执行@{text}
-查看@{text}
-查询@{text}
-下一曲
-下一首
-上一曲
-上一首
 播放@{text}
 暂停@{text}
 声音@{text}
+把@{text}
+开@{text}
+关@{text}
+查@{text}
+下@{text}
+上@{text}
 小@{text}
+我@{text}
 ```
 
 ## 小度自定义通用属性
@@ -216,4 +214,4 @@ tmall_type: outlet
 ## 如果这个项目对你有帮助，请我喝杯<del><small>咖啡</small></del><b>奶茶</b>吧😘
 |支付宝|微信|
 |---|---|
-<img src="https://ha.jiluxinqing.com/img/alipay.png" align="left" height="160" width="160" alt="支付宝" title="支付宝">  |  <img src="https://ha.jiluxinqing.com/img/wechat.png" align="left" height="160" width="160" alt="微信支付" title="微信">
+<img src="https://github.com/shaonianzhentan/ha-docs/raw/master/docs/img/alipay.png" align="left" height="160" width="160" alt="支付宝" title="支付宝">  |  <img src="https://github.com/shaonianzhentan/ha-docs/raw/master/docs/img/wechat.png" align="left" height="160" width="160" alt="微信支付" title="微信">

@@ -364,43 +364,6 @@ async def get_local_video_url(video_path, name, num):
                 if arr[0] == str(num):
                     return f'{name}/{f}'
 
-# 获取视频链接
-async def get_video_url(name, num):
-    print(f'{name} - {num}')
-    _url = f'https://api.okzy.tv/api.php/provide/vod/at/json/?ac=detail&wd={name}'
-    print(_url)
-    data = await http_get(_url)
-    # print(data)
-    if data['total'] > 0:
-        for obj in data['list']:
-            # 如果没有播放地址，则去找下一个
-            vod_play_url = obj.get('vod_play_url', '')
-            if vod_play_url == '':
-                continue
-            # 获取m3u8列表
-            vod_play_url_list = vod_play_url.split('$$$')
-            url_list = vod_play_url_list[1]
-            # 判断后缀格式
-            if url_list[-5:] != '.m3u8':
-                url_list = vod_play_url_list[0]
-            ''' 电影 '''
-            if num == -1:
-                arr = url_list.split('$')
-                if len(arr) > 1:
-                    return arr[len(arr) - 1]
-            else:
-                # 匹配集数
-                matchObj = re.findall(r'第(\d+)集\$(.*?)m3u8', url_list)
-                # 如果集数，大于当前列表，则去找下一个
-                if num > len(matchObj):
-                    continue
-                # 遍历当前视频集合
-                for item in matchObj:
-                    print(item)
-                    if int(item[0]) == num:
-                        return f'{item[1]}m3u8'
-    return None
-
 ########################################## 接口配置
 class ApiConfig():
 

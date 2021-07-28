@@ -1,6 +1,6 @@
 
 import re, requests, asyncio
-from util import get_video_url, matcher_switch
+from util import matcher_switch
 
 async def test():
     result = matcher_switch('麻烦把吸顶灯打开')

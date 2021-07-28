@@ -16,7 +16,7 @@ from .box.xiaoai_view import XiaoaiGateView
 from .box.xiaodu_view import XiaoduGateView
 
 from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_API, ALIGENIE_API, XIAODU_API, VIDEO_API, \
-    ApiConfig, find_entity, trim_char, http_get, get_video_url, get_local_video_url, \
+    ApiConfig, find_entity, trim_char, http_get, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
     matcher_script, matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
