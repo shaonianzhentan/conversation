@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <script src="node_modules/@picovoice/picovoice-web-en-worker/dist/iife/index.js"></script>
+    <script src="node_modules/@picovoice/web-voice-processor/dist/iife/index.js"></script>
+    <script type="application/javascript">
+        fetch('light.rhn').then((res) => res.blob()).then(res => {
+            var reader = new FileReader();
+            reader.readAsDataURL(res);
+            reader.onload = function () {
+                startPicovoice(reader.result.replace('data:application/octet-stream;base64,', ''));
+            };
+        })
+        function writeMessage(message) {
+            console.log(message);
+            let p = document.createElement("p");
+            let text = document.createTextNode(message);
+            p.appendChild(text);
+            document.getElementById("messages").appendChild(p);
+        }
+
+        async function startPicovoice(CLOCK_CONTEXT_64) {
+            writeMessage("Picovoice is loading. Please wait...");
+            picovoiceWorker = await PicovoiceWebEnWorker.PicovoiceWorkerFactory.create(
+                {
+                    porcupineKeyword: { builtin: "Jarvis" },
+                    rhinoContext: { base64: CLOCK_CONTEXT_64 },
+                    start: true,
+                }
+            );
+
+            picovoiceWorker.postMessage({ command: "info" });
+            writeMessage("Picovoice worker ready!");
+
+            picovoiceWorker.onmessage = (msg) => {
+                switch (msg.data.command) {
+                    case "ppn-keyword": {
+                        writeMessage(
+                            "检测到唤醒词: " + JSON.stringify(msg.data.keywordLabel)
+                        );
+                        break;
+                    }
+                    case "rhn-inference": {
+                        writeMessage(
+                            "检测到推断: " + JSON.stringify(msg.data.inference)
+                        );
+                        break;
+                    }
+                    case "rhn-info": {
+                        writeMessage("接收到的上下文信息YAML");
+                        document.getElementById("rhn-context-yaml").innerText =
+                            msg.data.info;
+                        break;
+                    }
+                }
+            };
+
+            writeMessage(
+                "WebVoiceProcessor正在初始化。请求麦克风权限..."
+            );
+
+            try {
+                let webVp = await WebVoiceProcessor.WebVoiceProcessor.init({
+                    engines: [picovoiceWorker],
+                    start: true,
+                });
+                writeMessage(
+                    "WebVoiceProcessor准备好了！说“Hey Siri”开始互动。"
+                );
+            } catch (e) {
+                writeMessage("WebVoiceProcessor failed to initialize: " + e);
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+    <h1>Picovoice SDK for Web Demo</h1>
+    <p>This demo uses Picovoice SDK for Web and the WebVoiceProcessor to:</p>
+    <ol>
+        <li>
+            Create an English instance of Picovoice that listens for "Picovoice" and
+            understands follow-on commands in the "Pico Clock" context;
+        </li>
+        <li>
+            Acquire microphone (& ask permission) data stream and convert to voice
+            processing format (16kHz 16-bit linear PCM). The downsampled audio is
+            forwarded to the Porcupine engines. The audio <i>does not</i> leave the
+            browser: all processing is occurring via the Picovoice WebAssembly code.
+        </li>
+        <li>
+            Await inference events from the Picovoice engines and output them to the
+            page.
+        </li>
+    </ol>
+    <div id="messages"></div>
+    <br />
+    <br />
+    <br />
+    <hr />
+    <h2>Context info:</h2>
+    <pre id="rhn-context-yaml"></pre>
+</body>
+
+</html>
