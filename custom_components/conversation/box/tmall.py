@@ -95,9 +95,13 @@ async def controlDevice(hass, action, payload):
     brightness = params.get('brightness')
     motorControl = params.get('motorControl')
     volume = params.get('volume')
+    muteMode = params.get('muteMode')
     playControl = params.get('playControl')
     # 颜色转换
     color = get_color_name(params.get('color'))
+    # 电视频道
+    if 'channelName' in params:
+        channelName = get_tv_name(params.get('channelName'))
     # 根据设备ID，找到对应的实体ID
     for entity_id in deviceIds:
         service_name = None
@@ -133,20 +137,26 @@ async def controlDevice(hass, action, payload):
                             service_name = 'open_cover'
                         elif motorControl == 2:
                             service_name = 'close_cover'
-                # 设置音量
-                if volume is not None:
-                    if domain == 'media_player':
+                # 媒体播放器
+                if domain == 'media_player':
+                    # 设置音量
+                    if volume is not None:
                         service_name = 'volume_set'
                         service_data.update({'volume_level': volume / 100})
-                # 播放控制
-                '''
-                if playControl is not None:
-                    if domain == 'media_player'
+                    # 静音
+                    if muteMode is not None:
+                        service_name = 'volume_mute'
+                        service_data.update({'is_volume_muted': muteMode == 1})
+                    # 播放控制
+                    if playControl is not None:
                         if playControl == 1:
                             service_name = 'media_play'
                         elif playControl == 2:
                             service_name = 'media_pause'
-                '''
+                        elif playControl == 3:
+                            service_name = 'media_previous_track'
+                        elif playControl == 4:
+                            service_name = 'media_next_track'
             elif action == 'thing.attribute.adjust':
                 # 增加/减少亮度
                 if brightness is not None:
@@ -211,6 +221,7 @@ def get_attributes(state, default_state=None):
         
     return status
 
+# 获取颜色名称
 def get_color_name(tmall_color):
     obj = {
         16711680: 'red',
@@ -228,3 +239,28 @@ def get_color_name(tmall_color):
         35723: 'darkcyan', # 深青色
     }
     return obj.get(tmall_color)
+
+# 获取频道名称
+def get_tv_name(tmall_tv):
+    obj = {
+        1: '浙江卫视',
+        2: '湖南卫视',
+        95: 'CCTV1',
+        96: 'CCTV2',
+        97: 'CCTV3',
+        98: 'CCTV4',
+        99: 'CCTV5',
+        100: 'CCTV6',
+        101: 'CCTV7',
+        103: 'CCTV8',
+        104: 'CCTV9',
+        105: 'CCTV10',
+        106: 'CCTV11',
+        107: 'CCTV12',
+        108: 'CCTV13',
+        109: 'CCTV14',
+        110: 'CCTV15',
+        113: '东方卫视',
+        119: '湖北卫视',
+    }
+    return obj.get(tmall_tv)

@@ -16,8 +16,7 @@ class XiaoduGateView(HomeAssistantView):
     async def post(self, request):
         hass = request.app["hass"]
         data = await request.json()
-        _LOGGER.debug("======= 小度API接口信息")
-        _LOGGER.debug(data)
+        _LOGGER.debug("======= 小度API接口信息：%s", data)
         header = data['header']
         payload = data['payload']
         name = header['name']
