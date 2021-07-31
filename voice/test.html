@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <script src="node_modules/@picovoice/picovoice-web-en-worker/dist/iife/index.js"></script>
+    <script src="node_modules/@picovoice/porcupine-web-en-worker/dist/iife/index.js"></script>
     <script src="node_modules/@picovoice/web-voice-processor/dist/iife/index.js"></script>
     <script type="application/javascript">
         class VoiceRecognition {
@@ -11,10 +11,12 @@
 
             }
             async startPorcupine() {
-                const porcupineWorker = await PorcupineWorkerFactory.create(
-                    [{ builtin: "Alexa", sensitivity: 0.65 }]
+                console.log('加载中，请等待...')
+                const porcupineWorker = await PorcupineWebEnWorker.PorcupineWorkerFactory.create(
+                    [{ builtin: "Jarvis", sensitivity: 0.65 }]
                 );
                 porcupineWorker.onmessage = (msg) => {
+                    console.log(msg)
                     switch (msg.data.command) {
                         case 'ppn-keyword':
                             // Porcupine keyword detection
@@ -30,17 +32,23 @@
                             break;
                     }
                 };
-                const webVp = await WebVoiceProcessor.init({
-                    engines: [porcupineWorker],
-                    start: true,
-                });
-                this.webVp = webVp
-                this.porcupineWorker = porcupineWorker
+                try {
+                    const webVp = await WebVoiceProcessor.WebVoiceProcessor.init({
+                        engines: [porcupineWorker]
+                    });
+                    this.webVp = webVp
+                    this.porcupineWorker = porcupineWorker
+                    setTimeout(() => {
+                        console.log('初始化完成')
+                    }, 1000)
+                } catch (ex) {
+                    console.error(ex)
+                }
             }
 
             stopPorcupine() {
                 this.webVp.release()
-                this.porcupineWorker.sendMessage({ command: "release" })
+                this.porcupineWorker.postMessage({ command: "release" })
             }
 
             // 初始化语音识别
@@ -52,7 +60,6 @@
                 recognition.interimResults = true;
 
                 recognition.onstart = function () {
-                    listenText = ''
                     console.log('开始')
                 }
 
@@ -62,6 +69,7 @@
 
                 recognition.onend = function () {
                     console.log("识别结束，发送命令中...")
+                    window.VOICE_RECOGNITION.startPorcupine()
                 }
 
                 recognition.onresult = (event) => {
@@ -70,6 +78,7 @@
                         console.log("gg---");
                         return;
                     }
+                    let listenText = ''
                     let final_transcript = '';
                     for (let i = event.resultIndex; i < result.length; ++i) {
                         const transcript = result[i][0].transcript;
@@ -85,19 +94,25 @@
                         recognition.stop();
                         return;
                     }
+                    console.log(listenText)
                     // this.$('.speech-text').textContent = listenText
                 }
                 this.recognition = recognition
             }
         }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const vf = new VoiceRecognition()
+            vf.startPorcupine()
+            window.VOICE_RECOGNITION = vf
+
+        });
     </script>
 </head>
 
 <body>
-    <script>
-        const vf = new VoiceRecognition()
-        vf.startPorcupine()
-    </script>
 </body>
 
 </html>
