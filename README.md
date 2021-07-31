@@ -217,6 +217,11 @@ xiaodu_domain: scene
 tmall_type: outlet
 ```
 
+## 相关问题
+
+- 与智能音箱对接，域名必须为https。如果没有可联系我，提供HTTP转HTTPS代理服务
+- 我的设备有限，所以支持不全，如有需要，可联系我添加
+
 ## 如果这个项目对你有帮助，请我喝杯<del><small>咖啡</small></del><b>奶茶</b>吧😘
 |支付宝|微信|
 |---|---|
