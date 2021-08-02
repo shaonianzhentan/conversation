@@ -71,7 +71,7 @@ class VoiceRecognition {
             this.porcupineWorker = porcupineWorker
             setTimeout(() => {
                 console.log('语音助手准备好了')
-                this.toast('语音助手Ready')
+                this.toast('语音助手准备好了，对我说Jarvis，唤醒我吧')
             }, 1000)
         } catch (ex) {
             console.error(ex)
@@ -104,7 +104,6 @@ class VoiceRecognition {
 
         recognition.onend = () => {
             this.stopListening()
-            this.toast("识别结束，发送命令中...")
             window.VOICE_RECOGNITION.startPorcupine()
         }
 
@@ -127,6 +126,7 @@ class VoiceRecognition {
             // 一句话识别完毕
             if (final_transcript != "") {
                 console.log(final_transcript)
+                this.callService('conversation.process', { text: final_transcript })
                 recognition.stop();
                 return;
             }
@@ -148,8 +148,7 @@ class VoiceRecognition {
                     width: 100%;
                     height: 100vh;
                     position: fixed;
-                    background: rgba(0, 0, 0, .5);
-                    filter: blur(10px);
+                    background: rgba(0, 0, 0, .8);
                 }
                 .conversation-voice-text {
                     color: white;
@@ -178,12 +177,12 @@ class VoiceRecognition {
     }
 }
 
-document.addEventListener("DOMContentLoaded", async function () {
-
-    const vf = new VoiceRecognition()
-    await vf.loadScript('https://unpkg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
-    await vf.loadScript('https://unpkg.com/@picovoice/web-voice-processor/dist/iife/index.js')
-    vf.startPorcupine()
-    window.VOICE_RECOGNITION = vf
-
-});
+(async function () {
+    if (location.protocol == 'https:') {
+        const vf = new VoiceRecognition()
+        await vf.loadScript('https://unpkg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
+        await vf.loadScript('https://unpkg.com/@picovoice/web-voice-processor/dist/iife/index.js')
+        vf.startPorcupine()
+        window.VOICE_RECOGNITION = vf
+    }
+})();
