@@ -76,7 +76,7 @@ class VoiceRecognition {
             }
             listenText = ''
             let final_transcript = '';
-            for (let i = event.resultIndex; i < result.length; ++i) {
+            for (let i = event.resultIndex; i < result.length; i++) {
                 const transcript = result[i][0].transcript;
                 if (result[i].isFinal) {
                     final_transcript += transcript
