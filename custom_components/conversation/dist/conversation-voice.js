@@ -98,11 +98,12 @@ class VoiceRecognition {
         }
 
         recognition.onerror = (event) => {
-            console.log('错误')
-            this.setListeningText('出现错误')
+            this.stopListening()
+            this.toast("语音识别出现错误")
         };
 
-        recognition.onend = function () {
+        recognition.onend = () => {
+            this.stopListening()
             this.toast("识别结束，发送命令中...")
             window.VOICE_RECOGNITION.startPorcupine()
         }
