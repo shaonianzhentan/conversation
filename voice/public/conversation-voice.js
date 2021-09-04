@@ -1,6 +1,7 @@
 class VoiceRecognition {
 
     constructor() {
+        this.hotwords = 'Hey Google'
     }
 
     loadScript(src) {
@@ -42,9 +43,10 @@ class VoiceRecognition {
     }
 
     async startPorcupine() {
+        const { hotwords } = this
         console.log('加载中，请等待...')
         const porcupineWorker = await PorcupineWebEnWorker.PorcupineWorkerFactory.create(
-            [{ builtin: "Jarvis", sensitivity: 0.65 }]
+            [{ builtin: hotwords, sensitivity: 0.65 }]
         );
         porcupineWorker.onmessage = (msg) => {
             console.log(msg)
@@ -70,9 +72,9 @@ class VoiceRecognition {
             this.webVp = webVp
             this.porcupineWorker = porcupineWorker
             setTimeout(() => {
-                console.log('语音助手准备好了')
-                this.toast('语音助手准备好了，对我说Jarvis，唤醒我吧')
-            }, 1000)
+                // console.log('语音助手准备好了')
+                this.toast(`语音助手准备好了，对我说${hotwords}，唤醒我吧`)
+            }, 1500)
         } catch (ex) {
             console.error(ex)
         }
