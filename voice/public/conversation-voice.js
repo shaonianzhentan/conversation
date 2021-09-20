@@ -2,6 +2,18 @@ class VoiceRecognition {
 
     constructor() {
         this.hotwords = 'Hey Google'
+        this.isMobile = 'ontouchend' in document.body
+        this.init()
+    }
+
+    async init() {
+        if (this.isMobile) {
+            await this.loadScript('https://cdn.jsdelivr.net/gh/shaonianzhentan/lovelace-voice-speak@master/dist/recorder.mp3.min.js')
+        }
+
+        await this.loadScript('https://unpkg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
+        await this.loadScript('https://unpkg.com/@picovoice/web-voice-processor/dist/iife/index.js')
+        this.startPorcupine()
     }
 
     loadScript(src) {
@@ -56,10 +68,14 @@ class VoiceRecognition {
                     console.log("Porcupine detected " + msg.data.keywordLabel);
                     this.stopPorcupine()
                     // 开始执行语音识别
-                    if (!this.recognition) {
-                        this.initRecognition()
+                    if (this.isMobile) {
+                        this.initVoiceRecorder()
+                    } else {
+                        if (!this.recognition) {
+                            this.initRecognition()
+                        }
+                        this.recognition.start()
                     }
-                    this.recognition.start()
                     break;
                 default:
                     break;
@@ -138,6 +154,53 @@ class VoiceRecognition {
         this.recognition = recognition
     }
 
+    // 初始化录音
+    initVoiceRecorder() {
+        const recorder = Recorder({ type: "mp3", sampleRate: 16000 });
+        recorder.open(() => {
+            recorder.start();
+            this.startListening()
+            let step = 4
+            let timer = setInterval(() => {
+                step -= 1
+                this.setListeningText(`正在聆听中...${step}秒`)
+                if (step <= 0) {
+                    clearInterval(timer)
+                    // 录音结束
+                    recorder.stop(async (blob, duration) => {
+                        recorder.close();
+                        if (duration > 2000) {
+                            const xunfei_api = this.hass.states["conversation.voice"]["attributes"]["XiaoAi"].replace('xiaoai', 'xunfei')
+                            const arr = xunfei_api.split('/')
+                            // 上传识别
+                            const body = new FormData();
+                            body.append("wav", blob);
+                            const res = await fetch('/' + arr[arr.length - 1] + '?type=conversation', {
+                                method: 'put',
+                                body
+                            }).then(res => res.json())
+                            console.log(res)
+                            this.toast(res.msg)
+                            this.stopListening()
+                            window.VOICE_RECOGNITION.startPorcupine()
+                        } else {
+                            this.toast('提示：当前录音时间没有2秒', -1)
+                        }
+                    }, (msg) => {
+                        this.toast("录音失败:" + msg);
+                    });
+                }
+            }, 1000)
+        }, (msg, isUserNotAllow) => {
+            console.log((isUserNotAllow ? "UserNotAllow，" : "") + "无法录音:" + msg);
+            // 如果没有权限，则显示提示
+            if (isUserNotAllow) {
+                this.toast('无法录音：' + msg)
+            }
+        });
+        this.recognition = recorder
+    }
+
     // 开始监听
     startListening() {
         const div = document.createElement('div')
@@ -179,12 +242,6 @@ class VoiceRecognition {
     }
 }
 
-(async function () {
-    if (location.protocol == 'https:') {
-        const vf = new VoiceRecognition()
-        await vf.loadScript('https://unpkg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
-        await vf.loadScript('https://unpkg.com/@picovoice/web-voice-processor/dist/iife/index.js')
-        vf.startPorcupine()
-        window.VOICE_RECOGNITION = vf
-    }
-})();
+if (location.protocol == 'https:') {
+    window.VOICE_RECOGNITION = new VoiceRecognition()
+}
