@@ -7,12 +7,13 @@
 ```yaml
 # 语音小助手（高级用法请参考官方文档）
 conversation:
+```
 
-# 日志
-logger:
-  default: info
-  logs:
-    custom_components.conversation: debug
+启动调试服务
+```yaml
+service: logger.set_level
+data:
+  custom_components.conversation: debug
 ```
 
 ## 云音乐指令（需要配合云音乐播放器使用）
@@ -52,7 +53,8 @@ logger:
 
 ## 更新日志
 
-### v1.5.1
+### v1.5.2
+- 适配小爱自定义技能退出的问题
 - 测试网页语音唤醒识别
 
 ### v1.5
