@@ -40,7 +40,7 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.5.2'
+VERSION = '1.5.3'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -48,7 +48,6 @@ MAC_ADDRESS = get_mac_address().replace(':','').lower()
 XIAOAI_API = f"/conversation-xiaoai-{MAC_ADDRESS}"
 XIAODU_API = f"/conversation-xiaodu"
 TMALL_API = f"/conversation-tmall"
-XUNFEI_API = f"/conversation-xunfei-{MAC_ADDRESS}"
 ALIGENIE_API = f"/conversation-aligenie-{MAC_ADDRESS}"
 VIDEO_API = '/conversation-video'
 ########################################## 查询实体

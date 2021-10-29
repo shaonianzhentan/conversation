@@ -170,19 +170,20 @@ class VoiceRecognition {
                     recorder.stop(async (blob, duration) => {
                         recorder.close();
                         if (duration > 2000) {
-                            const xunfei_api = this.hass.states["conversation.voice"]["attributes"]["XiaoAi"].replace('xiaoai', 'xunfei')
-                            const arr = xunfei_api.split('/')
+                            window.VOICE_RECOGNITION.startPorcupine()
                             // 上传识别
                             const body = new FormData();
                             body.append("wav", blob);
-                            const res = await fetch('/' + arr[arr.length - 1] + '?type=conversation', {
-                                method: 'put',
+                            const res = await fetch('/xunfei-api/stt', {
+                                method: 'post',
                                 body
                             }).then(res => res.json())
+                            if (res.code == 0) {
+                                this.callService('conversation.process', { text: res.data })
+                            }
                             console.log(res)
                             this.toast(res.msg)
                             this.stopListening()
-                            window.VOICE_RECOGNITION.startPorcupine()
                         } else {
                             this.toast('提示：当前录音时间没有2秒', -1)
                         }

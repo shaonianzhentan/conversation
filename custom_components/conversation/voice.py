@@ -9,7 +9,6 @@ import homeassistant.auth.models as models
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from datetime import timedelta
 
-from .xunfei_view import XunfeiView
 from .box.aligenie_view import AliGenieView
 from .box.tmall_view import TmallView
 from .box.xiaoai_view import XiaoaiGateView
@@ -48,7 +47,6 @@ class Voice():
         local = hass.config.path("custom_components/conversation/dist")
         hass.http.register_static_path('/conversation', local, False)
         hass.http.register_view(XiaoaiGateView)
-        hass.http.register_view(XunfeiView)
         hass.http.register_view(AliGenieView)
         hass.http.register_view(XiaoduGateView)
         hass.http.register_view(TmallView)
