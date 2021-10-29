@@ -8,7 +8,7 @@ class VoiceRecognition {
 
     async init() {
         if (this.isMobile) {
-            await this.loadScript('https://cdn.jsdelivr.net/gh/shaonianzhentan/lovelace-voice-speak@master/dist/recorder.mp3.min.js')
+            await this.loadScript('https://cdn.jsdelivr.net/gh/xiangyuecn/Recorder@master/recorder.wav.min.js')
         }
 
         await this.loadScript('https://unpkg.zhimg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
@@ -156,7 +156,7 @@ class VoiceRecognition {
 
     // 初始化录音
     initVoiceRecorder() {
-        const recorder = Recorder({ type: "mp3", sampleRate: 16000 });
+        const recorder = Recorder({ type: "wav", sampleRate: 16000 });
         recorder.open(() => {
             recorder.start();
             this.startListening()
