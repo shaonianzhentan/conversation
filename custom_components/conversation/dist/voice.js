@@ -11,8 +11,8 @@ class VoiceRecognition {
             await this.loadScript('https://cdn.jsdelivr.net/gh/shaonianzhentan/lovelace-voice-speak@master/dist/recorder.mp3.min.js')
         }
 
-        await this.loadScript('https://unpkg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
-        await this.loadScript('https://unpkg.com/@picovoice/web-voice-processor/dist/iife/index.js')
+        await this.loadScript('https://unpkg.zhimg.com/@picovoice/porcupine-web-en-worker/dist/iife/index.js')
+        await this.loadScript('https://unpkg.zhimg.com/@picovoice/web-voice-processor/dist/iife/index.js')
         this.startPorcupine()
     }
 
