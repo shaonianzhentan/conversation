@@ -65,8 +65,7 @@ async def async_setup(hass, config):
             await agent.async_process(text, service.context)
             # 记录来源
             source = service.data.get('source', '')
-            timestamp = service.data.get('timestamp', '')
-            await hass.data["conversation_voice"].set_state(text, source, timestamp)
+            await hass.data["conversation_voice"].set_state(text, source)
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 

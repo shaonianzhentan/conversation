@@ -550,13 +550,12 @@ class Voice():
                 })
 
     # 记录语音识别语句
-    async def set_state(self, text=VERSION, source = '', timestamp = ''):
+    async def set_state(self, text=VERSION, source = ''):
         hass = self.hass
         config_data = self.api_config.get_config()
         hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:account-voice",
             "friendly_name": "语音助手",
-            "timestamp": timestamp,
             "source": source,
             "version": VERSION,
             "open_mic": config_data.get("open_mic", True),
