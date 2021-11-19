@@ -23,24 +23,39 @@
     "
   >
     <a-input
-      placeholder="请输入文字命令"
+      placeholder="输入文字后自动发送"
       autofocus
       v-model:value.trim="msg"
       @keydown.enter="sendMsgKeydown"
       :disabled="loading"
+      v-if="isVoice"
     >
-      <template #prefix>
-        <BarsOutlined type="user" />
-      </template>
       <template #suffix>
-        <a-tooltip :title="isVoice ? '自动发送' : '手动发送'">
+        <a-tooltip title="自动发送">
           <span @click="toggleVoiceClick">
-            <AudioOutlined style="color: rgba(0, 0, 0, 0.45)" v-if="isVoice" />
-            <EditOutlined style="color: rgba(0, 0, 0, 0.45)" v-else />
+            <AudioOutlined style="color: rgba(0, 0, 0, 0.45)" />
           </span>
         </a-tooltip>
       </template>
     </a-input>
+    <a-auto-complete
+      v-else
+      v-model:value.trim="msg"
+      :options="options"
+      @select="onSelect"
+      dropdown-class-name="certain-category-search-dropdown"
+      style="width: 100%"
+    >
+      <a-input placeholder="请输入文字命令" @keydown.enter="sendMsgKeydown">
+        <template #suffix>
+          <a-tooltip title="手动发送">
+            <span @click="toggleVoiceClick">
+              <EditOutlined style="color: rgba(0, 0, 0, 0.45)" />
+            </span>
+          </a-tooltip>
+        </template>
+      </a-input>
+    </a-auto-complete>
   </div>
 </template>
 
@@ -88,6 +103,8 @@ export default defineComponent({
     return {
       msg: "",
       loading: false,
+      options: [],
+      states: [],
       throttle: throttle(
         () => {
           this.sendMsg(this.msg);
@@ -99,8 +116,41 @@ export default defineComponent({
   },
   watch: {
     msg(val) {
-      if (val && this.isVoice) {
-        this.throttle();
+      if (val) {
+        if (this.isVoice) this.throttle();
+        else {
+          if (val.indexOf("打开") == 0 || val.indexOf("关闭") == 0) {
+            const { states } = this;
+            let options = [];
+            states.forEach((entity) => {
+              const { entity_id, attributes } = entity;
+              const domain = entity_id.split(".")[0];
+              const { friendly_name } = attributes;
+              if (
+                friendly_name &&
+                [
+                  "input_boolean",
+                  "light",
+                  "switch",
+                  "fan",
+                  "automation",
+                  "climate",
+                ].includes(domain)
+              ) {
+                if (
+                  (val.length > 2 && friendly_name.includes(val.substr(2))) ||
+                  val.length == 2
+                ) {
+                  const optionValue = val.substr(0, 2) + friendly_name;
+                  options.push({ value: optionValue });
+                }
+              }
+            });
+            this.options = options;
+          } else {
+            this.options = [];
+          }
+        }
       }
     },
   },
@@ -152,8 +202,9 @@ export default defineComponent({
         // 获取当前组件版本
         connection
           .sendMessagePromise({ type: "get_states" })
-          .then((res: any) => {
-            let entity = res.find(
+          .then((states: any) => {
+            this.states = states;
+            let entity = states.find(
               (ele) => ele.entity_id === "conversation.voice"
             );
             let query = new URLSearchParams(location.search);
@@ -294,15 +345,26 @@ export default defineComponent({
     toggleVoiceClick() {
       this.isVoice = !this.isVoice;
     },
+    onSelect(val) {
+      this.sendMsg(val);
+    },
   },
 });
 </script>
 
 <style>
+body {
+  overflow-x: hidden;
+}
 #app {
   padding: 10px 10px 50px 10px;
 }
 #app .ant-card {
   margin-bottom: 10px;
+}
+.certain-category-search-dropdown {
+  position: fixed !important;
+  bottom: 50px !important;
+  top: 50% !important;
 }
 </style>

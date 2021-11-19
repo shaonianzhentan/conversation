@@ -244,6 +244,6 @@ class VoiceRecognition {
     }
 }
 
-if (location.protocol == 'https:') {
+if (location.protocol == 'https:' && !window.VOICE_RECOGNITION) {
     window.VOICE_RECOGNITION = new VoiceRecognition()
 }
