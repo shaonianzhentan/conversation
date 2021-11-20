@@ -119,30 +119,38 @@ export default defineComponent({
       if (val) {
         if (this.isVoice) this.throttle();
         else {
-          if (val.indexOf("打开") == 0 || val.indexOf("关闭") == 0) {
+          if (
+            val.indexOf("打开") == 0 ||
+            val.indexOf("关闭") == 0 ||
+            val.indexOf("查看") == 0
+          ) {
             const { states } = this;
             let options = [];
             states.forEach((entity) => {
               const { entity_id, attributes } = entity;
               const domain = entity_id.split(".")[0];
+              const action = val.substr(0, 2);
               const { friendly_name } = attributes;
-              if (
-                friendly_name &&
-                [
-                  "input_boolean",
-                  "light",
-                  "switch",
-                  "fan",
-                  "automation",
-                  "climate",
-                ].includes(domain)
-              ) {
+              if (friendly_name) {
+                const optionValue = action + friendly_name;
+
                 if (
-                  (val.length > 2 && friendly_name.includes(val.substr(2))) ||
-                  val.length == 2
+                  [
+                    "input_boolean",
+                    "light",
+                    "switch",
+                    "fan",
+                    "automation",
+                    "climate",
+                  ].includes(domain) ||
+                  action === "查看"
                 ) {
-                  const optionValue = val.substr(0, 2) + friendly_name;
-                  options.push({ value: optionValue });
+                  if (
+                    (val.length > 2 && friendly_name.includes(val.substr(2))) ||
+                    val.length == 2
+                  ) {
+                    options.push({ value: optionValue });
+                  }
                 }
               }
             });
@@ -297,6 +305,7 @@ export default defineComponent({
       });
     },
     sendMsg(msg) {
+      this.options = []
       this.msg = "";
       const comData = {
         name: "CardLoading",

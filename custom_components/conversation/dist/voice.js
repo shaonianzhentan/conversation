@@ -180,9 +180,10 @@ class VoiceRecognition {
                             }).then(res => res.json())
                             if (res.code == 0) {
                                 this.callService('conversation.process', { text: res.data })
+                                this.toast(res.data)
+                            }else{
+                                this.toast(res.msg)
                             }
-                            console.log(res)
-                            this.toast(res.msg)
                             this.stopListening()
                         } else {
                             this.toast('提示：当前录音时间没有2秒', -1)
@@ -243,6 +244,6 @@ class VoiceRecognition {
     }
 }
 
-if (location.protocol == 'https:') {
+if (location.protocol == 'https:' && !window.VOICE_RECOGNITION) {
     window.VOICE_RECOGNITION = new VoiceRecognition()
 }
