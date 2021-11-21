@@ -18,7 +18,7 @@ from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_AP
     ApiConfig, find_entity, trim_char, http_get, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
-    matcher_script, matcher_automation, matcher_query_state, matcher_switch, matcher_on_off
+    matcher_script, matcher_automation, matcher_media_player, matcher_query_state, matcher_switch, matcher_on_off
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +161,11 @@ class Voice():
         
         # 自动化操作
         intent_result = await self.execute_automation(_text)
+        if intent_result is not None:
+            return intent_result
+
+        # 媒体播放器控制
+        intent_result = await self.execute_media_player(_text)
         if intent_result is not None:
             return intent_result
 
@@ -371,6 +376,30 @@ class Voice():
                     self.call_service('automation.toggle', service_data)
                     return self.intent_result("正在切换自动化：" + entity_id, extra_data)
 
+    # 媒体播放器(播放|暂停|下一曲|上一曲)
+    async def execute_media_player(self, text):
+        result = matcher_media_player(text)
+        if result is not None:
+            action = result[1]
+            state = await find_entity(self.hass, result[0], 'media_player')
+            if state is not None:
+                entity_id = state.entity_id
+                extra_data = {
+                    'type': 'entity',
+                    'data': [ entity_id ]
+                }
+                service_data = {'entity_id': entity_id}
+                if action == '播放':
+                    self.call_service('media_player.media_play', service_data)
+                elif action == '暂停':
+                    self.call_service('media_player.media_pause', service_data)
+                elif action == '下一曲':
+                    self.call_service('media_player.media_next_track', service_data)
+                elif action == '上一曲':
+                    self.call_service('media_player.media_previous_track', service_data)
+
+                return self.intent_result(text, extra_data)
+                
     # 查看设备状态
     async def execute_query_state(self, text):
         result = matcher_query_state(text)
@@ -458,7 +487,7 @@ class Voice():
                 if result is not None:
                     return self.intent_result("正在执行" + result)
                 # 如果没有这个设备，则返回为空
-                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate', 'fan'])
+                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate', 'fan', 'media_player'])
                 if state is not None:
                     # 空调没有切换方法
                     if ['climate'].count(state.domain) == 1 and service_type == 'toggle':
@@ -476,7 +505,7 @@ class Voice():
             # 多个设备
             _list = []
             for _name in text:
-                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate'])
+                state = await find_entity(self.hass, _name, ['input_boolean', 'light', 'switch', 'climate', 'fan', 'media_player'])
                 if state is not None:
                     _list.append(_name)
                     self.call_service(f'{state.domain}.{service_type}', {'entity_id': state.entity_id})
