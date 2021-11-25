@@ -1,5 +1,8 @@
 # conversation
+
 在HA里使用的官方语音助手修改增强版
+
+![visit](https://visitor-badge.glitch.me/badge?page_id=shaonianzhentan.conversation&left_text=visit)
 
 > 官方文档：https://www.home-assistant.io/integrations/conversation/
 
@@ -194,7 +197,6 @@ xiaodu_domain: scene
 > 小度开发相关文档
 
 - [设备类型与模式表](https://dueros.baidu.com/didp/doc/dueros-bot-platform/dbp-smart-home/protocol/control-message_markdown#%E8%AE%BE%E5%A4%87%E7%B1%BB%E5%9E%8B%E4%B8%8E%E6%A8%A1%E5%BC%8F%E8%A1%A8)
-
 
 ## 天猫精灵2.0
 
