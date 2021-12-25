@@ -27,7 +27,7 @@ DATA_CONFIG = "conversation_config"
 
 SERVICE_PROCESS = "process"
 
-SERVICE_PROCESS_SCHEMA = vol.Schema({vol.Required(ATTR_TEXT): cv.string})
+SERVICE_PROCESS_SCHEMA = vol.Schema({vol.Required(ATTR_TEXT): cv.string, vol.Optional("source"): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
     {

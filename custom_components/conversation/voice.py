@@ -592,6 +592,5 @@ class Voice():
             'XiaoAi': self.get_base_url(XIAOAI_API),
             'AliGenie': self.get_base_url(ALIGENIE_API),
             'XiaoDu': self.get_base_url(XIAODU_API),
-            'Tmall': self.get_base_url(TMALL_API),
-            'github': 'https://github.com/shaonianzhentan/conversation'
+            'Tmall': self.get_base_url(TMALL_API)
         })
