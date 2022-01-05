@@ -28,6 +28,10 @@ data:
 
 [![导入蓝图](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fshaonianzhentan%2Fconversation%2Fblob%2Fmain%2Fblueprints%2Fxiaodu_philips_light.yaml)
 
+天猫精灵-晾衣架照明控制
+
+[![导入蓝图](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fshaonianzhentan%2Fconversation%2Fblob%2Fmain%2Fblueprints%2Ftmall_hanger_light.yaml)
+
 ## 云音乐指令（需要配合云音乐播放器使用）
 
 - 我想听xxx的歌

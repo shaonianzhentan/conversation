@@ -1,0 +1,42 @@
+blueprint:
+  name: 天猫精灵控制晾衣架灯
+  description: 天猫精灵控制小米晾衣架灯
+  domain: automation
+  source_url: https://github.com/shaonianzhentan/conversation
+  input:
+    cover_entity:
+      name: 晾衣架
+      description: 晾衣架设备
+      default: []
+      selector:
+        entity:
+          domain: cover
+    illumination_off:
+      name: 关闭照明
+      description: 关闭晾衣架灯
+      default: []
+      selector:
+        action: {}
+    illumination_on:
+      name: 打开照明
+      description: 打开晾衣架灯
+      default: []
+      selector:
+        action: {}
+trigger:
+- platform: event
+  event_type: tmall_event
+  event_data:
+    type: thing.attribute.set
+    domain: cover
+    entity_id: !input cover_entity
+action:
+- variables:
+    command: '{{ trigger.event.data.illumination }}'
+- choose:
+  - conditions:
+    - '{{ command == 1 }}'
+    sequence: !input illumination_on
+  - conditions:
+    - '{{ command == 0 }}'
+    sequence: !input illumination_off
