@@ -5,6 +5,8 @@
 [![hacs_badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
 ![visit](https://visitor-badge.glitch.me/badge?page_id=shaonianzhentan.conversation&left_text=visit)
 
+[![ha_badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
+
 > 官方文档：https://www.home-assistant.io/integrations/conversation/
 
 ## 配置
@@ -76,6 +78,7 @@ data:
 - 删除讯飞语音识别相关代码
 - 支持media_player控制
 - 解决HA新版异常问题
+- 优化Windows应用语音识别文本解析问题
 
 ### v1.5
 - 注意：`修改了配置文件格式，必需要重新配置`

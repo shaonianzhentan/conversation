@@ -192,11 +192,17 @@ class Voice():
     def fire_text(self, text):
         hass = self.hass
         # 去掉前后标点符号
-        _text = trim_char(text)
+        text = trim_char(text)
+
+        # 数字转换汉字
+        matchObj = re.match(r'(上|下|前|后|左|右)1(曲|首|个|页|条|段)', text)
+        if matchObj is not None:
+            text = text.replace('1', '一')
+
         # 发送事件，共享给其他组件
-        text_data = { 'text': _text }
+        text_data = { 'text': text }
         # 语义解析
-        result = matcher_watch_tv(_text)
+        result = matcher_watch_tv(text)
         if result is not None:
             text_data.update({ 'type': 'iptv', 'value': result })
 
@@ -204,7 +210,7 @@ class Voice():
         # 调用python_script.conversation
         if hass.services.has_service('python_script', 'conversation'):
             hass.async_create_task(hass.services.async_call('python_script', 'conversation', text_data))
-        return _text
+        return text
 
     # 查看设备
     def query_device(self, text):
