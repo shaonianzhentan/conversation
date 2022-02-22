@@ -113,8 +113,8 @@ class DefaultAgent(AbstractConversationAgent):
         self, text: str, context: core.Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
+        text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
         intents = self.hass.data[DOMAIN]
-
         for intent_type, matchers in intents.items():
             for matcher in matchers:
                 if not (match := matcher.match(text)):
