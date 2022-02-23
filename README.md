@@ -67,13 +67,14 @@ data:
 - 执行脚本（脚本名称=语音文本）
 
 ## node-red 和 自动化
-- 监听ha_voice_text_event事件
-- text: 语音文本
+- 监听`conversation`事件，命令文本参数：`text`
 
 ## 更新日志
 
-### v1.5.7
+### v1.5.8
 - 优化Windows应用语音识别文本解析问题
+- 修改事件`ha_voice_text_event`成`conversation`
+- 优化命令文本前后标点符号
 
 ### v1.5.6
 - 适配小爱自定义技能退出的问题
