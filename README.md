@@ -3,7 +3,7 @@
 在HA里使用的官方语音助手修改增强版
 
 [![hacs_badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
-![visit](https://visitor-badge.glitch.me/badge?page_id=shaonianzhentan.conversation&left_text=visit)
+![visit](https://visitor-badge.laobi.icu/badge?page_id=shaonianzhentan.conversation&left_text=visit)
 
 [![ha_badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
 
@@ -67,13 +67,14 @@ data:
 - 执行脚本（脚本名称=语音文本）
 
 ## node-red 和 自动化
-- 监听ha_voice_text_event事件
-- text: 语音文本
+- 监听`conversation`事件，命令文本参数：`text`
 
 ## 更新日志
 
-### v1.5.7
+### v1.5.8
 - 优化Windows应用语音识别文本解析问题
+- 修改事件`ha_voice_text_event`成`conversation`
+- 优化命令文本前后标点符号
 
 ### v1.5.6
 - 适配小爱自定义技能退出的问题

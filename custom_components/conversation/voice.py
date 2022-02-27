@@ -191,9 +191,6 @@ class Voice():
     # 触发事件
     def fire_text(self, text):
         hass = self.hass
-        # 去掉前后标点符号
-        text = trim_char(text)
-
         # 数字转换汉字
         matchObj = re.match(r'(上|下|前|后|左|右)1(曲|首|个|页|条|段)', text)
         if matchObj is not None:
@@ -206,7 +203,7 @@ class Voice():
         if result is not None:
             text_data.update({ 'type': 'iptv', 'value': result })
 
-        hass.bus.fire('ha_voice_text_event', text_data)
+        hass.bus.fire('conversation', text_data)
         # 调用python_script.conversation
         if hass.services.has_service('python_script', 'conversation'):
             hass.async_create_task(hass.services.async_call('python_script', 'conversation', text_data))
