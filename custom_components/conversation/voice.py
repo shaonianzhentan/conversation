@@ -14,7 +14,7 @@ from .box.tmall_view import TmallView
 from .box.xiaoai_view import XiaoaiGateView
 from .box.xiaodu_view import XiaoduGateView
 
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_API, ALIGENIE_API, XIAODU_API, VIDEO_API, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_API, ALIGENIE_API, XIAODU_API, \
     ApiConfig, find_entity, trim_char, http_get, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
@@ -44,8 +44,11 @@ class Voice():
         项目地址：https://github.com/shaonianzhentan/conversation
 
     -------------------------------------------------------------------''')
-        local = hass.config.path("custom_components/conversation/dist")
-        hass.http.register_static_path('/conversation', local, False)
+        local = hass.config.path("custom_components/conversation/www")
+        LOCAL_PATH = '/conversation-www'
+        hass.http.register_static_path(LOCAL_PATH, local, False)
+        hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={VERSION}')
+        
         hass.http.register_view(XiaoaiGateView)
         hass.http.register_view(AliGenieView)
         hass.http.register_view(XiaoduGateView)
@@ -591,7 +594,6 @@ class Voice():
             "source": source,
             "version": VERSION,
             "open_mic": config_data.get("open_mic", True),
-            'link': self.get_base_url('/conversation/index.html?ver=' + VERSION),
             'XiaoAi': self.get_base_url(XIAOAI_API),
             'AliGenie': self.get_base_url(ALIGENIE_API),
             'XiaoDu': self.get_base_url(XIAODU_API),

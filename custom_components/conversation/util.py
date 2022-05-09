@@ -40,7 +40,7 @@ def get_mac_address():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return ":".join([mac[e:e+2] for e in range(0,11,2)])
 ########################################## 常量
-VERSION = '1.5.8'
+VERSION = '1.6'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
@@ -49,7 +49,6 @@ XIAOAI_API = f"/conversation-xiaoai-{MAC_ADDRESS}"
 XIAODU_API = f"/conversation-xiaodu"
 TMALL_API = f"/conversation-tmall"
 ALIGENIE_API = f"/conversation-aligenie-{MAC_ADDRESS}"
-VIDEO_API = '/conversation-video'
 ########################################## 查询实体
 def isMatchDomain(type, domain):
     return type is None or (isinstance(type, list) and type.count(domain) == 1) or (isinstance(type, str) and type == domain)
