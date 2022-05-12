@@ -31,8 +31,20 @@ class Conversation():
             else:
                 state = self.hass.states.get(entity_id)
                 return self.intent_result(f'{entity_name}的状态：{state.state}')
+
+        # Query entity first
+        entity = await self.semantic.find_entity(text)
+        print(entity)
+        # brightness match
+        result = await self.semantic.brightness_match(text, entity)
+        if result is not None:            
+            entity_id = entity['entity_id']
+            entity_name = entity['entity_name']
+            self.call_service('light.turn_on', { 'entity_id': entity_id, 'brightness_pct': result })
+            return self.intent_result(f'{entity_name}的亮度正在设为{result}%')
+
         # Semantic analysis
-        result = await self.semantic.parser(text)
+        result = await self.semantic.turn_match(text, entity)
         slots = result['slots']
         if len(slots) > 0:
             cmd_arr = []

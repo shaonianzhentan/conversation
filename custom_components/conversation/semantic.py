@@ -6,10 +6,21 @@ class Semantic():
     def __init__(self, hass):
         self.hass = hass
 
-    async def parser(self, text):
+    async def brightness_match(self, text, entity):        
+        if entity is not None and entity.get('domain') == 'light':
+            if '亮度' in text:
+                # check numbers
+                compileX = re.compile("\d+")
+                findX = compileX.findall(text)
+                if len(findX) > 0:
+                    return int(findX[0])
+            if '最亮' in text:
+                return 100
+            if '最暗' in text:
+                return 1
+
+    async def turn_match(self, text, entity):
         entities = []
-        # Query entity first
-        entity = await self.find_entity(text)
 
         # Then query the area
         area = await self.find_area(text)
@@ -22,11 +33,11 @@ class Semantic():
 
         slots = []
         # match turn on
-        result = await self.parser_turn_on(text)
+        result = await self.parser_turn_on(text, entity)
         if result is not None:
             slots.append(result)
         # match turn off
-        result = await self.parser_turn_off(text)
+        result = await self.parser_turn_off(text, entity)
         if result is not None:
             slots.append(result)
         return {
@@ -164,11 +175,19 @@ class Semantic():
                 'area_words': words
             }
 
-    async def parser_turn_off(self, text):
-        return await self.parser_turn_cmd(text, 'turn_off', '关闭|关掉|关上|关一下|关下')
+    async def parser_turn_off(self, text, entity):
+        cmd = 'turn_off'
+        domain = entity.get('domain')
+        if domain == 'cover':
+            cmd = 'close_cover'
+        return await self.parser_turn_cmd(text, cmd, '关闭|关掉|关上|关一下|关下')
 
-    async def parser_turn_on(self, text):
-        return await self.parser_turn_cmd(text, 'turn_on', '打开|开启|启动|开一下|开下')
+    async def parser_turn_on(self, text, entity):
+        cmd = 'turn_on'
+        domain = entity.get('domain')
+        if domain == 'cover':
+            cmd = 'open_cover'
+        return await self.parser_turn_cmd(text, cmd, '打开|开启|开一下|开下')
 
     async def parser_turn_cmd(self, text, cmd, key):
         matchObj = self.parser_match(text, key)
