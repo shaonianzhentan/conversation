@@ -9,36 +9,3 @@ process:
       example: 打开所有灯
       selector:
         text:
-reload:
-  description: 重新加载 intent_script 配置
-setting:
-  description: 设置相关配置
-  fields:
-    open_mic:
-      name: 是否继续对话
-      description: 语音结束后是否继续开麦（是：true，否：false）
-      default: false
-      example: False
-      selector:
-        boolean:
-    user_id:
-      name: 小爱同学用户ID
-      description: 通过用户ID，过滤其它人的命令
-      selector:
-        text:
-    userOpenId:
-      name: 天猫精灵用户ID
-      description: 通过用户ID，过滤其它人的命令
-      selector:
-        text:
-    aligenie:
-      name: 天猫精灵唤醒词
-      description: 天猫精灵自定义技能的唤醒词
-      default: 请帮我
-      selector:
-        text:
-    apiKey:
-      name: 服务密钥
-      description: 用户私钥
-      selector:
-        text:

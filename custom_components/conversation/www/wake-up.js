@@ -1,3 +1,3 @@
 if (location.protocol == 'https:' || location.hostname == 'localhost') {
-    import('/conversation-www/wake-up.es.js.gz')
+    import('/www-conversation/wake-up.es.js.gz')
 };

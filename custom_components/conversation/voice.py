@@ -3,19 +3,9 @@ from homeassistant.helpers import intent
 import homeassistant.config as conf_util
 from homeassistant.helpers import template, entity_registry, area_registry
 from homeassistant.helpers.network import get_url
-# 授权
-from typing import Optional
-import homeassistant.auth.models as models
-from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
-from datetime import timedelta
 
-from .box.aligenie_view import AliGenieView
-from .box.tmall_view import TmallView
-from .box.xiaoai_view import XiaoaiGateView
-from .box.xiaodu_view import XiaoduGateView
-
-from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, XIAOAI_API, TMALL_API, ALIGENIE_API, XIAODU_API, \
-    ApiConfig, find_entity, trim_char, http_get, get_local_video_url, \
+from .util import VERSION, DOMAIN, DATA_AGENT, DATA_CONFIG, \
+    find_entity, trim_char, http_get, get_local_video_url, \
     matcher_brightness, matcher_light_color, matcher_light_mode, \
     matcher_watch_video, matcher_watch_movie, matcher_watch_tv, \
     matcher_script, matcher_automation, matcher_media_player, matcher_query_state, matcher_switch, matcher_on_off
@@ -29,9 +19,6 @@ class Voice():
 
     def __init__(self, hass):
         self.hass = hass
-        self.api_config = ApiConfig(hass.config.path(".shaonianzhentan"))
-        hass.services.async_register(DOMAIN, 'reload', self.reload)
-        hass.services.async_register(DOMAIN, 'setting', self.setting)
         # 显示插件信息
         _LOGGER.info('''
     -------------------------------------------------------------------
@@ -45,68 +32,9 @@ class Voice():
 
     -------------------------------------------------------------------''')
         local = hass.config.path("custom_components/conversation/www")
-        LOCAL_PATH = '/conversation-www'
+        LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
         hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={VERSION}')
-        
-        hass.http.register_view(XiaoaiGateView)
-        hass.http.register_view(AliGenieView)
-        hass.http.register_view(XiaoduGateView)
-        hass.http.register_view(TmallView)
-        # 重写刷新token方法
-        hass.auth._store.async_create_refresh_token = self.async_create_refresh_token
-
-    # 创建刷新token
-    async def async_create_refresh_token(
-        self,
-        user: models.User, 
-        client_id: Optional[str] = None,
-        client_name: Optional[str] = None,
-        client_icon: Optional[str] = None,
-        token_type: str = models.TOKEN_TYPE_NORMAL,
-        access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
-        credential: models.Credentials = None,
-    ) -> models.RefreshToken:
-        # 如果是小度或天猫精灵，则给它们十年的授权
-        if client_id is not None and ['https://open.bot.tmall.com', 'https://xiaodu.baidu.com'].count(client_id.strip('/')) > 0:
-            access_token_expiration = timedelta(hours=87600)
-            _LOGGER.debug('如果是小度或天猫精灵，则给它们十年的授权')
-        """Create a new token for a user."""
-        kwargs = {
-            'user': user,
-            'client_id': client_id,
-            'token_type': token_type,
-            'access_token_expiration': access_token_expiration
-        }  # type: Dict[str, Any]
-        if client_name:
-            kwargs['client_name'] = client_name
-        if client_icon:
-            kwargs['client_icon'] = client_icon
-
-        refresh_token = models.RefreshToken(**kwargs)
-        user.refresh_tokens[refresh_token.id] = refresh_token
-
-        self.hass.auth._store._async_schedule_save()
-        return refresh_token
-                
-    # 获取基础url
-    def get_base_url(self, url):
-        try:
-            base_url = get_url(self.hass)
-        except Exception as ex:
-            base_url = 'http://localhost:8123'
-        return f'{base_url}{url}'
-
-    @property
-    def media_player(self):
-        ''' 媒体播放器 '''
-        cfg = self.api_config.get_config()
-        entity_id = cfg.get('media_player', '')
-        if entity_id != '':
-            state = self.hass.states.get(entity_id)
-            if state is not None:
-                return state
-        return None
 
     # 解析模板
     def template(self, message):
@@ -118,14 +46,6 @@ class Voice():
         intent_result = intent.IntentResponse()
         intent_result.async_set_speech(message, 'plain', extra_data)
         return intent_result
-
-    # 重新加载配置
-    async def reload(self, service):
-        hass = self.hass
-        # 读取配置
-        hass.data[DATA_CONFIG] = await conf_util.async_hass_config_yaml(hass)
-        # 清除agent
-        hass.data[DATA_AGENT] = None
 
     # 异步调用服务
     def call_service(self, service, data={}):
@@ -544,58 +464,10 @@ class Voice():
             _LOGGER.debug(e)        
         return message
 
-    # 配置设置
-    async def setting(self, service):
-        hass = self.hass
-        is_save = False
-        config_data = self.api_config.get_config()
-        data = service.data
-        # 保存user_id
-        user_id = data.get('user_id')
-        if user_id is not None:
-            config_data.update({'user_id': user_id})
-            is_save = True
-        # 保存userOpenId
-        userOpenId = data.get('userOpenId')
-        if userOpenId is not None:
-            config_data.update({'userOpenId': userOpenId})
-            is_save = True
-        # 保存aligenie
-        aligenie = data.get('aligenie')
-        if aligenie is not None:
-            config_data.update({'aligenie': aligenie})
-            is_save = True
-        # 保存open_mic
-        open_mic = data.get('open_mic')
-        if open_mic is not None:
-            config_data.update({'open_mic': open_mic})
-            is_save = True
-        # 保存apiKey
-        apiKey = data.get('apiKey', '')
-        if apiKey != '':
-            config_data.update({'apiKey': apiKey})
-            is_save = True
-        # 保存配置
-        if is_save:
-            self.api_config.save_config(config_data)
-            self.call_service('persistent_notification.create', {
-                    'message': '配置信息保存成功',
-                    'title': '语音小助手',
-                    'notification_id': 'conversation-success'
-                })
-
     # 记录语音识别语句
-    async def set_state(self, text=VERSION, source = ''):
-        hass = self.hass
-        config_data = self.api_config.get_config()
-        hass.states.async_set('conversation.voice', text, {
+    async def set_state(self, text=VERSION):
+        self.hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:account-voice",
             "friendly_name": "语音助手",
-            "source": source,
-            "version": VERSION,
-            "open_mic": config_data.get("open_mic", True),
-            'XiaoAi': self.get_base_url(XIAOAI_API),
-            'AliGenie': self.get_base_url(ALIGENIE_API),
-            'XiaoDu': self.get_base_url(XIAODU_API),
-            'Tmall': self.get_base_url(TMALL_API)
+            "version": VERSION
         })

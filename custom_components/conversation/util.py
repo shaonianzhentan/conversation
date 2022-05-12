@@ -44,11 +44,6 @@ VERSION = '1.6'
 DOMAIN = "conversation"
 DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
-MAC_ADDRESS = get_mac_address().replace(':','').lower()
-XIAOAI_API = f"/conversation-xiaoai-{MAC_ADDRESS}"
-XIAODU_API = f"/conversation-xiaodu"
-TMALL_API = f"/conversation-tmall"
-ALIGENIE_API = f"/conversation-aligenie-{MAC_ADDRESS}"
 ########################################## 查询实体
 def isMatchDomain(type, domain):
     return type is None or (isinstance(type, list) and type.count(domain) == 1) or (isinstance(type, str) and type == domain)
@@ -263,7 +258,7 @@ def matcher_switch(text):
         name = matchObj.group(2)
     else:
         matchObj = re.match(r'.*((打开|开启|启动|开一下|开下|关闭|关掉|关上|关一下|关下|切换)(.+))', text)
-        if matchObj is not None: 
+        if matchObj is not None:
             action = matchObj.group(2)
             name = matchObj.group(3)
     
@@ -347,70 +342,3 @@ async def http_code(url):
 async def http_get(url):
     async with aiohttp.request("GET", url) as response:
         return json.loads(await response.text())
-
-# 获取本地视频链接
-async def get_local_video_url(video_path, name, num):
-    if video_path == '':
-        return None
-    _url = f'{video_path}/{name}'
-    print(f'查找资源：')
-    # 判断是否为链接
-    if video_path[:4] == 'http':
-        # 暂时还没想好怎么处理
-        return None
-    elif os.path.exists(_url):
-        # 读取目录里的文件
-        files = os.listdir(_url)
-        for f in files:
-            if os.path.isfile(f'{_url}/{f}'):
-                # 判断集数是否存在
-                arr = f.split('.')
-                if arr[0] == str(num):
-                    return f'{name}/{f}'
-
-########################################## 接口配置
-class ApiConfig():
-
-    def __init__(self, _dir):
-        if os.path.exists(_dir) == False:           
-            self.mkdir(_dir)
-        self.dir = _dir
-
-    def get_config(self):
-        content = self.read('conversation.yaml')
-        if content is None:
-            content = {}
-        return content
-
-    def save_config(self, data):
-        content = self.get_config()
-        content.update(data)
-        self.write('conversation.yaml', content)
-
-    # 创建文件夹
-    def mkdir(self, path):
-        folders = []
-        while not os.path.isdir(path):
-            path, suffix = os.path.split(path)
-            folders.append(suffix)
-        for folder in folders[::-1]:
-            path = os.path.join(path, folder)
-            os.mkdir(path)
-
-    # 获取路径
-    def get_path(self, name):
-        return self.dir + '/' + name
-
-    # 读取文件内容
-    def read(self, name):
-        fn = self.get_path(name)
-        if os.path.isfile(fn):
-            with open(fn,'r', encoding='utf-8') as f:
-                content = yaml.load(f, Loader=yaml.FullLoader)
-                return content
-        return None
-
-    # 写入文件内容
-    def write(self, name, obj):
-        with open(self.get_path(name), 'w', encoding='utf-8') as f:
-            yaml.dump(obj, f)
