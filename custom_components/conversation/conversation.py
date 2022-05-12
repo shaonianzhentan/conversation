@@ -9,18 +9,6 @@ class Conversation():
 
     def __init__(self, hass):
         self.hass = hass
-        # 显示插件信息
-        _LOGGER.info('''
-    -------------------------------------------------------------------
-        语音小助手【作者QQ：635147515】
-        
-        版本：''' + VERSION + '''
-        
-        介绍：官方语音助手修改增强版
-        
-        项目地址：https://github.com/shaonianzhentan/conversation
-
-    -------------------------------------------------------------------''')
         local = hass.config.path("custom_components/conversation/www")
         LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
@@ -32,7 +20,7 @@ class Conversation():
     async def async_process(self, text):
         self.fire_text(text)
         # Exact match
-        result = await self.semantic.find_entity(text)
+        result = await self.semantic.find_entity_name(text)
         if result is not None:
             entity_id = result.get('entity_id')
             entity_name = result.get('entity_name')
@@ -51,19 +39,27 @@ class Conversation():
             for slot in slots:
                 entity_id = slot.get('entity_id')
                 cmd_text = slot.get('cmd_text')
+                service =  slot["cmd"]
                 if entity_id is None:
                     for entity in result.get('entities'):
-                        server_name = f'{entity["domain"]}.{slot["cmd"]}'
-                        self.call_service_entity(server_name, entity['entity_id'])
+                        domain = entity["domain"]
+                        entity_id = entity['entity_id']
                         entity_name = entity['entity_name']
-                        cmd_arr.append(f'{cmd_text}{entity_name}')
-                else:
-                    server_name = f'{slot["domain"]}.{slot["cmd"]}'
-                    self.call_service_entity(server_name, entity_id)
-                    entity_name = slot.get('entity_name')
-                    cmd_arr.append(f'{cmd_text}{entity_name}')
 
-            if len(slots) > 0:
+                        service_name = f'{domain}.{service}'
+                        if self.hass.services.has_service(domain, service):
+                            self.call_service_entity(service_name, entity_id)
+                            cmd_arr.append(f'{cmd_text}{entity_name}')
+                else:
+                    domain = slot["domain"]
+                    entity_name = slot.get('entity_name')
+
+                    service_name = f'{domain}.{service}'
+                    if self.hass.services.has_service(domain, service):
+                        self.call_service_entity(service_name, entity_id)
+                        cmd_arr.append(f'{cmd_text}{entity_name}')
+
+            if len(slots) > 0 and len(cmd_arr) > 0:
                 return self.intent_result('、'.join(cmd_arr))
 
         # Call chat robot

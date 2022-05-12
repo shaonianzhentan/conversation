@@ -62,6 +62,31 @@ class Semantic():
                 }
 
     # match entity name
+    async def find_entity_name(self, name):
+        states = self.hass.states.async_all()
+        for state in states:
+            entity_id = state.entity_id
+            domain = entity_id.split('.')[0]
+            attributes = state.attributes
+            state_value = state.state
+            friendly_name = attributes.get('friendly_name')
+            # 执行自定义脚本
+            if domain == 'script':
+                cmd = friendly_name.split('=')
+                if cmd.count(name) > 0:
+                    return {
+                        'domain': domain,
+                        'entity_id': entity_id,
+                        'entity_name': friendly_name
+                    }
+            if friendly_name == name:
+                return {
+                    'domain': domain,
+                    'entity_id': entity_id,
+                    'entity_name': friendly_name
+                }
+
+    # match entity name
     async def find_entity_like(self, key):
         states = self.hass.states.async_all()
         for state in states:
