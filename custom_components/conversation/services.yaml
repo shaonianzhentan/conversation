@@ -1,11 +1,11 @@
 # Describes the format for available component services
 process:
   name: Process
-  description: 执行文本命令
+  description: Launch a conversation from a transcribed text.
   fields:
     text:
       name: Text
-      description: 执行命令
-      example: 打开所有灯
+      description: Transcribed text
+      example: Turn all lights on
       selector:
         text:

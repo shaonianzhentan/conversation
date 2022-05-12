@@ -1,4 +1,4 @@
-"""Standard conversastion implementation for Home Assistant."""
+"""Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
 import re
@@ -17,6 +17,7 @@ from homeassistant.setup import ATTR_COMPONENT
 from .agent import AbstractConversationAgent
 from .const import DOMAIN
 from .util import create_matcher
+from .conversation import Conversation
 
 REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
 REGEX_TYPE = type(re.compile(""))
@@ -36,6 +37,7 @@ UTTERANCES = {
 @core.callback
 def async_register(hass, intent_type, utterances):
     """Register utterances and any custom intents for the default agent.
+
     Registrations don't require conversations to be loaded. They will become
     active once the conversation component is loaded.
     """
@@ -55,6 +57,7 @@ class DefaultAgent(AbstractConversationAgent):
     def __init__(self, hass: core.HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
+        self.conversation = Conversation(hass)
 
     async def async_initialize(self, config):
         """Initialize the default agent."""
@@ -112,8 +115,9 @@ class DefaultAgent(AbstractConversationAgent):
     async def async_process(
         self, text: str, context: core.Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
-        """Process a sentence."""
-        text = text.strip(' 。，、＇：∶；?‘’“”〝〞ˆˇ﹕︰﹔﹖﹑·¨….¸;！´？！～—ˉ｜‖＂〃｀@﹫¡¿﹏﹋﹌︴々﹟#﹩$﹠&﹪%*﹡﹢﹦﹤‐￣¯―﹨ˆ˜﹍﹎+=<­­＿_-\ˇ~﹉﹊（）〈〉‹›﹛﹜『』〖〗［］《》〔〕{}「」【】︵︷︿︹︽_﹁﹃︻︶︸﹀︺︾ˉ﹂﹄︼')
+        """Process a sentence."""        
+        text = self.conversation.trim_char(text)
+
         intents = self.hass.data[DOMAIN]
         for intent_type, matchers in intents.items():
             for matcher in matchers:
@@ -129,5 +133,4 @@ class DefaultAgent(AbstractConversationAgent):
                     context,
                 )
 
-        voice = self.hass.data["conversation_voice"]
-        return await voice.async_process(text)
+        return await self.conversation.async_process(text)
