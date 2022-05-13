@@ -65,7 +65,9 @@ class Semantic():
             domain = entity_id.split('.')[0]
             attributes = state.attributes
             state_value = state.state
-            friendly_name = attributes.get('friendly_name')
+            friendly_name = attributes.get('friendly_name', '')
+            if friendly_name == '':
+                continue
             # 执行自定义脚本
             if domain == 'script':
                 cmd = friendly_name.split('=')
@@ -75,7 +77,7 @@ class Semantic():
                         'entity_id': entity_id,
                         'entity_name': friendly_name
                     }
-            if friendly_name is not None and text.count(friendly_name) > 0:
+            if text.count(friendly_name) > 0:
                 return {
                     'domain': domain,
                     'entity_id': entity_id,
@@ -90,7 +92,9 @@ class Semantic():
             domain = entity_id.split('.')[0]
             attributes = state.attributes
             state_value = state.state
-            friendly_name = attributes.get('friendly_name')
+            friendly_name = attributes.get('friendly_name', '')
+            if friendly_name == '':
+                continue
             # 执行自定义脚本
             if domain == 'script':
                 cmd = friendly_name.split('=')
@@ -115,8 +119,8 @@ class Semantic():
             domain = entity_id.split('.')[0]
             attributes = state.attributes
             state_value = state.state
-            friendly_name = attributes.get('friendly_name')
-            if friendly_name is not None and friendly_name.count(key) > 0:
+            friendly_name = attributes.get('friendly_name', '')
+            if friendly_name != '' and friendly_name.count(key) > 0:
                 return {
                     'domain': domain,
                     'entity_id': entity_id,

@@ -125,7 +125,7 @@ class Conversation():
 
                 if brightness > 0:
                     self.call_service('light.turn_on', { 'entity_id': entity_id, 'brightness_pct': brightness })
-                    return f'{entity_name}的亮度正在设为{result}%'
+                    return f'{entity_name}的亮度正在设为{brightness}%'
 
     async def media_player_match(self, text, entity):
         if entity is not None:
