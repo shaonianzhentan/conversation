@@ -19,6 +19,8 @@ class Conversation():
     # Voice service processing
     async def async_process(self, text):
         self.fire_text(text)
+        # update cache data
+        await self.semantic.update()
         # Exact match
         result = await self.semantic.find_entity_name(text)
         if result is not None:
@@ -30,7 +32,7 @@ class Conversation():
                 return self.intent_result(f'执行脚本：{entity_id}')
             else:
                 state = self.hass.states.get(entity_id)
-                return self.intent_result(f'{entity_name}的状态：{state.state}')
+                return self.intent_result(f'{domain}{entity_name}的状态：{state.state}')
 
         # Query entity first
         entity = await self.semantic.find_entity(text)
@@ -88,7 +90,7 @@ class Conversation():
                         print(service_name)
                         if self.hass.services.has_service(domain, service):
                             self.call_service_entity(service_name, entity_id)
-                            cmd_arr.append(f'{cmd_text}{entity_name}')
+                            cmd_arr.append(f'{cmd_text}{domain}{entity_name}')
                 else:
                     domain = slot["domain"]
                     entity_name = slot.get('entity_name')
@@ -96,7 +98,7 @@ class Conversation():
                     print(service_name)
                     if self.hass.services.has_service(domain, service):
                         self.call_service_entity(service_name, entity_id)
-                        cmd_arr.append(f'{cmd_text}{entity_name}')
+                        cmd_arr.append(f'{cmd_text}{domain}{entity_name}')
 
             if len(slots) > 0 and len(cmd_arr) > 0:
                 return self.intent_result(f"正在{'、'.join(cmd_arr)}")

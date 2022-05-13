@@ -58,6 +58,7 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent |
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     hass.data[DATA_CONFIG] = config
+    await _get_agent(hass)
 
     async def handle_service(service: core.ServiceCall) -> None:
         """Parse text into commands."""

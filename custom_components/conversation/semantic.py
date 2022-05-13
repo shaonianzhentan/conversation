@@ -6,6 +6,19 @@ class Semantic():
     def __init__(self, hass):
         self.hass = hass
 
+    # cache data
+    async def update(self):
+        # all state
+        states = self.hass.states.async_all()
+        arr = []
+        for state in states:
+            arr.append(state)
+        arr.sort(reverse=True, key=lambda x:x.last_changed)
+        self.states = arr
+        # all area        
+        area = await area_registry.async_get_registry(self.hass)
+        self.area_list = area.async_list_areas()
+
     async def trigger_match(self, text, entity):      
         if entity is not None:
             domain = entity.get('domain')
@@ -59,7 +72,7 @@ class Semantic():
 
     # match entity name
     async def find_entity(self, text):
-        states = self.hass.states.async_all()
+        states = self.states
         for state in states:
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
@@ -86,7 +99,7 @@ class Semantic():
 
     # match entity name
     async def find_entity_name(self, name):
-        states = self.hass.states.async_all()
+        states = self.states
         for state in states:
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
@@ -112,7 +125,7 @@ class Semantic():
 
     # match entity name
     async def find_entity_like(self, key):
-        states = self.hass.states.async_all()
+        states = self.states
         for state in states:
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
@@ -126,13 +139,8 @@ class Semantic():
                     'entity_name': friendly_name
                 }
 
-    async def get_area_list(self):
-        area = await area_registry.async_get_registry(self.hass)
-        return area.async_list_areas()
-
     async def get_area(self, name):
-        area_list = await self.get_area_list()
-        _list = list(filter(lambda item: item.name == name, area_list))
+        _list = list(filter(lambda item: item.name == name, self.area_list))
         if len(_list) > 0:
             return _list[0]
 
@@ -161,9 +169,8 @@ class Semantic():
 
     # match area
     async def find_area(self, text):
-        area_list = await self.get_area_list()
         areas = []
-        for item in area_list:
+        for item in self.area_list:
             areas.append(item.name)
         area_str = '|'.join(areas)
         area = ''
