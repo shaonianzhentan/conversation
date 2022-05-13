@@ -12,13 +12,13 @@ class Semantic():
             if ['automation', 'input_button', 'button', 'script', 'alarm_control_panel'].count(domain) > 0 and '触发' in text:
                 service = ''
                 if domain == 'automation':
-                    return 'trigger'
+                    service = 'trigger'
                 elif domain == 'script':
-                    return 'turn_on'
+                    service = 'turn_on'
                 elif domain == 'alarm_control_panel':
-                    return 'alarm_trigger'
+                    service = 'alarm_trigger'
                 else:
-                    return 'press'
+                    service = 'press'
 
                 if service != '':
                     return f'{domain}.{service}'
@@ -91,7 +91,6 @@ class Semantic():
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
             attributes = state.attributes
-            state_value = state.state
             friendly_name = attributes.get('friendly_name', '')
             if friendly_name == '':
                 continue

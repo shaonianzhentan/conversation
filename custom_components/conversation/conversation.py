@@ -85,14 +85,15 @@ class Conversation():
                         entity_name = entity['entity_name']
 
                         service_name = f'{domain}.{service}'
+                        print(service_name)
                         if self.hass.services.has_service(domain, service):
                             self.call_service_entity(service_name, entity_id)
                             cmd_arr.append(f'{cmd_text}{entity_name}')
                 else:
                     domain = slot["domain"]
                     entity_name = slot.get('entity_name')
-
                     service_name = f'{domain}.{service}'
+                    print(service_name)
                     if self.hass.services.has_service(domain, service):
                         self.call_service_entity(service_name, entity_id)
                         cmd_arr.append(f'{cmd_text}{entity_name}')
