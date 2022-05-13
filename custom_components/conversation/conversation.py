@@ -98,7 +98,7 @@ class Conversation():
                         cmd_arr.append(f'{cmd_text}{entity_name}')
 
             if len(slots) > 0 and len(cmd_arr) > 0:
-                return self.intent_result('、'.join(cmd_arr))
+                return self.intent_result(f"正在{'、'.join(cmd_arr)}")
 
         # Call chat robot
         message = await self.chat_robot(text)
