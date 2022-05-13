@@ -133,5 +133,8 @@ class DefaultAgent(AbstractConversationAgent):
                     text,
                     context,
                 )
-
-        return await self.conversation.async_process(text)
+        result = await self.conversation.async_process(text)
+        speech = result.speech.get('plain')
+        if speech is not None:
+            self.conversation.update(text, speech.get('speech'))
+        return result

@@ -6,18 +6,28 @@ class Semantic():
     def __init__(self, hass):
         self.hass = hass
 
-    async def brightness_match(self, text, entity):        
-        if entity is not None and entity.get('domain') == 'light':
-            if '亮度' in text:
-                # check numbers
-                compileX = re.compile("\d+")
-                findX = compileX.findall(text)
-                if len(findX) > 0:
-                    return int(findX[0])
-            if '最亮' in text:
-                return 100
-            if '最暗' in text:
-                return 1
+    async def trigger_match(self, text, entity):      
+        if entity is not None:
+            domain = entity.get('domain')
+            if ['automation', 'input_button', 'button', 'script', 'alarm_control_panel'].count(domain) > 0 and '触发' in text:
+                service = ''
+                if domain == 'automation':
+                    return 'trigger'
+                elif domain == 'script':
+                    return 'turn_on'
+                elif domain == 'alarm_control_panel':
+                    return 'alarm_trigger'
+                else:
+                    return 'press'
+
+                if service != '':
+                    return f'{domain}.{service}'
+
+    async def activate_match(self, text, entity):
+        if entity is not None:
+            domain = entity.get('domain')
+            if ['scene'].count(domain) > 0 and ('激活' in text or '启用' in text or '启动' in text):
+                return 'scene.turn_on'
 
     async def turn_match(self, text, entity):
         entities = []
@@ -177,16 +187,22 @@ class Semantic():
 
     async def parser_turn_off(self, text, entity):
         cmd = 'turn_off'
-        domain = entity.get('domain')
-        if domain == 'cover':
-            cmd = 'close_cover'
+        if entity is not None:
+            domain = entity.get('domain')
+            if domain == 'cover':
+                cmd = 'close_cover'
+            elif domain == 'lock':
+                cmd = 'lock'
         return await self.parser_turn_cmd(text, cmd, '关闭|关掉|关上|关一下|关下')
 
     async def parser_turn_on(self, text, entity):
         cmd = 'turn_on'
-        domain = entity.get('domain')
-        if domain == 'cover':
-            cmd = 'open_cover'
+        if entity is not None:
+            domain = entity.get('domain')
+            if domain == 'cover':
+                cmd = 'open_cover'
+            elif domain == 'lock':
+                cmd = 'unlock'
         return await self.parser_turn_cmd(text, cmd, '打开|开启|开一下|开下')
 
     async def parser_turn_cmd(self, text, cmd, key):
