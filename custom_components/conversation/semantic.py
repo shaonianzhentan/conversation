@@ -142,20 +142,21 @@ class Semantic():
         if area is not None:
             obj = await self.get_area(area.get('area_name'))
             if obj is not None:
-                print(obj)
                 word = area.get('area_words')[2].strip('的')
-
                 registry_entity = await entity_registry.async_get_registry(self.hass)
                 entities = entity_registry.async_entries_for_area(registry_entity, obj.id)
                 for entity in entities:
-                    entity_name = entity.name or entity.original_name
-                    if entity_name is not None and word in entity_name:
+                    state = self.hass.states.get(entity.entity_id)
+                    friendly_name = state.attributes.get('friendly_name', '')
+                    if friendly_name == '':
+                        continue
+                    if word in friendly_name:
                         entity_id = entity.entity_id
                         domain = entity_id.split('.')[0]
                         arr.append({
                             'domain': domain,
                             'entity_id': entity_id,
-                            'entity_name': entity_name
+                            'entity_name': friendly_name
                         })
         return arr
 
