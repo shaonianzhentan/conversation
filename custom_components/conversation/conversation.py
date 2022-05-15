@@ -24,15 +24,22 @@ class Conversation():
         # Exact match
         result = await self.semantic.find_entity_name(text)
         if result is not None:
-            entity_id = result.get('entity_id')
-            entity_name = result.get('entity_name')
-            domain = result.get('domain')
-            if domain == 'script':
-                self.call_service(entity_id)
-                return self.intent_result(f'执行脚本：{entity_id}')
-            else:
-                state = self.hass.states.get(entity_id)
-                return self.intent_result(f'{domain}{entity_name}的状态：{state.state}')
+            if isinstance(result, dict):
+                entity_id = result.get('entity_id')
+                entity_name = result.get('entity_name')
+                domain = result.get('domain')
+                if domain == 'script':
+                    self.call_service(entity_id)
+                    return self.intent_result(f'执行脚本：{entity_id}')
+            elif isinstance(result, list):
+                result_message = []
+                for item in result:
+                    entity_id = item.get('entity_id')
+                    entity_name = item.get('entity_name')
+                    domain = item.get('domain')
+                    entity_state = item.get('state', '')
+                    result_message.append(f'{domain}{entity_name}：{entity_state}')
+                return self.intent_result('\n'.join(result_message))
 
         # Query entity first
         entity = await self.semantic.find_entity(text)

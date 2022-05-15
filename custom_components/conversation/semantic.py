@@ -99,6 +99,7 @@ class Semantic():
 
     # match entity name
     async def find_entity_name(self, name):
+        arr = []
         states = self.states
         for state in states:
             entity_id = state.entity_id
@@ -117,11 +118,14 @@ class Semantic():
                         'entity_name': friendly_name
                     }
             if friendly_name == name:
-                return {
+                arr.append({
                     'domain': domain,
                     'entity_id': entity_id,
-                    'entity_name': friendly_name
-                }
+                    'entity_name': friendly_name,
+                    'state': state.state
+                })
+        if len(arr) > 0:
+            return arr
 
     # match entity name
     async def find_entity_like(self, key):
