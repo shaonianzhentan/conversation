@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "1.7"
+VERSION = "1.8"
 
 class Conversation():
 
@@ -227,12 +227,11 @@ class Conversation():
     async def chat_robot(self, text):
         message = "对不起，我不明白"
         try:
-            async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text) as r:
+            async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=3) as r:
                 res = await r.json(content_type=None)
-                _LOGGER.debug(res)
                 message = res['data']['info']['text']
         except Exception as e:
-            _LOGGER.debug(e)        
+            _LOGGER.debug(e)
         return message
 
     def update(self, text, reply):
