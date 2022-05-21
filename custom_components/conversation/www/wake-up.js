@@ -1,11 +1,12 @@
+const VERSION = '1.0'
 let isInitWakeUp = false
 function initWakeUp() {
     if (isInitWakeUp) return;
     isInitWakeUp = true;
     if (location.protocol == 'https:' || location.hostname == 'localhost') {
-        import('/www-conversation/wake-up.es.js.gz')
+        import(`/www-conversation/wake-up.es.js.gz?v=${VERSION}`)
         // Overly complicated console tag.
-        const conInfo = { header: "%c≡ wake-up".padEnd(27), ver: "%cversion *DEV " };
+        const conInfo = { header: "%c≡ wake-up".padEnd(27), ver: `%cversion ${VERSION} ` };
         const br = "%c\n";
         const maxLen = Math.max(...Object.values(conInfo).map((el) => el.length));
         for (const [key] of Object.entries(conInfo)) {
@@ -73,7 +74,7 @@ customElements.whenDefined("hui-view").then(() => {
                         justify-content: space-between;
                         align-items: center;
                     }
-                    ha-select{width:100%;}
+                    ha-select,ha-textfield{width:100%;}
                     .tips{display:none;}
                     .hide ha-switch,
                     .hide ha-select{
@@ -94,7 +95,6 @@ customElements.whenDefined("hui-view").then(() => {
                         <ha-select label="唤醒词">   
                             ${this.keywords.map((word) => `<mwc-list-item value="${word}">${word}</mwc-list-item>`).join('')}
                         </ha-select>
-
                         <div class="tips">
                             当前环境不支持语音唤醒，请使用<b>https</b>协议访问
                             <br/>
@@ -102,8 +102,20 @@ customElements.whenDefined("hui-view").then(() => {
                                 ${location.href.replace('http://', 'https://')}
                             </a>
                         </div>
+                        <ha-textfield label="控制命令"></ha-textfield>
                     </div>
             </ha-card>`
+            const input = shadow.querySelector('ha-textfield')
+            input.onkeypress = (event) => {
+                if (event.keyCode == 13) {
+                    const text = input.value.trim()
+                    if (text != '') {
+                        this.callService('conversation.process', { text })
+                        this.toast('执行成功')
+                    }
+                    input.value = ''
+                }
+            }
 
             if (!(location.protocol == 'https:' || location.hostname == 'localhost')) {
                 shadow.querySelector('ha-card').classList.add('hide')
@@ -161,6 +173,18 @@ customElements.whenDefined("hui-view").then(() => {
         // 通知
         toast(message) {
             this.fire("hass-notification", { message })
+        }
+
+        /*
+        * 调用服务
+        * service: 服务名称(例：light.toggle)
+        * service_data：服务数据(例：{ entity_id: "light.xiao_mi_deng_pao" } )
+        */
+        callService(service_name, service_data = {}) {
+            let arr = service_name.split('.')
+            let domain = arr[0]
+            let service = arr[1]
+            this.hass.callService(domain, service, service_data)
         }
 
     });
