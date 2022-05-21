@@ -7,40 +7,30 @@ class Semantic():
         self.hass = hass
 
     # cache data
-    async def update(self):
+    async def update(self, text):
+        self.entities = []
+        self.areas = []
         # all state
         states = self.hass.states.async_all()
         arr = []
         for state in states:
             arr.append(state)
+            friendly_name = state.attributes.get('friendly_name', '')
+            if friendly_name != '' and friendly_name in text:
+                self.entities.append({
+                    'domain': state.entity_id.split('.')[0],
+                    'entity_id': state.entity_id,
+                    'entity_name': friendly_name,
+                    'state': state.state
+                })
         arr.sort(reverse=True, key=lambda x:x.last_changed)
         self.states = arr
-        # all area        
+        # all area
         area = await area_registry.async_get_registry(self.hass)
         self.area_list = area.async_list_areas()
-
-    async def trigger_match(self, text, entity):      
-        if entity is not None:
-            domain = entity.get('domain')
-            if ['automation', 'input_button', 'button', 'script', 'alarm_control_panel'].count(domain) > 0 and '触发' in text:
-                service = ''
-                if domain == 'automation':
-                    service = 'trigger'
-                elif domain == 'script':
-                    service = 'turn_on'
-                elif domain == 'alarm_control_panel':
-                    service = 'alarm_trigger'
-                else:
-                    service = 'press'
-
-                if service != '':
-                    return f'{domain}.{service}'
-
-    async def activate_match(self, text, entity):
-        if entity is not None:
-            domain = entity.get('domain')
-            if ['scene'].count(domain) > 0 and ('激活' in text or '启用' in text or '启动' in text):
-                return 'scene.turn_on'
+        for item in self.area_list:
+            if item.name in text:
+                self.areas.append(item.name)
 
     async def turn_match(self, text, entity):
         entities = []
@@ -77,20 +67,8 @@ class Semantic():
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
             attributes = state.attributes
-            state_value = state.state
             friendly_name = attributes.get('friendly_name', '')
-            if friendly_name == '':
-                continue
-            # 执行自定义脚本
-            if domain == 'script':
-                cmd = friendly_name.split('=')
-                if cmd.count(text) > 0:
-                    return {
-                        'domain': domain,
-                        'entity_id': entity_id,
-                        'entity_name': friendly_name
-                    }
-            if text.count(friendly_name) > 0:
+            if friendly_name != '' and friendly_name in text:
                 return {
                     'domain': domain,
                     'entity_id': entity_id,

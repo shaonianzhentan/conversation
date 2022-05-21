@@ -3,6 +3,7 @@
 在HA里使用的官方语音助手修改增强版
 
 [![hacs_badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 ![visit](https://visitor-badge.laobi.icu/badge?page_id=shaonianzhentan.conversation&left_text=visit)
 
 [![ha_badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
@@ -41,7 +42,6 @@ data:
 - `查看|查询`
 - 支持媒体播放器
 - 支持空调
-- [ ] 关闭测试开关和吸顶灯。
 
 ## 执行脚本
 - 执行脚本（脚本名称=语音文本）
