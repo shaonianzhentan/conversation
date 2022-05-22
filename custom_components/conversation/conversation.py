@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "1.9"
+VERSION = "2.0"
 
 class Conversation():
 
@@ -262,33 +262,72 @@ class Conversation():
                 turnOff_text = matchTurnOff[0]
             if matchTurnOff[2] != '':
                 turnOff_text = matchTurnOff[2]
+        # single device
+        turnOn_entities = await self.semantic.find_entity_multiple(turnOn_text)
+        if len(turnOn_entities) > 0:
+            for entity in turnOn_entities:
+                domain = entity.get('domain')
+                entity_id = entity.get('entity_id')
+                entity_name = entity.get('entity_name')
+                service = 'turn_on'
+                if domain == 'cover':
+                    service = 'open_cover'
+                elif domain == 'lock':
+                    service = 'unlock'
+                if self.hass.services.has_service(domain, service):
+                    self.call_service_entity(f'{domain}.{service}', entity_id)
+                    result.append(f'打开{domain}{entity_name}')
+        
+        turnOff_entities = await self.semantic.find_entity_multiple(turnOff_text)
+        if len(turnOff_entities) > 0:
+            for entity in turnOff_entities:
+                domain = entity.get('domain')
+                entity_id = entity.get('entity_id')
+                entity_name = entity.get('entity_name')
+                service = 'turn_off'
+                if domain == 'cover':
+                    service = 'close_cover'
+                elif domain == 'lock':
+                    service = 'lock'
+                if self.hass.services.has_service(domain, service):
+                    self.call_service_entity(f'{domain}.{service}', entity_id)
+                    result.append(f'关闭{domain}{entity_name}')
 
-        entities = self.semantic.entities
-        if len(entities) > 0:
+        # in area
+        area = await self.semantic.find_area(turnOn_text)
+        if area is not None:
+            entities = await self.semantic.findAll_entity(area)
             for entity in entities:
                 domain = entity.get('domain')
                 entity_id = entity.get('entity_id')
                 entity_name = entity.get('entity_name')
-                cmd_text = ''
-                if entity_name in turnOn_text:
-                    cmd_text = '打开'
-                    service = 'turn_on'
-                    if domain == 'cover':
-                        service = 'open_cover'
-                    elif domain == 'lock':
-                        service = 'unlock'
-                elif entity_name in turnOff_text:
-                    cmd_text = '关闭'
-                    service = 'turn_off'
-                    if domain == 'cover':
-                        service = 'close_cover'
-                    elif domain == 'lock':
-                        service = 'lock'
-                if cmd_text != '' and self.hass.services.has_service(domain, service):
+                service = 'turn_on'
+                if domain == 'cover':
+                    service = 'open_cover'
+                elif domain == 'lock':
+                    service = 'unlock'
+                if self.hass.services.has_service(domain, service):
                     self.call_service_entity(f'{domain}.{service}', entity_id)
-                    result.append(f'{cmd_text}{domain}{entity_name}')
-            if len(result) > 0:
-                return '、'.join(result)
+                    result.append(f'打开{domain}{entity_name}')
+
+        area = await self.semantic.find_area(turnOff_text)
+        if area is not None:
+            entities = await self.semantic.findAll_entity(area)
+            for entity in entities:
+                domain = entity.get('domain')
+                entity_id = entity.get('entity_id')
+                entity_name = entity.get('entity_name')
+                service = 'turn_off'
+                if domain == 'cover':
+                    service = 'close_cover'
+                elif domain == 'lock':
+                    service = 'lock'
+                if self.hass.services.has_service(domain, service):
+                    self.call_service_entity(f'{domain}.{service}', entity_id)
+                    result.append(f'关闭{domain}{entity_name}')
+
+        if len(result) > 0:
+            return '、'.join(result)
 
     # Remove the front and back punctuation marks
     def trim_char(self, text):

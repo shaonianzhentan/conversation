@@ -8,7 +8,7 @@ class Semantic():
 
     # cache data
     async def update(self, text):
-        self.entities = []
+        entities = []
         self.areas = []
         # all state
         states = self.hass.states.async_all()
@@ -17,7 +17,7 @@ class Semantic():
             arr.append(state)
             friendly_name = state.attributes.get('friendly_name', '')
             if friendly_name != '' and friendly_name in text:
-                self.entities.append({
+                entities.append({
                     'domain': state.entity_id.split('.')[0],
                     'entity_id': state.entity_id,
                     'entity_name': friendly_name,
@@ -31,34 +31,16 @@ class Semantic():
         for item in self.area_list:
             if item.name in text:
                 self.areas.append(item.name)
-
-    async def turn_match(self, text, entity):
-        entities = []
-
-        # Then query the area
-        area = await self.find_area(text)
-
-        # if the entity is None, the first device in the query area
-        if entity is None:
-            entities = await self.findAll_entity(area)
-        else:
-            entities.append(entity)
-
-        slots = []
-        # match turn on
-        result = await self.parser_turn_on(text, entity)
-        if result is not None:
-            slots.append(result)
-        # match turn off
-        result = await self.parser_turn_off(text, entity)
-        if result is not None:
-            slots.append(result)
-        return {
-            'input': text,
-            'slots': slots,
-            'area': area,
-            'entities': entities
-        }
+        # sort words
+        entities.sort(reverse=True, key=lambda x:len(x['entity_name']))
+        tmp_text = text
+        for index, entity in enumerate(entities):
+            entity_name = entity['entity_name']
+            if entity_name in tmp_text:
+                tmp_text = tmp_text.replace(entity_name, '')
+            else:
+                entities[index] = None
+        self.entities = list(filter(lambda x:x is not None, entities))
 
     # match entity name
     async def find_entity(self, text):
@@ -72,8 +54,31 @@ class Semantic():
                 return {
                     'domain': domain,
                     'entity_id': entity_id,
-                    'entity_name': friendly_name
+                    'entity_name': friendly_name,
+                    'state': state.state
                 }
+    
+    # match entity name
+    async def find_entity_multiple(self, text):
+        arr = []
+        for state in self.states:
+            friendly_name = state.attributes.get('friendly_name', '')
+            if friendly_name != '' and friendly_name in text:
+                arr.append({
+                    'domain': state.entity_id.split('.')[0],
+                    'entity_id': state.entity_id,
+                    'entity_name': friendly_name,
+                    'state': state.state
+                })
+        arr.sort(reverse=True, key=lambda x:len(x['entity_name']))
+        tmp_text = text
+        for index, entity in enumerate(arr):
+            entity_name = entity['entity_name']
+            if entity_name in tmp_text:
+                tmp_text = tmp_text.replace(entity_name, '')
+            else:
+                arr[index] = None
+        return list(filter(lambda x:x is not None, arr))
 
     # match entity name
     async def find_entity_name(self, name):

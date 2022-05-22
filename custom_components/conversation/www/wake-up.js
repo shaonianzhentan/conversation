@@ -1,24 +1,3 @@
-const VERSION = '1.0'
-let isInitWakeUp = false
-function initWakeUp() {
-    if (isInitWakeUp) return;
-    isInitWakeUp = true;
-    if (location.protocol == 'https:' || location.hostname == 'localhost') {
-        import(`/www-conversation/wake-up.es.js.gz?v=${VERSION}`)
-        // Overly complicated console tag.
-        const conInfo = { header: "%c≡ wake-up".padEnd(27), ver: `%cversion ${VERSION} ` };
-        const br = "%c\n";
-        const maxLen = Math.max(...Object.values(conInfo).map((el) => el.length));
-        for (const [key] of Object.entries(conInfo)) {
-            if (conInfo[key].length <= maxLen) conInfo[key] = conInfo[key].padEnd(maxLen);
-            if (key == "header") conInfo[key] = `${conInfo[key].slice(0, -1)}⋮ `;
-        }
-        const header =
-            "display:inline-block;border-width:1px 1px 0 1px;border-style:solid;border-color:#424242;color:white;background:#03a9f4;font-size:12px;padding:4px 4.5px 5px 6px;";
-        const info = "border-width:0px 1px 1px 1px;padding:7px;background:white;color:#424242;line-height:0.7;";
-        console.info(conInfo.header + br + conInfo.ver, header, "", `${header} ${info}`);
-    };
-}
 
 let WakeUpStorageObject = {}
 try {
@@ -34,6 +13,22 @@ window.WakeUpStorage = new Proxy(WakeUpStorageObject, {
         return true
     }
 })
+
+if (WakeUpStorage.switch && (location.protocol == 'https:' || location.hostname == 'localhost')) {
+    import('/www-conversation/wake-up.es.js.gz')
+    // Overly complicated console tag.
+    const conInfo = { header: "%c≡ wake-up".padEnd(27), ver: "%cversion *DEV " };
+    const br = "%c\n";
+    const maxLen = Math.max(...Object.values(conInfo).map((el) => el.length));
+    for (const [key] of Object.entries(conInfo)) {
+        if (conInfo[key].length <= maxLen) conInfo[key] = conInfo[key].padEnd(maxLen);
+        if (key == "header") conInfo[key] = `${conInfo[key].slice(0, -1)}⋮ `;
+    }
+    const header =
+        "display:inline-block;border-width:1px 1px 0 1px;border-style:solid;border-color:#424242;color:white;background:#03a9f4;font-size:12px;padding:4px 4.5px 5px 6px;";
+    const info = "border-width:0px 1px 1px 1px;padding:7px;background:white;color:#424242;line-height:0.7;";
+    console.info(conInfo.header + br + conInfo.ver, header, "", `${header} ${info}`);
+};
 
 // 添加预览
 customElements.whenDefined("hui-view").then(() => {
@@ -127,7 +122,7 @@ customElements.whenDefined("hui-view").then(() => {
             const wakeUpSwitch = WakeUpStorage.switch
             if (wakeUpSwitch) {
                 toggle.checked = wakeUpSwitch
-                initWakeUp()
+                this.toast('刷新页面生效')
             }
 
             toggle.onchange = () => {
