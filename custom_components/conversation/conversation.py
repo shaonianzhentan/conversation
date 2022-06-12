@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2.0"
+VERSION = "2022.6.12"
 
 class Conversation():
 
@@ -31,6 +31,11 @@ class Conversation():
                 domain = result.get('domain')
                 if domain == 'script':
                     self.call_service(entity_id)
+                    # customze reply
+                    reply = result.get('conversation')
+                    if reply is not None:
+                        return self.intent_result(self.template(reply))
+                    # default reply
                     return self.intent_result(f'执行脚本：{entity_id}')
             elif isinstance(result, list):
                 result_message = []

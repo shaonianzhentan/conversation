@@ -98,7 +98,8 @@ class Semantic():
                     return {
                         'domain': domain,
                         'entity_id': entity_id,
-                        'entity_name': friendly_name
+                        'entity_name': friendly_name,
+                        'conversation': attributes.get('conversation')
                     }
             if friendly_name == name:
                 arr.append({
