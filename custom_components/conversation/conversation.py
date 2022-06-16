@@ -30,10 +30,15 @@ class Conversation():
                 entity_name = result.get('entity_name')
                 domain = result.get('domain')
                 if domain == 'script':
-                    self.call_service(entity_id)
+                    # reg match
+                    slots = result.get('slots', {})
+                    self.call_service(entity_id, slots)
                     # customze reply
-                    reply = result.get('conversation')
+                    reply = result.get('reply')
                     if reply is not None:
+                        for key in slots:
+                            set_var = '{% set ' + key + '="' + slots[key] + '" %}'
+                            reply = set_var + reply
                         return self.intent_result(self.template(reply))
                     # default reply
                     return self.intent_result(f'执行脚本：{entity_id}')

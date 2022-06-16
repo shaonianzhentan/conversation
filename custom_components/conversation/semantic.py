@@ -1,5 +1,6 @@
 import re
 from homeassistant.helpers import template, entity_registry, area_registry
+from .util import create_matcher
 
 class Semantic():
     
@@ -93,13 +94,27 @@ class Semantic():
                 continue
             # 执行自定义脚本
             if domain == 'script':
+                # 判断是否自定义匹配命令
+                intents = attributes.get('intents', [])
+                if len(intents) > 0:
+                    for intent in intents:
+                        match = create_matcher(intent).match(name)
+                        if match is not None:
+                            return {
+                                'domain': domain,
+                                'entity_id': entity_id,
+                                'entity_name': friendly_name,
+                                'reply': attributes.get('reply'),
+                                'slots': {key: value for key, value in match.groupdict().items()}
+                            }
+
                 cmd = friendly_name.split('=')
                 if cmd.count(name) > 0:
                     return {
                         'domain': domain,
                         'entity_id': entity_id,
                         'entity_name': friendly_name,
-                        'conversation': attributes.get('conversation')
+                        'reply': attributes.get('reply')
                     }
             if friendly_name == name:
                 arr.append({
