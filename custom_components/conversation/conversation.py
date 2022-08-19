@@ -347,7 +347,8 @@ class Conversation():
     async def chat_robot(self, text):
         message = "对不起，我不明白"
         try:
-            async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=5) as r:
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=timeout) as r:
                 res = await r.json(content_type=None)
                 message = res['data']['info']['text']
         except Exception as e:
