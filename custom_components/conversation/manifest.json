@@ -1,6 +1,6 @@
 {
   "domain": "conversation",
-  "version": "1.6",
+  "version": "2022.8.19",
   "name": "Conversation",
   "documentation": "https://www.home-assistant.io/integrations/conversation",
   "dependencies": ["http"],
