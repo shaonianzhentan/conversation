@@ -27,7 +27,7 @@ class Semantic():
         arr.sort(reverse=True, key=lambda x:x.last_changed)
         self.states = arr
         # all area
-        area = await area_registry.async_get_registry(self.hass)
+        area = area_registry.async_get(self.hass)
         self.area_list = area.async_list_areas()
         for item in self.area_list:
             if item.name in text:
@@ -153,7 +153,7 @@ class Semantic():
             obj = await self.get_area(area.get('area_name'))
             if obj is not None:
                 word = area.get('area_words')[2].strip('的')
-                registry_entity = await entity_registry.async_get_registry(self.hass)
+                registry_entity = entity_registry.async_get(self.hass)
                 entities = entity_registry.async_entries_for_area(registry_entity, obj.id)
                 for entity in entities:
                     state = self.hass.states.get(entity.entity_id)
