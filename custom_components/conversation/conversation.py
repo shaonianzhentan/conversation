@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.6.12"
+VERSION = "2022.10.18"
 
 class Conversation():
 
@@ -21,7 +21,7 @@ class Conversation():
         self.fire_text(text)
         # update cache data
         await self.semantic.update(text)
-        print(self.semantic.entities)
+        # print(self.semantic.entities)
         # Exact match
         result = await self.semantic.find_entity_name(text)
         if result is not None:
@@ -39,9 +39,9 @@ class Conversation():
                         for key in slots:
                             set_var = '{% set ' + key + '="' + slots[key] + '" %}'
                             reply = set_var + reply
-                        return self.intent_result(self.template(reply))
+                        return self.intent_result(self.template(reply), result.get('extra_data'))
                     # default reply
-                    return self.intent_result(f'执行脚本：{entity_id}')
+                    return self.intent_result(f'执行脚本：{entity_id}', result.get('extra_data'))
             elif isinstance(result, list):
                 result_message = []
                 for item in result:
