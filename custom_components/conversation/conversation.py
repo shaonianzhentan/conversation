@@ -33,15 +33,16 @@ class Conversation():
                     # reg match
                     slots = result.get('slots', {})
                     self.call_service(entity_id, slots)
+                    extra_data = result.get('extra_data')
                     # customze reply
                     reply = result.get('reply')
                     if reply is not None:
                         for key in slots:
                             set_var = '{% set ' + key + '="' + slots[key] + '" %}'
                             reply = set_var + reply
-                        return self.intent_result(self.template(reply), result.get('extra_data'))
+                        return self.intent_result(self.template(reply), extra_data)
                     # default reply
-                    return self.intent_result(f'执行脚本：{entity_id}', result.get('extra_data'))
+                    return self.intent_result(f'执行脚本：{entity_id}', extra_data)
             elif isinstance(result, list):
                 result_message = []
                 for item in result:
