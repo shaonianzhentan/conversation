@@ -45,16 +45,16 @@ class Conversation():
 
                             url = extra_data.get('url')
                             if url is not None:
-                                extra_data['url'] = self.template(var_str + url)
+                                extra_data['url'] = self.template(var_str + url).strip()
 
                             picurl = extra_data.get('picurl')
                             if picurl is not None:
-                                extra_data['picurl'] = self.template(var_str + picurl)
+                                extra_data['picurl'] = self.template(var_str + picurl).strip()
 
                     # customze reply
                     reply = result.get('reply')
                     if reply is not None:
-                        return self.intent_result(self.template(var_str + reply), extra_data)
+                        return self.intent_result(self.template(var_str + reply).strip(), extra_data)
                     # default reply
                     return self.intent_result(f'执行脚本：{entity_id}', extra_data)
             elif isinstance(result, list):
@@ -63,7 +63,7 @@ class Conversation():
                     entity_id = item.get('entity_id')
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
-                    entity_state = item.get('state', '')
+                    entity_state = item.get('state', '') + ' ' + item.get("unit")
                     result_message.append(f'{domain}{entity_name}：{entity_state}')
                 return self.intent_result('\n'.join(result_message))
         

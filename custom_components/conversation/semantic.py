@@ -92,8 +92,11 @@ class Semantic():
             friendly_name = attributes.get('friendly_name', '')
             if friendly_name == '':
                 continue
+            
             # 执行自定义脚本
             if domain == 'script':
+                extra_data = attributes.get('extra_data')
+                reply = attributes.get('reply')
                 # 判断是否自定义匹配命令
                 intents = attributes.get('intents', [])
                 if len(intents) > 0:
@@ -104,8 +107,8 @@ class Semantic():
                                 'domain': domain,
                                 'entity_id': entity_id,
                                 'entity_name': friendly_name,
-                                'extra_data': attributes.get('extra_data'),
-                                'reply': attributes.get('reply'),
+                                'extra_data': extra_data,
+                                'reply': reply,
                                 'slots': {key: value for key, value in match.groupdict().items()}
                             }
 
@@ -115,15 +118,16 @@ class Semantic():
                         'domain': domain,
                         'entity_id': entity_id,
                         'entity_name': friendly_name,
-                        'extra_data': attributes.get('extra_data'),
-                        'reply': attributes.get('reply')
+                        'extra_data': extra_data,
+                        'reply': reply
                     }
             if friendly_name == name:
                 arr.append({
                     'domain': domain,
                     'entity_id': entity_id,
                     'entity_name': friendly_name,
-                    'state': state.state
+                    'state': state.state,
+                    'unit': attributes.get('unit_of_measurement', '')
                 })
         if len(arr) > 0:
             return arr
