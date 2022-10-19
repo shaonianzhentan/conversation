@@ -104,6 +104,7 @@ class Semantic():
                                 'domain': domain,
                                 'entity_id': entity_id,
                                 'entity_name': friendly_name,
+                                'extra_data': attributes.get('extra_data'),
                                 'reply': attributes.get('reply'),
                                 'slots': {key: value for key, value in match.groupdict().items()}
                             }
@@ -114,6 +115,7 @@ class Semantic():
                         'domain': domain,
                         'entity_id': entity_id,
                         'entity_name': friendly_name,
+                        'extra_data': attributes.get('extra_data'),
                         'reply': attributes.get('reply')
                     }
             if friendly_name == name:

@@ -59,6 +59,17 @@ script.1652361988272:
     - 把灯设成{color}
 ```
 
+### 微信回复
+
+```yaml
+script.1652361988272:
+  extra_data:
+    source: wechat
+    title: 标题
+    picurl: https://ha.jiluxinqing.com/img/wechat.png
+    url: https://ha.jiluxinqing.com
+```
+
 ## node-red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
 
