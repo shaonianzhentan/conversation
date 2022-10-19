@@ -61,13 +61,23 @@ script.1652361988272:
 
 ### 微信回复
 
+图文信息
 ```yaml
 script.1652361988272:
+  reply: 将url参数删除，图文信息会不可点击
   extra_data:
-    source: wechat
-    title: 标题
+    type: wx-image
     picurl: https://ha.jiluxinqing.com/img/wechat.png
     url: https://ha.jiluxinqing.com
+```
+
+音乐链接
+```yaml
+script.1652361988272:
+  reply: 注意，url音乐链接中不能包含&字符
+  extra_data:
+    type: wx-music
+    url: http://music.163.com/song/media/outer/url?id=563563649.mp3
 ```
 
 ## node-red 和 自动化

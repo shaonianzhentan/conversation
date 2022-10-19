@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.10.18"
+VERSION = "2022.10.19"
 
 class Conversation():
 
@@ -33,14 +33,28 @@ class Conversation():
                     # reg match
                     slots = result.get('slots', {})
                     self.call_service(entity_id, slots)
+                    vars = []
+                    for key in slots:
+                        vars.append('{% set ' + key + '="' + slots[key] + '" %}')
+                    var_str = ''.join(vars)
+
+                    # 额外数据
                     extra_data = result.get('extra_data')
+                    if extra_data is not None:
+                        if isinstance(extra_data, dict):
+
+                            url = extra_data.get('url')
+                            if url is not None:
+                                extra_data['url'] = self.template(var_str + url)
+
+                            picurl = extra_data.get('picurl')
+                            if picurl is not None:
+                                extra_data['picurl'] = self.template(var_str + picurl)
+
                     # customze reply
                     reply = result.get('reply')
                     if reply is not None:
-                        for key in slots:
-                            set_var = '{% set ' + key + '="' + slots[key] + '" %}'
-                            reply = set_var + reply
-                        return self.intent_result(self.template(reply), extra_data)
+                        return self.intent_result(self.template(var_str + reply), extra_data)
                     # default reply
                     return self.intent_result(f'执行脚本：{entity_id}', extra_data)
             elif isinstance(result, list):
