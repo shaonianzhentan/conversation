@@ -59,6 +59,27 @@ script.1652361988272:
     - 把灯设成{color}
 ```
 
+### 微信回复
+
+图文信息
+```yaml
+script.1652361988272:
+  reply: 将url参数删除，图文信息会不可点击
+  extra_data:
+    type: wx-image
+    picurl: https://ha.jiluxinqing.com/img/wechat.png
+    url: https://ha.jiluxinqing.com
+```
+
+音乐链接
+```yaml
+script.1652361988272:
+  reply: 注意，url音乐链接中不能包含&字符
+  extra_data:
+    type: wx-music
+    url: http://music.163.com/song/media/outer/url?id=563563649.mp3
+```
+
 ## node-red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
 
@@ -68,9 +89,12 @@ script.1652361988272:
 - 文本控制
 
 ## 如果这个项目对你有帮助，请我喝杯<del style="font-size: 14px;">咖啡</del>奶茶吧😘
-|  |支付宝|微信|
-|---|---|---|
-奶茶= | <img src="https://cdn.jsdelivr.net/gh/shaonianzhentan/ha-docs@master/docs/img/alipay.png" align="left" height="160" width="160" alt="支付宝" title="支付宝">  |  <img src="https://cdn.jsdelivr.net/gh/shaonianzhentan/ha-docs@master/docs/img/wechat.png" height="160" width="160" alt="微信支付" title="微信">
+|支付宝|微信|
+|---|---|
+<img src="https://ha.jiluxinqing.com/img/alipay.png" align="left" height="160" width="160" alt="支付宝" title="支付宝">  |  <img src="https://ha.jiluxinqing.com/img/wechat.png" align="left" height="160" width="160" alt="微信支付" title="微信">
 
-## 关注我的微信订阅号，了解更多HomeAssistant相关知识
-<img src="https://cdn.jsdelivr.net/gh/shaonianzhentan/ha-docs@master/docs/img/wechat-channel.png" height="160" alt="HomeAssistant家庭助理" title="HomeAssistant家庭助理"> 
+#### 关注我的微信订阅号，了解更多HomeAssistant相关知识
+<img src="https://ha.jiluxinqing.com/img/wechat-channel.png" align="left" height="160" alt="HomeAssistant家庭助理" title="HomeAssistant家庭助理"> 
+
+---
+**在使用的过程之中，如果遇到无法解决的问题，付费咨询请加Q`635147515`**

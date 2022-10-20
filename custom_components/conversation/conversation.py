@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.6.12"
+VERSION = "2022.10.20"
 
 class Conversation():
 
@@ -21,7 +21,7 @@ class Conversation():
         self.fire_text(text)
         # update cache data
         await self.semantic.update(text)
-        print(self.semantic.entities)
+        # print(self.semantic.entities)
         # Exact match
         result = await self.semantic.find_entity_name(text)
         if result is not None:
@@ -33,22 +33,37 @@ class Conversation():
                     # reg match
                     slots = result.get('slots', {})
                     self.call_service(entity_id, slots)
+                    vars = []
+                    for key in slots:
+                        vars.append('{% set ' + key + '="' + slots[key] + '" %}')
+                    var_str = ''.join(vars)
+
+                    # 额外数据
+                    extra_data = result.get('extra_data')
+                    if extra_data is not None:
+                        if isinstance(extra_data, dict):
+
+                            url = extra_data.get('url')
+                            if url is not None:
+                                extra_data['url'] = self.template(var_str + url).strip()
+
+                            picurl = extra_data.get('picurl')
+                            if picurl is not None:
+                                extra_data['picurl'] = self.template(var_str + picurl).strip()
+
                     # customze reply
                     reply = result.get('reply')
                     if reply is not None:
-                        for key in slots:
-                            set_var = '{% set ' + key + '="' + slots[key] + '" %}'
-                            reply = set_var + reply
-                        return self.intent_result(self.template(reply))
+                        return self.intent_result(self.template(var_str + reply).strip(), extra_data)
                     # default reply
-                    return self.intent_result(f'执行脚本：{entity_id}')
+                    return self.intent_result(f'执行脚本：{entity_id}', extra_data)
             elif isinstance(result, list):
                 result_message = []
                 for item in result:
                     entity_id = item.get('entity_id')
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
-                    entity_state = item.get('state', '')
+                    entity_state = item.get('state', '') + ' ' + item.get("unit")
                     result_message.append(f'{domain}{entity_name}：{entity_state}')
                 return self.intent_result('\n'.join(result_message))
         
@@ -78,6 +93,11 @@ class Conversation():
             return self.intent_result(result)
         
         result = await self.turn_match(text)
+        if result is not None:
+            return self.intent_result(result)
+
+        # 微信位置匹配
+        result = await self.wechat_match(text)
         if result is not None:
             return self.intent_result(result)
 
@@ -338,6 +358,19 @@ class Conversation():
 
         if len(result) > 0:
             return '、'.join(result)
+
+    async def wechat_match(self, text):
+        compileX = re.compile("微信定位(\d+\.\d+),(\d+\.\d+)")
+        findX = compileX.findall(text)
+        if len(findX) > 0:
+            location = findX[0]
+            latitude = location[0]
+            longitude = location[1]
+            vars = '{% set location = { "latitude": ' + latitude + ', "longitude": ' + longitude + ' } %}'
+            return self.template(vars + ''' {% set state = closest(location.latitude,location.longitude, states) %}
+            与最近的实体【{{ state.name }}】距离{{ distance(location.latitude,location.longitude, state) | round(2) }}公里
+            与家距离{{ distance(location.latitude,location.longitude) | round(2) }}公里
+            ''')
 
     # Remove the front and back punctuation marks
     def trim_char(self, text):

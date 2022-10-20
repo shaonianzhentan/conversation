@@ -117,7 +117,6 @@ class DefaultAgent(AbstractConversationAgent):
     ) -> intent.IntentResponse:
         """Process a sentence."""        
         text = self.conversation.trim_char(text)
-        print(text)
 
         intents = self.hass.data[DOMAIN]
         for intent_type, matchers in intents.items():

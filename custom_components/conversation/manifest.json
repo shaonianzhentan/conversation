@@ -1,10 +1,11 @@
 {
   "domain": "conversation",
-  "version": "2022.8.19",
+  "version": "2022.10.20",
   "name": "Conversation",
-  "documentation": "https://www.home-assistant.io/integrations/conversation",
+  "documentation": "https://github.com/shaonianzhentan/conversation",
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "integration_type": "system"
 }
