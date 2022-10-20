@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.10.19"
+VERSION = "2022.10.20"
 
 class Conversation():
 
@@ -93,6 +93,11 @@ class Conversation():
             return self.intent_result(result)
         
         result = await self.turn_match(text)
+        if result is not None:
+            return self.intent_result(result)
+
+        # 微信位置匹配
+        result = await self.wechat_match(text)
         if result is not None:
             return self.intent_result(result)
 
@@ -353,6 +358,19 @@ class Conversation():
 
         if len(result) > 0:
             return '、'.join(result)
+
+    async def wechat_match(self, text):
+        compileX = re.compile("微信定位(\d+\.\d+),(\d+\.\d+)")
+        findX = compileX.findall(text)
+        if len(findX) > 0:
+            location = findX[0]
+            latitude = location[0]
+            longitude = location[1]
+            vars = '{% set location = { "latitude": ' + latitude + ', "longitude": ' + longitude + ' } %}'
+            return self.template(vars + ''' {% set state = closest(location.latitude,location.longitude, states) %}
+            与最近的实体【{{ state.name }}】距离{{ distance(location.latitude,location.longitude, state) | round(2) }}公里
+            与家距离{{ distance(location.latitude,location.longitude) | round(2) }}公里
+            ''')
 
     # Remove the front and back punctuation marks
     def trim_char(self, text):
