@@ -3,7 +3,7 @@ from homeassistant.helpers import template, intent
 from .semantic import Semantic
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.10.20"
+VERSION = "2022.10.21"
 
 class Conversation():
 
@@ -168,6 +168,166 @@ class Conversation():
                     if brightness > 0:
                         self.call_service('light.turn_on', { 'entity_id': entity_id, 'brightness_pct': brightness })
                         result.append(f'{entity_name}的亮度正在设为{brightness}%')
+                    else:
+                        color_obj = {
+                            '主题色': 'homeassistant',
+                            '爱丽丝蓝': 'aliceblue',
+                            '古董白': 'antiquewhite',
+                            '浅绿色': 'aqua',
+                            '碧绿': 'aquamarine',
+                            '青白色': 'azure',
+                            '米色': 'beige',
+                            '陶坯黄': 'bisque',
+                            '杏仁白': 'blanchedalmond',
+                            '蓝色': 'blue',
+                            '蓝紫色': 'blueviolet',
+                            '棕色': 'brown',
+                            '硬木褐': 'burlywood',
+                            '军服蓝': 'cadetblue',
+                            '查特酒绿': 'chartreuse',
+                            '巧克力色': 'chocolate',
+                            '珊瑚红': 'coral',
+                            '矢车菊蓝': 'cornflowerblue',
+                            '玉米穗黄': 'cornsilk',
+                            '绯红': 'crimson',
+                            '青色': 'cyan',
+                            '深蓝色': 'darkblue',
+                            '深青色': 'darkcyan',
+                            '深金菊黄': 'darkgoldenrod',
+                            '深灰色': 'darkgray',
+                            '墨绿色': 'darkgreen',
+                            '黑灰色': 'darkgrey',
+                            '深卡其色': 'darkkhaki',
+                            '深品红': 'darkmagenta',
+                            '深橄榄绿': 'darkolivegreen',
+                            '深橙': 'darkorange',
+                            '深洋兰紫': 'darkorchid',
+                            '深红色': 'darkred',
+                            '深鲑红': 'darksalmon',
+                            '深海藻绿': 'darkseagreen',
+                            '深岩蓝': 'darkslateblue',
+                            '深岩灰': 'darkslategray',
+                            '暗岩灰': 'darkslategrey',
+                            '深松石绿': 'darkturquoise',
+                            '深紫罗兰': 'darkviolet',
+                            '深粉色': 'deeppink',
+                            '深天蓝': 'deepskyblue',
+                            '昏灰': 'dimgray',
+                            '浅灰': 'dimgrey',
+                            '湖蓝': 'dodgerblue',
+                            '火砖红': 'firebrick',
+                            '花卉白': 'floralwhite',
+                            '森林绿': 'forestgreen',
+                            '紫红色': 'fuchsia',
+                            '庚氏灰': 'gainsboro',
+                            '幽灵白': 'ghostwhite',
+                            '金色': 'gold',
+                            '金菊黄': 'goldenrod',
+                            '灰色': 'gray',
+                            '绿色': 'green',
+                            '黄绿色': 'greenyellow',
+                            '灰白色': 'grey',
+                            '蜜瓜绿': 'honeydew',
+                            '艳粉': 'hotpink',
+                            '印度红': 'indianred',
+                            '靛蓝': 'indigo',
+                            '象牙白': 'ivory',
+                            '卡其色': 'khaki',
+                            '薰衣草紫': 'lavender',
+                            '薰衣草红': 'lavenderblush',
+                            '草坪绿': 'lawngreen',
+                            '柠檬绸黄': 'lemonchiffon',
+                            '浅蓝': 'lightblue',
+                            '浅珊瑚红': 'lightcoral',
+                            '浅青': 'lightcyan',
+                            '浅金菊黄': 'lightgoldenrodyellow',
+                            '亮灰': 'lightgray',
+                            '浅绿': 'lightgreen',
+                            '浅灰': 'lightgrey',
+                            '浅粉': 'lightpink',
+                            '浅肉色': 'lightsalmon',
+                            '浅海藻绿': 'lightseagreen',
+                            '浅天蓝': 'lightskyblue',
+                            '浅板岩灰色': 'lightslategray',
+                            '浅板岩灰白色': 'lightslategrey',
+                            '亮钢蓝': 'lightsteelblue',
+                            '浅黄色': 'lightyellow',
+                            '石灰': 'lime',
+                            '石灰绿': 'limegreen',
+                            '亚麻布': 'linen',
+                            '洋红': 'magenta',
+                            '褐红色': 'maroon',
+                            #'颜色': 'mediumaquamarine',
+                            #'颜色': 'mediumblue',
+                            #'颜色': 'mediumorchid',
+                            #'颜色': 'mediumpurple',
+                            #'颜色': 'mediumseagreen',
+                            #'颜色': 'mediumslateblue',
+                            #'颜色': 'mediumspringgreen',
+                            #'颜色': 'mediumturquoise',
+                            #'颜色': 'mediumvioletred',
+                            #'颜色': 'midnightblue',
+                            #'颜色': 'mintcream',
+                            #'颜色': 'mistyrose',
+                            #'颜色': 'moccasin',
+                            #'颜色': 'navajowhite',
+                            #'颜色': 'navy',
+                            #'颜色': 'navyblue',
+                            #'颜色': 'oldlace',
+                            '橄榄色': 'olive',
+                            #'颜色': 'olivedrab',
+                            '橙色': 'orange',
+                            #'颜色': 'orangered',
+                            #'颜色': 'orchid',
+                            #'颜色': 'palegoldenrod',
+                            #'颜色': 'palegreen',
+                            #'颜色': 'paleturquoise',
+                            #'颜色': 'palevioletred',
+                            #'颜色': 'papayawhip',
+                            #'颜色': 'peachpuff',
+                            #'颜色': 'peru',
+                            '粉色': 'pink',
+                            #'颜色': 'plum',
+                            #'颜色': 'powderblue',
+                            '紫色': 'purple',
+                            '红色': 'red',
+                            #'颜色': 'rosybrown',
+                            #'颜色': 'royalblue',
+                            #'颜色': 'saddlebrown',
+                            #'颜色': 'salmon',
+                            #'颜色': 'sandybrown',
+                            #'颜色': 'seagreen',
+                            #'颜色': 'seashell',
+                            #'颜色': 'sienna',
+                            '银色': 'silver',
+                            '天蓝色': 'skyblue',
+                            #'颜色': 'slateblue',
+                            #'颜色': 'slategray',
+                            #'颜色': 'slategrey',
+                            #'颜色': 'snow',
+                            #'颜色': 'springgreen',
+                            #'颜色': 'steelblue',
+                            #'颜色': 'tan',
+                            #'颜色': 'teal',
+                            #'颜色': 'thistle',
+                            #'颜色': 'tomato',
+                            #'颜色': 'turquoise',
+                            #'颜色': 'violet',
+                            #'颜色': 'wheat',
+                            '白色': 'white',
+                            #'颜色': 'whitesmoke',
+                            '黄色': 'yellow',
+                            #'颜色': 'yellowgreen'
+                        }
+                        # 颜色
+                        compileX = re.compile('|'.join(color_obj.keys()))
+                        findX = compileX.findall(text)
+                        if len(findX) > 0:
+                            name = findX[0]
+                            color_name = color_obj[name]
+                            self.call_service('light.turn_on', { 'entity_id': entity_id, 'color_name': color_name })
+                            result.append(f'{entity_name}的颜色调整为{color_name}{name}')
+
             if len(result) > 0:
                 return '、'.join(result)
 
@@ -368,8 +528,7 @@ class Conversation():
             longitude = location[1]
             vars = '{% set location = { "latitude": ' + latitude + ', "longitude": ' + longitude + ' } %}'
             return self.template(vars + ''' {% set state = closest(location.latitude,location.longitude, states) %}
-            与最近的实体【{{ state.name }}】距离{{ distance(location.latitude,location.longitude, state) | round(2) }}公里
-            与家距离{{ distance(location.latitude,location.longitude) | round(2) }}公里
+            与最近的实体【{{ state.name }}】距离{{ distance(location.latitude,location.longitude, state) | round(2) }}公里，与家距离{{ distance(location.latitude,location.longitude) | round(2) }}公里
             ''')
 
     # Remove the front and back punctuation marks
