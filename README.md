@@ -2,11 +2,13 @@
 
 在HA里使用的官方语音助手修改增强版
 
-[![hacs_badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
+[![badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 ![visit](https://visitor-badge.laobi.icu/badge?page_id=shaonianzhentan.conversation&left_text=visit)
 
-[![ha_badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
+[![badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
+[![badge](https://img.shields.io/badge/wechat-微信控制-6cae6a?logo=wechat&style=for-the-badge)](https://github.com/shaonianzhentan/ha_wechat)
+[![badge](https://img.shields.io/badge/android-家庭助理-purple?logo=android&style=for-the-badge)](https://github.com/shaonianzhentan/ha_app)
 
 > 官方文档：https://www.home-assistant.io/integrations/conversation/
 
@@ -22,17 +24,6 @@ service: logger.set_level
 data:
   custom_components.conversation: debug
 ```
-
-## 云音乐指令（需要配合云音乐播放器使用）
-
-- 我想听xxx的歌
-- 播放(电台|歌单|歌曲|专辑)xxx
-- 下一曲
-- 上一曲
-- 播放音乐
-- 暂停音乐
-- 声音小点、小点声音、小一点声音、声音小一点
-- 声音大点、大点声音、大一点声音、声音大一点
 
 ## 支持指令
 - 开关设备
@@ -58,7 +49,7 @@ script.1652361988272:
     - 把灯设成{color}
 ```
 
-### 微信回复
+> 微信回复
 
 图文信息
 ```yaml
@@ -79,7 +70,7 @@ script.1652361988272:
     url: http://music.163.com/song/media/outer/url?id=563563649.mp3
 ```
 
-## node-red 和 自动化
+> Node-Red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
 
 ## 功能
