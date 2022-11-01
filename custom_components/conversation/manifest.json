@@ -1,6 +1,6 @@
 {
   "domain": "conversation",
-  "version": "2022.10.20",
+  "version": "2022.10.21",
   "name": "Conversation",
   "documentation": "https://github.com/shaonianzhentan/conversation",
   "dependencies": ["http"],
