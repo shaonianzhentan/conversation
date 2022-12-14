@@ -1,9 +1,9 @@
 import logging, aiohttp, re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
+from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.10.21"
 
 class Conversation():
 
@@ -12,8 +12,8 @@ class Conversation():
         local = hass.config.path("custom_components/conversation/www")
         LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
-        hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={VERSION}')
-        self.update(VERSION, '')
+        hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
+        self.update(manifest.version, '')
         self.semantic = Semantic(hass)
 
     # Voice service processing
