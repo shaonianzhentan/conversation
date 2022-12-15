@@ -536,9 +536,11 @@ class Conversation():
             latitude = location[0]
             longitude = location[1]
             vars = '{% set location = { "latitude": ' + latitude + ', "longitude": ' + longitude + ' } %}'
-            return self.template(vars + ''' {% set state = closest(location.latitude,location.longitude, states) %}
-            与最近的实体【{{ state.name }}】距离{{ distance(location.latitude,location.longitude, state) | round(2) }}公里，与家距离{{ distance(location.latitude,location.longitude) | round(2) }}公里
-            ''')
+            return self.template(vars + '''{% set state = closest(location.latitude,location.longitude, states) %}
+距离最近的实体【{{ state.name }}】
+距离【{{ state.name }}】{{ distance(location.latitude,location.longitude, state) | round(2) }}公里
+距离【{{states.zone.home.name}}】{{ distance(location.latitude,location.longitude) | round(2) }}公里
+【{{ state.name }}】距离【{{states.zone.home.name}}】{{ distance(state) | round(2) }}公里''')
 
     # Remove the front and back punctuation marks
     def trim_char(self, text):
