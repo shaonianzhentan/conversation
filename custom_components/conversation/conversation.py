@@ -1,9 +1,9 @@
 import logging, aiohttp, re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
+from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
-VERSION = "2022.10.21"
 
 class Conversation():
 
@@ -12,8 +12,8 @@ class Conversation():
         local = hass.config.path("custom_components/conversation/www")
         LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
-        hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={VERSION}')
-        self.update(VERSION, '')
+        hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
+        self.update(manifest.version, '')
         self.semantic = Semantic(hass)
 
     # Voice service processing
@@ -356,6 +356,15 @@ class Conversation():
                     if '暂停' in text:
                         self.call_service_entity('media_player.media_pause', entity_id)
                         return f'{entity_name}暂停'
+
+                    if ['声音小点', '小点声音', '小一点声音', '声音小一点', '音量减少', '减少音量', '音量调低', '调低音量'].count(text) == 1:
+                        self.call_service_entity('media_player.volume_down', entity_id)
+                        return f'{entity_name}音量减少'
+
+                    if ['声音大点', '大点声音', '大一点声音', '声音大一点', '音量增加', '增加音量', '音量调高', '调高音量'].count(text) == 1:
+                        self.call_service_entity('media_player.volume_up', entity_id)
+                        return f'{entity_name}音量增加'
+
                     if '声音' in text or '音量' in text:
                         # check numbers
                         compileX = re.compile("\d+")
@@ -371,7 +380,7 @@ class Conversation():
                             result.append(f'{entity_name}音量正在调整为{volume_level}%')
             if len(result) > 0:
                 return '、'.join(result)
-    
+
     async def climate_match(self, text):
         entities = self.semantic.entities
         if len(entities) > 0:
@@ -527,9 +536,11 @@ class Conversation():
             latitude = location[0]
             longitude = location[1]
             vars = '{% set location = { "latitude": ' + latitude + ', "longitude": ' + longitude + ' } %}'
-            return self.template(vars + ''' {% set state = closest(location.latitude,location.longitude, states) %}
-            与最近的实体【{{ state.name }}】距离{{ distance(location.latitude,location.longitude, state) | round(2) }}公里，与家距离{{ distance(location.latitude,location.longitude) | round(2) }}公里
-            ''')
+            return self.template(vars + '''{% set state = closest(location.latitude,location.longitude, states) %}
+距离最近的实体【{{ state.name }}】
+距离【{{ state.name }}】{{ distance(location.latitude,location.longitude, state) | round(2) }}公里
+距离【{{states.zone.home.name}}】{{ distance(location.latitude,location.longitude) | round(2) }}公里
+【{{ state.name }}】距离【{{states.zone.home.name}}】{{ distance(state) | round(2) }}公里''')
 
     # Remove the front and back punctuation marks
     def trim_char(self, text):
@@ -561,7 +572,7 @@ class Conversation():
 
     # 返回意图结果
     def intent_result(self, message, extra_data = None):
-        intent_result = intent.IntentResponse()
+        intent_result = intent.IntentResponse(self.hass.config.language)
         intent_result.async_set_speech(message, 'plain', extra_data)
         return intent_result
 
