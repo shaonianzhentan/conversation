@@ -18,13 +18,6 @@
 conversation:
 ```
 
-启动调试服务
-```yaml
-service: logger.set_level
-data:
-  custom_components.conversation: debug
-```
-
 ## 支持指令
 - 开关设备
 - 灯光亮度

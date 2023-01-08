@@ -572,7 +572,7 @@ class Conversation():
 
     # 返回意图结果
     def intent_result(self, message, extra_data = None):
-        intent_result = intent.IntentResponse()
+        intent_result = intent.IntentResponse(self.hass.config.language)
         intent_result.async_set_speech(message, 'plain', extra_data)
         return intent_result
 
