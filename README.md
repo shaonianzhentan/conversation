@@ -6,13 +6,17 @@
 [![badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 ![visit](https://visitor-badge.laobi.icu/badge?page_id=shaonianzhentan.conversation&left_text=visit)
 
+[![badge](https://img.shields.io/badge/Conversation-语音小助手-049cdb?logo=homeassistant&style=for-the-badge)](https://github.com/shaonianzhentan/ha_wechat)
 [![badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
 [![badge](https://img.shields.io/badge/wechat-微信控制-6cae6a?logo=wechat&style=for-the-badge)](https://github.com/shaonianzhentan/ha_wechat)
 [![badge](https://img.shields.io/badge/android-家庭助理-purple?logo=android&style=for-the-badge)](https://github.com/shaonianzhentan/ha_app)
 
+
 > 官方文档：https://www.home-assistant.io/integrations/conversation/
 
 ## 配置
+
+在`configuration.yaml`中添加以下配置
 ```yaml
 # 语音小助手（高级用法请参考官方文档）
 conversation:
@@ -21,6 +25,7 @@ conversation:
 ## 支持指令
 - 开关设备
 - 灯光亮度
+- `light名称` `红|橙|黄|绿|青|蓝|紫`色
 - `触发` `自动化|按钮|脚本|警报控制面板`
 - `激活|启动|启用`场景
 - 支持媒体播放器
@@ -75,6 +80,7 @@ script.1652361988272:
 |支付宝|微信|
 |---|---|
 <img src="https://ha.jiluxinqing.com/img/alipay.png" align="left" height="160" width="160" alt="支付宝" title="支付宝">  |  <img src="https://ha.jiluxinqing.com/img/wechat.png" align="left" height="160" width="160" alt="微信支付" title="微信">
+
 
 #### 关注我的微信订阅号，了解更多HomeAssistant相关知识
 <img src="https://ha.jiluxinqing.com/img/wechat-channel.png" height="160" alt="HomeAssistant家庭助理" title="HomeAssistant家庭助理"> 
