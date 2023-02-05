@@ -7,7 +7,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class Conversation():
 
-    def __init__(self, hass):
+    def __init__(self, hass, recognize):
         self.hass = hass
         local = hass.config.path("custom_components/conversation/www")
         LOCAL_PATH = '/www-conversation'
@@ -15,6 +15,7 @@ class Conversation():
         hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
         self.update(manifest.version, '')
         self.semantic = Semantic(hass)
+        self.recognize = recognize
 
     # Voice service processing
     async def async_process(self, text):

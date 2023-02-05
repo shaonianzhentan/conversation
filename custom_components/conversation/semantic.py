@@ -1,14 +1,20 @@
-import re
+import re, logging
 from homeassistant.helpers import template, entity_registry, area_registry
 from .util import create_matcher
+
+_LOGGER = logging.getLogger(__name__)
 
 class Semantic():
     
     def __init__(self, hass):
         self.hass = hass
+        self.entity_registry = None
 
     # cache data
     async def update(self, text):
+        # 注册实体
+        self.entity_registry = entity_registry.async_get(self.hass)
+
         entities = []
         self.areas = []
         # all state
@@ -17,13 +23,14 @@ class Semantic():
         for state in states:
             arr.append(state)
             friendly_name = state.attributes.get('friendly_name', '')
-            if friendly_name != '' and friendly_name in text:
-                entities.append({
-                    'domain': state.entity_id.split('.')[0],
-                    'entity_id': state.entity_id,
-                    'entity_name': friendly_name,
-                    'state': state.state
-                })
+            if friendly_name != '':
+                if friendly_name in text or self.aliases_in(state.entity_id, text):
+                    entities.append({
+                        'domain': state.entity_id.split('.')[0],
+                        'entity_id': state.entity_id,
+                        'entity_name': friendly_name,
+                        'state': state.state
+                    })
         arr.sort(reverse=True, key=lambda x:x.last_changed)
         self.states = arr
         # all area
@@ -43,6 +50,37 @@ class Semantic():
                 entities[index] = None
         self.entities = list(filter(lambda x:x is not None, entities))
 
+    # 获取别名
+    def get_aliases(self, entity_id):
+        _list = []
+        entity = self.entity_registry.async_get(entity_id)
+        if entity is not None:
+            if entity.entity_category or entity.hidden:
+                # Skip configuration/diagnostic/hidden entities
+                return []
+
+            if entity.aliases:
+                for alias in entity.aliases:
+                    _list.append(alias)
+        return _list
+
+    # 完全匹配
+    def in_aliases(self, entity_id, name) -> bool:
+        aliases = self.get_aliases(entity_id)
+        return len(list(filter(lambda x:name in x, aliases))) > 0
+
+    # 模糊匹配
+    def aliases_in(self, entity_id, name):
+        aliases = self.get_aliases(entity_id)
+        _list = list(filter(lambda x:x in name, aliases))
+        if len(_list) > 0:
+            return _list[0]
+
+    # 完全匹配
+    def equal_aliases(self, entity_id, name) -> bool:
+        aliases = self.get_aliases(entity_id)
+        return aliases.count(name) > 0
+
     # match entity name
     async def find_entity(self, text):
         states = self.states
@@ -51,32 +89,38 @@ class Semantic():
             domain = entity_id.split('.')[0]
             attributes = state.attributes
             friendly_name = attributes.get('friendly_name', '')
-            if friendly_name != '' and friendly_name in text:
-                return {
-                    'domain': domain,
-                    'entity_id': entity_id,
-                    'entity_name': friendly_name,
-                    'state': state.state
-                }
+            if friendly_name != '':
+                if friendly_name in text or self.aliases_in(state.entity_id, text):
+                    return {
+                        'domain': domain,
+                        'entity_id': entity_id,
+                        'entity_name': friendly_name,
+                        'state': state.state
+                    }
     
     # match entity name
     async def find_entity_multiple(self, text):
+        _LOGGER.debug('[find_entity_multiple] %s', text)
         arr = []
         for state in self.states:
             friendly_name = state.attributes.get('friendly_name', '')
-            if friendly_name != '' and friendly_name in text:
-                arr.append({
-                    'domain': state.entity_id.split('.')[0],
-                    'entity_id': state.entity_id,
-                    'entity_name': friendly_name,
-                    'state': state.state
-                })
+            if friendly_name != '':
+                if friendly_name in text or self.aliases_in(state.entity_id, text):
+                    arr.append({
+                        'domain': state.entity_id.split('.')[0],
+                        'entity_id': state.entity_id,
+                        'entity_name': friendly_name,
+                        'state': state.state
+                    })
         arr.sort(reverse=True, key=lambda x:len(x['entity_name']))
         tmp_text = text
         for index, entity in enumerate(arr):
             entity_name = entity['entity_name']
+            alias = self.aliases_in(entity['entity_id'], tmp_text)
             if entity_name in tmp_text:
                 tmp_text = tmp_text.replace(entity_name, '')
+            elif alias:
+                tmp_text = tmp_text.replace(alias, '')
             else:
                 arr[index] = None
         return list(filter(lambda x:x is not None, arr))
@@ -121,7 +165,7 @@ class Semantic():
                         'extra_data': extra_data,
                         'reply': reply
                     }
-            if friendly_name == name:
+            if friendly_name == name or self.equal_aliases(entity_id, name):
                 arr.append({
                     'domain': domain,
                     'entity_id': entity_id,
@@ -141,12 +185,13 @@ class Semantic():
             attributes = state.attributes
             state_value = state.state
             friendly_name = attributes.get('friendly_name', '')
-            if friendly_name != '' and friendly_name.count(key) > 0:
-                return {
-                    'domain': domain,
-                    'entity_id': entity_id,
-                    'entity_name': friendly_name
-                }
+            if friendly_name != '':
+                if key in friendly_name or self.in_aliases(state.entity_id, key):
+                    return {
+                        'domain': domain,
+                        'entity_id': entity_id,
+                        'entity_name': friendly_name
+                    }
 
     async def get_area(self, name):
         _list = list(filter(lambda item: item.name == name, self.area_list))
@@ -162,12 +207,12 @@ class Semantic():
                 registry_entity = entity_registry.async_get(self.hass)
                 entities = entity_registry.async_entries_for_area(registry_entity, obj.id)
                 for entity in entities:
-                    state = self.hass.states.get(entity.entity_id)
+                    entity_id = entity.entity_id
+                    state = self.hass.states.get(entity_id)
                     friendly_name = state.attributes.get('friendly_name', '')
                     if friendly_name == '':
-                        continue
-                    if word in friendly_name:
-                        entity_id = entity.entity_id
+                        continue                    
+                    if word in friendly_name or self.in_aliases(entity_id, word):
                         domain = entity_id.split('.')[0]
                         arr.append({
                             'domain': domain,
@@ -243,4 +288,6 @@ class Semantic():
     def parser_match(self, text, find):
         matchObj = re.match(rf'(.*)({find})(.*)', text)
         if matchObj is not None:
-            return (matchObj.group(1), matchObj.group(2), matchObj.group(3))
+            result = (matchObj.group(1), matchObj.group(2), matchObj.group(3))
+            _LOGGER.debug(result)
+            return result
