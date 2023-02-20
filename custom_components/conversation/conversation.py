@@ -23,6 +23,14 @@ class Conversation():
     # Voice service processing
     async def async_process(self, text):
         self.fire_text(text)
+
+        # 新增日历事件
+        async_conversation_calendar = self.hass.data.get('async_conversation_calendar')
+        if async_conversation_calendar is not None:
+            result = await async_conversation_calendar(text)
+            if result is not None:
+                return self.intent_result(result)
+
         # update cache data
         await self.semantic.update(text)
         # print(self.semantic.entities)
