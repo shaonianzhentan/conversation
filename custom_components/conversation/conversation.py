@@ -1,3 +1,6 @@
+'''
+https://github.com/home-assistant/core/tree/dev/homeassistant/components/conversation
+'''
 import logging, aiohttp, re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
