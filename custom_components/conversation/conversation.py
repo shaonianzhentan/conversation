@@ -19,15 +19,23 @@ class Conversation():
         self.update(manifest.version, '')
         self.semantic = Semantic(hass)
         self.recognize = recognize
+        # 语音助手插件增强
+        self.async_conversation_calendar = None
+        self.async_conversation_weather = None
 
     # Voice service processing
     async def async_process(self, text):
         self.fire_text(text)
 
-        # 新增日历事件
-        async_conversation_calendar = self.hass.data.get('async_conversation_calendar')
-        if async_conversation_calendar is not None:
-            result = await async_conversation_calendar(text)
+        # 日历
+        if self.async_conversation_calendar is not None:
+            result = await self.async_conversation_calendar(text)
+            if result is not None:
+                return self.intent_result(result)
+
+        # 天气
+        if self.async_conversation_weather is not None:
+            result = await self.async_conversation_weather(text)
             if result is not None:
                 return self.intent_result(result)
 

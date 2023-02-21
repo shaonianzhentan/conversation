@@ -1,7 +1,7 @@
 {
   "domain": "conversation",
   "name": "Conversation",
-  "version": "2023.2.20",
+  "version": "2023.2.21",
   "documentation": "https://www.home-assistant.io/integrations/conversation",
   "requirements": [
     "hassil>=0.2.6",
