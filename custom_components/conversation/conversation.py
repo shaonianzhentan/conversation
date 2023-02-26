@@ -1,3 +1,6 @@
+'''
+https://github.com/home-assistant/core/tree/dev/homeassistant/components/conversation
+'''
 import logging, aiohttp, re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
@@ -20,6 +23,14 @@ class Conversation():
     # Voice service processing
     async def async_process(self, text):
         self.fire_text(text)
+
+        # 语音助手扩展
+        conversation_assistant = self.hass.data.get('conversation_assistant')
+        if conversation_assistant is not None:
+            result = await conversation_assistant.async_process(text)
+            if result is not None:
+                return self.intent_result(result)
+
         # update cache data
         await self.semantic.update(text)
         # print(self.semantic.entities)
