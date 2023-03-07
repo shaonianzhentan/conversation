@@ -143,6 +143,11 @@ class Semantic():
                 reply = attributes.get('reply')
                 # 判断是否自定义匹配命令
                 intents = attributes.get('intents', [])
+
+                # 使用别名定义意图脚本
+                if '意图脚本' in friendly_name and len(intents) == 0:
+                    intents = self.get_aliases(entity_id)
+
                 if len(intents) > 0:
                     for intent in intents:
                         match = create_matcher(intent).match(name)
