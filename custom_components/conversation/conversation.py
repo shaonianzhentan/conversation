@@ -8,6 +8,26 @@ from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
 
+# 天气状态翻译
+WEATHER_STATE = {
+    'clear-night': '晴朗的夜晚',
+    'cloudy': '多云',
+    'exceptional': '异常',
+    'fog': '雾',
+    'hail': '冰雹',
+    'lightning': '打雷闪电',
+    'lightning-rainy': '雷阵雨',
+    'partlycloudy': '局部多云',
+    'pouring': '倾盆大雨',
+    'rainy': '雨',
+    'snowy': '雪',
+    'snowy-rainy': '雨夹雪',
+    'sunny': '晴',
+    'windy': '有风',
+    'windy-variant': '很大风'
+}
+
+
 class Conversation():
 
     def __init__(self, hass, recognize):
@@ -76,9 +96,32 @@ class Conversation():
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
                     entity_state = item.get('state', '') + ' ' + item.get("unit")
-                    result_message.append(f'{domain}{entity_name}：{entity_state}')
-                return self.intent_result('\n'.join(result_message))
-        
+
+                    if domain == 'weather' and item.get('state') != 'unavailable':
+                        ''' 天气 '''
+                        state = self.hass.states.get(entity_id)
+                        attributes = state.attributes
+                        unit = attributes.get('temperature_unit')
+                        result_message.append(f'今天天气{WEATHER_STATE.get(state.state, state.state)}，温度{attributes.get("temperature")} {unit}，湿度{attributes.get("humidity")} %')
+                        forecast = attributes.get('forecast', [])
+                        for index, item in enumerate(forecast):
+                            date = item['datetime']
+                            if index == 0:
+                                date = '明天'
+                            elif index == 1:
+                                date = '后天'
+                            else:
+                                date = date[:10]
+
+                            condition = item['condition']
+                            temperature = item['temperature']
+                            templow = item['templow']
+                            result_message.append(f'{date}天气{WEATHER_STATE.get(condition, condition)}，最高温度{temperature} {unit}，最低温度{templow} {unit}')
+                    else:
+                        result_message.append(f'{domain}{entity_name}：{entity_state}')
+
+                return self.intent_result('\n\r'.join(result_message))
+
         # trigger match
         result = await self.trigger_match(text)
         if result is not None:
