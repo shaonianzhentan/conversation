@@ -113,6 +113,16 @@ class DefaultAgent(AbstractConversationAgent):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         language = user_input.language or self.hass.config.language
+
+        country = self.hass.config.country
+        if language == "zh-Hans":
+            language = "zh-cn"
+        elif language == "zh-Hant":
+            if country == "HK":
+                language = "zh-hk"
+            elif country == "TW":
+                language = "zh-tw"
+
         lang_intents = self._lang_intents.get(language)
         conversation_id = None  # Not supported
 

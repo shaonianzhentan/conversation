@@ -296,14 +296,6 @@ async def async_converse(
 
     if language is None:
         language = hass.config.language
-        country = hass.config.country
-        if language == "zh-Hans":
-            language = "zh-cn"
-        elif language == "zh-Hant":
-            if country == "HK":
-                language = "zh-hk"
-            elif country == "TW":
-                language = "zh-tw"
 
     _LOGGER.debug("Processing in %s: %s", language, text)
     # 插件
