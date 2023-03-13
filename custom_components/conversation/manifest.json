@@ -1,5 +1,5 @@
 {
-  "version": "2023.3.10",
+  "version": "2023.3.13",
   "domain": "conversation",
   "name": "Conversation",
   "codeowners": ["@home-assistant/core", "@synesthesiam"],
