@@ -237,7 +237,9 @@ class Semantic():
         words = self.parser_match(text, area_str)
         if words is not None:
             area = words[1]
-            entity = await self.find_entity(words[2])
+            entity_name = words[2]
+            if entity_name is not None:
+                entity = await self.find_entity(entity_name)
         else:
             entity = await self.find_entity(text)
         
