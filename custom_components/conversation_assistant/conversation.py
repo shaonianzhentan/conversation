@@ -1,6 +1,3 @@
-'''
-https://github.com/home-assistant/core/tree/dev/homeassistant/components/conversation
-'''
 import logging, aiohttp, re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
@@ -26,7 +23,6 @@ WEATHER_STATE = {
     'windy': '有风',
     'windy-variant': '很大风'
 }
-
 
 class Conversation():
 

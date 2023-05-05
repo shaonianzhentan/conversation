@@ -1,0 +1,28 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "语音小助手",
+                "description": "一个简单的中文语音控制插件",
+                "data": {}
+            }
+        },
+        "error": {},
+        "abort": {
+            "single_instance_allowed": "仅允许单个配置."
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "title": "语音小助手",
+                "description": "指定默认控制的实体",
+                "data": {
+                    "calendar_id": "日历",
+                    "music_id": "音乐"
+                }
+            }
+        },
+        "error": {}
+    }
+}
