@@ -65,7 +65,7 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-
+        conversation_id = user_input.conversation_id
         # 兼容中文语句
         language = user_input.language or self.hass.config.language
         country = self.hass.config.country
