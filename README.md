@@ -1,6 +1,6 @@
 # 语音小助手
 
-一个简单的在Home Assistant里使用的中文语音控制插件
+一个在Home Assistant里使用的简单中文语音控制插件
 
 [![badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
 [![badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
