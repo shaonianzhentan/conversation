@@ -605,7 +605,7 @@ class ConversationAssistant():
     def update(self, text, reply):
         self.hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:account-voice",
-            "friendly_name": "语音助手",
+            "friendly_name": "语音小助手",
             "reply": reply
         })
 

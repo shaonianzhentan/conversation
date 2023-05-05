@@ -16,7 +16,9 @@
 
 ## 配置
 
-在集成中搜索`语音小助手`
+安装完成后重启HA，刷新一下页面，在集成里搜索`语音小助手`
+
+[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=conversation_assistant)
 
 
 ## 支持指令
