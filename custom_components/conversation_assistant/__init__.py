@@ -98,7 +98,7 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
         intent_response = conversation_result.response
         if intent_response.error_code is not None:
             # 插件意图
-            result = self.entity_assistant.async_process(text)
+            result = await self.entity_assistant.async_process(text)
             if result is not None:
                 intent_response = conversation_assistant.intent_result(result)
             else:
