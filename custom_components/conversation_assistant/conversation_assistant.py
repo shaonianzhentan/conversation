@@ -38,8 +38,6 @@ class ConversationAssistant():
 
     # Voice service processing
     async def async_process(self, text):
-        self.fire_text(text)
-
         # update cache data
         await self.semantic.update(text)
         # print(self.semantic.entities)
