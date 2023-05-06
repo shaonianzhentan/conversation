@@ -5,6 +5,7 @@
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/conversation",
   "requirements": [
+    "emoji==1.7",
     "recognizers-text-suite>=1.0.2a2"
   ],
   "dependencies": [],
