@@ -20,7 +20,6 @@
 
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=conversation_assistant)
 
-
 ## 支持指令
 - 开关设备
 - 灯光亮度
