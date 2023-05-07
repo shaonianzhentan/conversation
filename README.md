@@ -1,6 +1,6 @@
 # 语音小助手
 
-一个简单的在Home Assistant里使用的中文语音控制插件
+一个在Home Assistant里使用的简单中文语音控制插件
 
 [![badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
 [![badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
@@ -19,7 +19,6 @@
 安装完成后重启HA，刷新一下页面，在集成里搜索`语音小助手`
 
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=conversation_assistant)
-
 
 ## 支持指令
 - 开关设备

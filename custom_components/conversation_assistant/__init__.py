@@ -1,25 +1,31 @@
 from __future__ import annotations
 
 from functools import partial
-import logging
+import logging, datetime, re
 from typing import Literal
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, MATCH_ALL
 from homeassistant.core import HomeAssistant, Context
-from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
 from homeassistant.helpers import intent, template
 from homeassistant.util import ulid
 from home_assistant_intents import get_domains_and_languages, get_intents
 
+from .entity_assistant import EntityAssistant
 from .conversation_assistant import ConversationAssistant
 DATA_VOICE = "conversation_voice"
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    ''' 安装集成 '''
+    await update_listener(hass, entry)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    return True
+
+async def update_listener(hass, entry):
+    ''' 更新配置 '''
     assistant = ConversationAssistantAgent(hass, entry)
     conversation.async_set_agent(hass, entry, assistant)
 
@@ -33,13 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return result
     hass.data[DATA_VOICE] = ConversationAssistant(hass, recognize)
-    return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    ''' 删除集成 '''
     conversation.async_unset_agent(hass, entry)
+    del hass.data[DATA_VOICE]
     return True
-
 
 class ConversationAssistantAgent(conversation.AbstractConversationAgent):
 
@@ -47,9 +52,8 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
-        # 预定义实体
-        self.calendar_id = self.entry.options.get("calendar_id")
-        self.music_id = self.entry.options.get("music_id")
+        
+        self.entity_assistant = EntityAssistant(hass, entry.options)
 
     @property
     def attribution(self):
@@ -78,10 +82,11 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
                 language = "zh-tw"
 
         # 处理意图
-        conversation_voice = self.hass.data[DATA_VOICE]
-        text = conversation_voice.trim_char(user_input.text)
+        conversation_assistant = self.hass.data[DATA_VOICE]
+        text = conversation_assistant.trim_char(user_input.text)
+        conversation_assistant.fire_text(text)
 
-        # 调用内置服务
+        # 调用Hass意图
         conversation_result = await conversation.async_converse(
                 hass=self.hass,
                 text=text,
@@ -93,12 +98,16 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
         intent_response = conversation_result.response
         if intent_response.error_code is not None:
             # 插件意图
-            intent_response = await conversation_voice.async_process(text)
+            result = await self.entity_assistant.async_process(text)
+            if result is not None:
+                intent_response = conversation_assistant.intent_result(result)
+            else:
+                intent_response = await conversation_assistant.async_process(text)
 
         speech = intent_response.speech.get('plain')
         if speech is not None:
             result = speech.get('speech')
-            conversation_voice.update(text, result)
+            conversation_assistant.update(text, result)
 
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
