@@ -98,6 +98,11 @@ class EntityAssistant:
             elif text.startswith('播放专辑'):
                 pass
 
+            elif text.startswith('我想看'):
+                ''' 电视 '''
+                pass
+
+
             if service_name is not None:
                 await self.hass.services.async_call('media_player', service_name, service_data)
 

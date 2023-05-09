@@ -19,7 +19,8 @@
                 "description": "指定默认控制的实体",
                 "data": {
                     "calendar_id": "日历",
-                    "music_id": "音乐"
+                    "music_id": "音乐",
+                    "tv_id": "电视"
                 }
             }
         },
