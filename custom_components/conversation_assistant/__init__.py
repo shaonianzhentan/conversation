@@ -35,6 +35,7 @@ async def update_listener(hass, entry):
                 text=text,
                 context=Context(),
                 conversation_id=conversation_id,
+                language=None
             )
         )
         return result
