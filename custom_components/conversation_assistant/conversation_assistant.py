@@ -1,6 +1,3 @@
-'''
-https://github.com/home-assistant/core/tree/dev/homeassistant/components/conversation
-'''
 import logging, aiohttp, re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
@@ -27,12 +24,11 @@ WEATHER_STATE = {
     'windy-variant': '很大风'
 }
 
-
-class Conversation():
+class ConversationAssistant():
 
     def __init__(self, hass, recognize):
         self.hass = hass
-        local = hass.config.path("custom_components/conversation/www")
+        local = hass.config.path("custom_components/conversation_assistant/www")
         LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
         hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
@@ -42,15 +38,6 @@ class Conversation():
 
     # Voice service processing
     async def async_process(self, text):
-        self.fire_text(text)
-
-        # 语音助手扩展
-        conversation_assistant = self.hass.data.get('conversation_assistant')
-        if conversation_assistant is not None:
-            result = await conversation_assistant.async_process(text)
-            if result is not None:
-                return self.intent_result(result)
-
         # update cache data
         await self.semantic.update(text)
         # print(self.semantic.entities)
@@ -616,7 +603,7 @@ class Conversation():
     def update(self, text, reply):
         self.hass.states.async_set('conversation.voice', text, {
             "icon": "mdi:account-voice",
-            "friendly_name": "语音助手",
+            "friendly_name": "语音小助手",
             "reply": reply
         })
 

@@ -22,8 +22,8 @@ class Semantic():
         arr = []
         for state in states:
             arr.append(state)
-            friendly_name = state.attributes.get('friendly_name', '')
-            if friendly_name != '':
+            friendly_name = state.attributes.get('friendly_name')
+            if friendly_name != '' and friendly_name is not None:
                 if friendly_name in text or self.aliases_in(state.entity_id, text):
                     entities.append({
                         'domain': state.entity_id.split('.')[0],
@@ -88,8 +88,8 @@ class Semantic():
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
             attributes = state.attributes
-            friendly_name = attributes.get('friendly_name', '')
-            if friendly_name != '':
+            friendly_name = attributes.get('friendly_name')
+            if friendly_name != '' and friendly_name is not None:
                 if friendly_name in text or self.aliases_in(state.entity_id, text):
                     return {
                         'domain': domain,
@@ -103,8 +103,8 @@ class Semantic():
         _LOGGER.debug('[find_entity_multiple] %s', text)
         arr = []
         for state in self.states:
-            friendly_name = state.attributes.get('friendly_name', '')
-            if friendly_name != '':
+            friendly_name = state.attributes.get('friendly_name')
+            if friendly_name != '' and friendly_name is not None:
                 if friendly_name in text or self.aliases_in(state.entity_id, text):
                     arr.append({
                         'domain': state.entity_id.split('.')[0],
@@ -133,8 +133,8 @@ class Semantic():
             entity_id = state.entity_id
             domain = entity_id.split('.')[0]
             attributes = state.attributes
-            friendly_name = attributes.get('friendly_name', '')
-            if friendly_name == '':
+            friendly_name = attributes.get('friendly_name')
+            if friendly_name is None or friendly_name == '':
                 continue
             
             # 执行自定义脚本
@@ -189,8 +189,8 @@ class Semantic():
             domain = entity_id.split('.')[0]
             attributes = state.attributes
             state_value = state.state
-            friendly_name = attributes.get('friendly_name', '')
-            if friendly_name != '':
+            friendly_name = attributes.get('friendly_name')
+            if friendly_name != '' and friendly_name is not None:
                 if key in friendly_name or self.in_aliases(state.entity_id, key):
                     return {
                         'domain': domain,
@@ -214,8 +214,8 @@ class Semantic():
                 for entity in entities:
                     entity_id = entity.entity_id
                     state = self.hass.states.get(entity_id)
-                    friendly_name = state.attributes.get('friendly_name', '')
-                    if friendly_name == '':
+                    friendly_name = state.attributes.get('friendly_name')
+                    if friendly_name is None or friendly_name == '':
                         continue                    
                     if word in friendly_name or self.in_aliases(entity_id, word):
                         domain = entity_id.split('.')[0]
