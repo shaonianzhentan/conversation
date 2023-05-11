@@ -10,16 +10,42 @@ class EntityAssistant:
         self.hass = hass
         self.calendar_id = config.get('calendar_id')
         self.music_id = config.get('music_id')
+        self.tv_id = config.get('tv_id')
+        self.xiaoai_id = config.get('xiaoai_id')
+        self.fm_id = config.get('fm_id')
 
     async def async_process(self, text):
         result = await self.async_calendar(text)
         if result is not None:
             return result
 
+        result = await self.async_fm(text)
+        if result is not None:
+            return result
+
         result = await self.async_music(text)
         if result is not None:
             return result
-    
+
+        result = await self.async_tv(text)
+        if result is not None:
+            return result
+
+        result = await self.async_xiaoai(text)
+        if result is not None:
+            return result
+
+    async def async_fm(self, text):
+        ''' 广播电台 '''
+        if self.fm_id is not None:
+            service_name = None
+            service_data = { 'entity_id': self.fm_id }
+            # 搜索广播电台
+
+            if service_name is not None:
+                await self.hass.services.async_call('media_player', service_name, service_data)
+                return text
+
     async def async_music(self, text):
         if self.music_id is not None:
             service_name = None
@@ -98,10 +124,6 @@ class EntityAssistant:
             elif text.startswith('播放专辑'):
                 pass
 
-            elif text.startswith('我想看'):
-                ''' 电视 '''
-                pass
-
 
             if service_name is not None:
                 await self.hass.services.async_call('media_player', service_name, service_data)
@@ -114,6 +136,45 @@ class EntityAssistant:
                     return f'{friendly_name}的音量是{volume_level}%'
 
                 return f'音乐{text}'
+
+    async def async_tv(self, text):
+        ''' 电视 '''
+        if self.tv_id is not None:
+            service_name = None
+            service_data = {
+                'entity_id': self.tv_id
+            }
+            if text.startswith('我想看'):
+                pass
+                '''
+                service_name = 'play_media'
+                service_data.update({
+                    'media_content_type': 'video',
+                    'media_content_id': ''
+                })
+                '''
+
+            if service_name is not None:
+                await self.hass.services.async_call('media_player', service_name, service_data)
+                return text
+
+    async def async_xiaoai(self, text):
+        ''' 小爱音箱 '''
+        if self.xiaoai_id is not None and (text.startswith('小爱') or text.startswith('小艾')):
+            text = text[2:]
+            if text == '':
+                return None
+
+            service_data = {
+                'text': text,
+                'entity_id': self.xiaoai_id,
+                'execute': True,
+                'silent': True,
+                'throw': True
+            }
+            await self.hass.services.async_call('xiaomi_miot', 'intelligent_speaker', service_data)
+            return text
+
 
     async def async_calendar(self, text):
         if self.calendar_id is not None and '提醒我' in text:
