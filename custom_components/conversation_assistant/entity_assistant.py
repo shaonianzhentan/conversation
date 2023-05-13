@@ -35,6 +35,10 @@ class EntityAssistant:
         if result is not None:
             return result
 
+        result = await self.async_xiaodu(text)
+        if result is not None:
+            return result
+
     async def async_fm(self, text):
         ''' 广播电台 '''
         if self.fm_id is not None:
@@ -175,6 +179,19 @@ class EntityAssistant:
             await self.hass.services.async_call('xiaomi_miot', 'intelligent_speaker', service_data)
             return text
 
+    async def async_xiaodu(self, text):
+        ''' 小度音箱 '''
+        if self.xiaodu_id is not None and (text.startswith('小度') or text.startswith('小杜')):
+            text = text[2:]
+            if text == '':
+                return None
+
+            service_data = {
+                'text': text,
+                'entity_id': self.xiaodu_id
+            }
+            await self.hass.services.async_call('baidu', 'command', service_data)
+            return text
 
     async def async_calendar(self, text):
         if self.calendar_id is not None and '提醒我' in text:

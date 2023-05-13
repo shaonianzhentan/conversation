@@ -21,8 +21,9 @@
                     "calendar_id": "日历",
                     "music_id": "音乐",
                     "tv_id": "电视",
+                    "fm_id": "广播电台",
                     "xiaoai_id": "小爱音箱",
-                    "fm_id": "广播电台"
+                    "xiaodu_id": "小度音箱"
                 }
             }
         },
