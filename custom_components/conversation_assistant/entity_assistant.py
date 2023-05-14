@@ -3,6 +3,7 @@ _LOGGER = logging.getLogger(__name__)
 
 import recognizers_suite as Recognizers
 from recognizers_suite import Culture, ModelResult
+from radios import FilterBy, Order, RadioBrowser
 
 class EntityAssistant:
 
@@ -11,8 +12,9 @@ class EntityAssistant:
         self.calendar_id = config.get('calendar_id')
         self.music_id = config.get('music_id')
         self.tv_id = config.get('tv_id')
-        self.xiaoai_id = config.get('xiaoai_id')
         self.fm_id = config.get('fm_id')
+        self.xiaoai_id = config.get('xiaoai_id')
+        self.xiaodu_id = config.get('xiaodu_id')
 
     async def async_process(self, text):
         result = await self.async_calendar(text)
@@ -41,14 +43,28 @@ class EntityAssistant:
 
     async def async_fm(self, text):
         ''' 广播电台 '''
-        if self.fm_id is not None:
-            service_name = None
-            service_data = { 'entity_id': self.fm_id }
+        if self.fm_id is not None and '广播' in text:
             # 搜索广播电台
-
-            if service_name is not None:
-                await self.hass.services.async_call('media_player', service_name, service_data)
-                return text
+            async with RadioBrowser(user_agent="MyAwesomeApp/1.0.0") as radios:
+                # https://de1.api.radio-browser.info/json/stations/bylanguage/chinese?hidebroken=true&order=changetimestamp
+                stations = await radios.stations(
+                    filter_by=FilterBy.LANGUAGE,
+                    filter_term='chinese',
+                    hide_broken=True,
+                    order=Order.CHANGE_TIMESTAMP,
+                    reverse=False,
+                )
+                collect = filter(lambda x: x.name == text, stations)
+                for item in collect:
+                    print(item)
+                    await self.hass.services.async_call('media_player', 'play_media', { 
+                        'entity_id': self.fm_id,
+                        'media_content_type': 'music',
+                        'media_content_id': item.url
+                    })
+                    state = self.hass.states.get(self.fm_id)
+                    friendly_name = state.attributes.get('friendly_name', '')
+                    return f'正在{friendly_name}上播放{text}'
 
     async def async_music(self, text):
         if self.music_id is not None:
