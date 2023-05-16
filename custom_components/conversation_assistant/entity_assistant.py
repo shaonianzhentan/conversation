@@ -4,6 +4,7 @@ _LOGGER = logging.getLogger(__name__)
 import recognizers_suite as Recognizers
 from recognizers_suite import Culture, ModelResult
 from radios import FilterBy, Order, RadioBrowser
+from .iptv import IPTV
 
 class EntityAssistant:
 
@@ -15,6 +16,8 @@ class EntityAssistant:
         self.fm_id = config.get('fm_id')
         self.xiaoai_id = config.get('xiaoai_id')
         self.xiaodu_id = config.get('xiaodu_id')
+
+        self.iptv = IPTV()
 
     async def async_process(self, text):
         result = await self.async_calendar(text)
@@ -151,7 +154,7 @@ class EntityAssistant:
                 # 返回音量信息
                 if ['volume_up', 'volume_down'].count(service_name) == 1:
                     state = self.hass.states.get(self.music_id)
-                    friendly_name = state.attributes.get('friendly_name', '')
+                    friendly_name = state.attributes.get('friendly_name')
                     volume_level = state.attributes.get("volume_level", 0) * 100
                     return f'{friendly_name}的音量是{volume_level}%'
 
@@ -160,23 +163,20 @@ class EntityAssistant:
     async def async_tv(self, text):
         ''' 电视 '''
         if self.tv_id is not None:
-            service_name = None
-            service_data = {
-                'entity_id': self.tv_id
-            }
             if text.startswith('我想看'):
-                pass
-                '''
-                service_name = 'play_media'
-                service_data.update({
-                    'media_content_type': 'video',
-                    'media_content_id': ''
-                })
-                '''
+                text = text[3:]
+                if text == '':
+                    return None
 
-            if service_name is not None:
-                await self.hass.services.async_call('media_player', service_name, service_data)
-                return text
+                item = self.iptv.search_item(text)
+                await self.hass.services.async_call('media_player', 'play_media', {
+                    'media_content_type': 'video',
+                    'media_content_id': item.url,
+                    'entity_id': self.tv_id
+                })
+                state = self.hass.states.get(self.tv_id)
+                friendly_name = state.attributes.get('friendly_name')
+                return f'正在{friendly_name}上播放{item.title}'
 
     async def async_xiaoai(self, text):
         ''' 小爱音箱 '''
