@@ -75,11 +75,7 @@ class ConversationAssistant():
                     if reply is not None:
                         return self.intent_result(self.template(var_str + reply).strip(), extra_data)
                     # default reply
-                    return self.intent_result(f'执行脚本：{entity_id}', extra_data)                
-                elif ['input_button', 'button'].count(domain) == 'button' and entity_name == text:
-                    # 完全匹配时点击按钮
-                    self.call_service_entity(f'{domain}.press', entity_id)
-                    return self.intent_result(f'{entity_name}按钮被点击')
+                    return self.intent_result(f'执行脚本：{entity_id}', extra_data)
             elif isinstance(result, list):
                 result_message = []
                 for item in result:
@@ -108,6 +104,10 @@ class ConversationAssistant():
                             temperature = item['temperature']
                             templow = item['templow']
                             result_message.append(f'{date}天气{WEATHER_STATE.get(condition, condition)}，最高温度{temperature} {unit}，最低温度{templow} {unit}')
+                    elif ['input_button', 'button'].count(domain) > 0 and entity_name == text:
+                        # 完全匹配时点击按钮
+                        self.call_service_entity(f'{domain}.press', entity_id)
+                        return self.intent_result(f'点击{entity_name}按钮')
                     else:
                         result_message.append(f'{domain}{entity_name}：{entity_state}')
 
