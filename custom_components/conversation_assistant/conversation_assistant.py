@@ -75,7 +75,11 @@ class ConversationAssistant():
                     if reply is not None:
                         return self.intent_result(self.template(var_str + reply).strip(), extra_data)
                     # default reply
-                    return self.intent_result(f'执行脚本：{entity_id}', extra_data)
+                    return self.intent_result(f'执行脚本：{entity_id}', extra_data)                
+                elif ['input_button', 'button'].count(domain) == 'button' and entity_name == text:
+                    # 完全匹配时点击按钮
+                    self.call_service_entity(f'{domain}.press', entity_id)
+                    return self.intent_result(f'{entity_name}按钮被点击')
             elif isinstance(result, list):
                 result_message = []
                 for item in result:
