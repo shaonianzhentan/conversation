@@ -169,14 +169,15 @@ class EntityAssistant:
                     return None
 
                 item = self.iptv.search_item(text)
-                await self.hass.services.async_call('media_player', 'play_media', {
-                    'media_content_type': 'video',
-                    'media_content_id': item.url,
-                    'entity_id': self.tv_id
-                })
-                state = self.hass.states.get(self.tv_id)
-                friendly_name = state.attributes.get('friendly_name')
-                return f'正在{friendly_name}上播放{item.title}'
+                if item is not None:
+                    await self.hass.services.async_call('media_player', 'play_media', {
+                        'media_content_type': 'video',
+                        'media_content_id': item.url,
+                        'entity_id': self.tv_id
+                    })
+                    state = self.hass.states.get(self.tv_id)
+                    friendly_name = state.attributes.get('friendly_name')
+                    return f'正在{friendly_name}上播放{item.title}'
 
     async def async_xiaoai(self, text):
         ''' 小爱音箱 '''
