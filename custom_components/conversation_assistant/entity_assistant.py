@@ -172,12 +172,14 @@ class EntityAssistant:
                 if item is not None:
                     await self.hass.services.async_call('media_player', 'play_media', {
                         'media_content_type': 'video',
-                        'media_content_id': item.url,
+                        'media_content_id': item.path,
                         'entity_id': self.tv_id
                     })
                     state = self.hass.states.get(self.tv_id)
                     friendly_name = state.attributes.get('friendly_name')
                     return f'正在{friendly_name}上播放{item.title}'
+                else:
+                    return f'没有找到{friendly_name}'
 
     async def async_xiaoai(self, text):
         ''' 小爱音箱 '''
