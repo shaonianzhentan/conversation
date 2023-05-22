@@ -83,7 +83,7 @@ script.1652361988272:
     - 把灯设成{color}
 ```
 
-> 微信回复
+## 微信控制自定义回复
 
 图文信息
 ```yaml
@@ -104,7 +104,7 @@ script.1652361988272:
     url: http://music.163.com/song/media/outer/url?id=563563649.mp3
 ```
 
-> Node-Red 和 自动化
+## Node-Red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
 
 ## 功能
