@@ -169,7 +169,7 @@ class EntityAssistant:
                 if text == '':
                     return None
 
-                item = self.iptv.search_item(text)
+                item = await self.iptv.async_search_play(text)
                 if item is not None:
                     await self.hass.services.async_call('media_player', 'play_media', {
                         'media_content_type': 'video',
@@ -180,7 +180,7 @@ class EntityAssistant:
                     friendly_name = state.attributes.get('friendly_name')
                     return f'正在{friendly_name}上播放{item.title}'
                 else:
-                    return f'没有找到{friendly_name}'
+                    return f'没有找到{text}'
 
     async def async_xiaoai(self, text):
         ''' 小爱音箱 '''

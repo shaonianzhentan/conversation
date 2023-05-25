@@ -98,7 +98,8 @@ class IPTV():
 
         if is_download:
             print('拉取最新资源')
-            m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/iptv-org/iptv/master/streams/cn.m3u'
+            #m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/iptv-org/iptv/master/streams/cn.m3u'
+            m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/master/TV-IPV4.m3u'
             # 下载文件
             request_timeout = aiohttp.ClientTimeout(total=10)
             async with aiohttp.ClientSession(timeout=request_timeout) as session:
@@ -130,3 +131,18 @@ class IPTV():
         item = await self.search_item(name)
         if item is not None:
             return item.path
+
+    async def async_search_play(self, name):
+        ''' 搜索可播放项 '''
+        items = await self.search_list(name)
+        if items is not None:
+            request_timeout = aiohttp.ClientTimeout(total=2)
+            for item in items:
+                print(item.title, item.path)
+                try:
+                    async with aiohttp.ClientSession(timeout=request_timeout) as session:
+                        async with session.get(item.path) as response:
+                            print(response.status)
+                            return item.path
+                except Exception as ex:
+                    pass
