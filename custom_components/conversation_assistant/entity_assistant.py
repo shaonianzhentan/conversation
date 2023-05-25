@@ -18,6 +18,7 @@ class EntityAssistant:
         self.xiaodu_id = config.get('xiaodu_id')
 
         self.iptv = IPTV()
+        hass.data.setdefault('conversation_iptv', self.iptv)
 
     async def async_process(self, text):
         result = await self.async_calendar(text)
