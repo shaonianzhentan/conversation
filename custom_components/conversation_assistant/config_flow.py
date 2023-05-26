@@ -51,10 +51,12 @@ class OptionsFlowHandler(OptionsFlow):
                 del user_input['music_id']
             if user_input.get('tv_id') == default_name:
                 del user_input['tv_id']
-            if user_input.get('xiaoai_id') == default_name:
-                del user_input['xiaoai_id']
             if user_input.get('fm_id') == default_name:
                 del user_input['fm_id']
+            if user_input.get('xiaoai_id') == default_name:
+                del user_input['xiaoai_id']
+            if user_input.get('xiaodu_id') == default_name:
+                del user_input['xiaodu_id']
             return self.async_create_entry(title='', data=user_input)
 
         calendar_states = self.hass.states.async_all('calendar')
@@ -62,14 +64,30 @@ class OptionsFlowHandler(OptionsFlow):
         calendar_entities.append(default_name)
 
         media_states = self.hass.states.async_all('media_player')
-        media_entities = list(map(lambda x: x.entity_id, media_states))
-        media_entities.append(default_name)
+
+        media_entities = [ default_name ]
+        music_media_entities = [ default_name ]
+        xiaoai_media_entities = [ default_name ]
+        xiaodu_media_entities = [ default_name ]
+
+        for state in media_states:
+            if state.attributes.get('platform') == 'cloud_music':
+                music_media_entities.append(state.entity_id)
+                continue
+            if state.attributes.get('platform') == 'xiaodu':
+                xiaodu_media_entities.append(state.entity_id)
+                continue
+            if state.attributes.get('xiaoai_id') is not None:
+                xiaoai_media_entities.append(state.entity_id)
+                continue
+            media_entities.append(state.entity_id)
 
         DATA_SCHEMA = vol.Schema({
             vol.Optional("calendar_id", default=options.get('calendar_id', default_name)): vol.In(calendar_entities),
-            vol.Optional("music_id", default=options.get('music_id', default_name)): vol.In(media_entities),
+            vol.Optional("music_id", default=options.get('music_id', default_name)): vol.In(music_media_entities),
             vol.Optional("tv_id", default=options.get('tv_id', default_name)): vol.In(media_entities),
-            vol.Optional("xiaoai_id", default=options.get('xiaoai_id', default_name)): vol.In(media_entities),
-            vol.Optional("fm_id", default=options.get('fm_id', default_name)): vol.In(media_entities)
+            vol.Optional("fm_id", default=options.get('fm_id', default_name)): vol.In(media_entities),
+            vol.Optional("xiaoai_id", default=options.get('xiaoai_id', default_name)): vol.In(xiaoai_media_entities),
+            vol.Optional("xiaodu_id", default=options.get('xiaodu_id', default_name)): vol.In(xiaodu_media_entities)
         })
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)

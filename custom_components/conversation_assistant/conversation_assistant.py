@@ -104,6 +104,10 @@ class ConversationAssistant():
                             temperature = item['temperature']
                             templow = item['templow']
                             result_message.append(f'{date}天气{WEATHER_STATE.get(condition, condition)}，最高温度{temperature} {unit}，最低温度{templow} {unit}')
+                    elif ['input_button', 'button'].count(domain) > 0 and entity_name == text:
+                        # 完全匹配时点击按钮
+                        self.call_service_entity(f'{domain}.press', entity_id)
+                        return self.intent_result(f'点击{entity_name}按钮')
                     else:
                         result_message.append(f'{domain}{entity_name}：{entity_state}')
 

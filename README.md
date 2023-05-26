@@ -46,60 +46,67 @@
 - `一个时间点`提醒我`要做的事`
 - `八点半`提醒我`洗碗`
 
-### 电视（待实现）
-
-- 我想看 `中央一台`
-- 更多...
-
-### 小爱音箱（待实现）
+### 小爱音箱（控制接入米家的设备）
 
 - 小爱`打开卫生间的灯`
 - 小艾`打开卫生间的灯`
 
-### 广播电台（待实现）
+### 小度音箱（控制接入小度的设备）
+
+- 小度`打开卫生间的灯`
+- 小杜`打开卫生间的灯`
+
+### 电视（待测试）
+
+- 我想看 `cctv`
+- 更多...
+
+### 广播电台（待测试）
 
 - 中央人民广播电台
 - 仙桃人民广播电台
 - 更多...
 
-## 执行脚本
+## 执行脚本&自定义答复
 - 执行脚本（脚本名称=语音文本）
-- 自定义回复定义 `customize.yaml`
+- 自定义回复定义
+
+configuration.yaml
 ```yaml
+homeassistant:
+  customize: !include customize.yaml
+```
+
+customize.yaml
+```yaml
+# 自定义回复
 script.1652361988272:
   reply: '回复内容，支持模板语法{{ now() }}'
-```
-- 正则匹配
-```yaml
-script.1652361988272:
+
+# 正则匹配
+script.1652361988273:
   reply: 'OK, 灯已经设为{{ color }}'
   intents:
     - 把灯设为{color}
     - 把灯设成{color}
-```
 
-> 微信回复
-
-图文信息
-```yaml
-script.1652361988272:
+# 微信图文回复
+script.1652361988274:
   reply: 将url参数删除，图文信息会不可点击
   extra_data:
     type: wx-image
     picurl: https://ha.jiluxinqing.com/img/wechat.png
     url: https://ha.jiluxinqing.com
-```
 
-音乐链接
-```yaml
-script.1652361988272:
+# 微信音乐回复
+script.1652361988275:
   reply: 注意，url音乐链接中不能包含&字符
   extra_data:
     type: wx-music
     url: http://music.163.com/song/media/outer/url?id=563563649.mp3
 ```
 
-> Node-Red 和 自动化
+## Node-Red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
 
 ## 功能

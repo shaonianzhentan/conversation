@@ -3,6 +3,8 @@ _LOGGER = logging.getLogger(__name__)
 
 import recognizers_suite as Recognizers
 from recognizers_suite import Culture, ModelResult
+from radios import FilterBy, Order, RadioBrowser
+from .iptv import IPTV
 
 class EntityAssistant:
 
@@ -11,8 +13,12 @@ class EntityAssistant:
         self.calendar_id = config.get('calendar_id')
         self.music_id = config.get('music_id')
         self.tv_id = config.get('tv_id')
-        self.xiaoai_id = config.get('xiaoai_id')
         self.fm_id = config.get('fm_id')
+        self.xiaoai_id = config.get('xiaoai_id')
+        self.xiaodu_id = config.get('xiaodu_id')
+
+        self.iptv = IPTV()
+        hass.data.setdefault('conversation_iptv', self.iptv)
 
     async def async_process(self, text):
         result = await self.async_calendar(text)
@@ -35,16 +41,34 @@ class EntityAssistant:
         if result is not None:
             return result
 
+        result = await self.async_xiaodu(text)
+        if result is not None:
+            return result
+
     async def async_fm(self, text):
         ''' 广播电台 '''
-        if self.fm_id is not None:
-            service_name = None
-            service_data = { 'entity_id': self.fm_id }
+        if self.fm_id is not None and '广播' in text:
             # 搜索广播电台
-
-            if service_name is not None:
-                await self.hass.services.async_call('media_player', service_name, service_data)
-                return text
+            async with RadioBrowser(user_agent="MyAwesomeApp/1.0.0") as radios:
+                # https://de1.api.radio-browser.info/json/stations/bylanguage/chinese?hidebroken=true&order=changetimestamp
+                stations = await radios.stations(
+                    filter_by=FilterBy.LANGUAGE,
+                    filter_term='chinese',
+                    hide_broken=True,
+                    order=Order.CHANGE_TIMESTAMP,
+                    reverse=False,
+                )
+                collect = filter(lambda x: x.name == text, stations)
+                for item in collect:
+                    print(item)
+                    await self.hass.services.async_call('media_player', 'play_media', { 
+                        'entity_id': self.fm_id,
+                        'media_content_type': 'music',
+                        'media_content_id': item.url
+                    })
+                    state = self.hass.states.get(self.fm_id)
+                    friendly_name = state.attributes.get('friendly_name', '')
+                    return f'正在{friendly_name}上播放{text}'
 
     async def async_music(self, text):
         if self.music_id is not None:
@@ -131,7 +155,7 @@ class EntityAssistant:
                 # 返回音量信息
                 if ['volume_up', 'volume_down'].count(service_name) == 1:
                     state = self.hass.states.get(self.music_id)
-                    friendly_name = state.attributes.get('friendly_name', '')
+                    friendly_name = state.attributes.get('friendly_name')
                     volume_level = state.attributes.get("volume_level", 0) * 100
                     return f'{friendly_name}的音量是{volume_level}%'
 
@@ -140,23 +164,23 @@ class EntityAssistant:
     async def async_tv(self, text):
         ''' 电视 '''
         if self.tv_id is not None:
-            service_name = None
-            service_data = {
-                'entity_id': self.tv_id
-            }
             if text.startswith('我想看'):
-                pass
-                '''
-                service_name = 'play_media'
-                service_data.update({
-                    'media_content_type': 'video',
-                    'media_content_id': ''
-                })
-                '''
+                text = text[3:]
+                if text == '':
+                    return None
 
-            if service_name is not None:
-                await self.hass.services.async_call('media_player', service_name, service_data)
-                return text
+                item = await self.iptv.async_search_play(text)
+                if item is not None:
+                    await self.hass.services.async_call('media_player', 'play_media', {
+                        'media_content_type': 'video',
+                        'media_content_id': item.path,
+                        'entity_id': self.tv_id
+                    })
+                    state = self.hass.states.get(self.tv_id)
+                    friendly_name = state.attributes.get('friendly_name')
+                    return f'正在{friendly_name}上播放{item.title}'
+                else:
+                    return f'没有找到{text}'
 
     async def async_xiaoai(self, text):
         ''' 小爱音箱 '''
@@ -175,6 +199,19 @@ class EntityAssistant:
             await self.hass.services.async_call('xiaomi_miot', 'intelligent_speaker', service_data)
             return text
 
+    async def async_xiaodu(self, text):
+        ''' 小度音箱 '''
+        if self.xiaodu_id is not None and (text.startswith('小度') or text.startswith('小杜')):
+            text = text[2:]
+            if text == '':
+                return None
+
+            service_data = {
+                'text': text,
+                'entity_id': self.xiaodu_id
+            }
+            await self.hass.services.async_call('baidu', 'command', service_data)
+            return text
 
     async def async_calendar(self, text):
         if self.calendar_id is not None and '提醒我' in text:

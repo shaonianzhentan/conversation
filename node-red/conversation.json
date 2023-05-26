@@ -1,0 +1,81 @@
+[
+    {
+        "id": "929f4fd56b1a4bd9",
+        "type": "tab",
+        "label": "流程 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "bda6f0961d92be76",
+        "type": "server-events",
+        "z": "929f4fd56b1a4bd9",
+        "name": "",
+        "server": "2f7d62715f3f4eec",
+        "version": 1,
+        "event_type": "conversation",
+        "exposeToHomeAssistant": false,
+        "haConfig": [
+            {
+                "property": "name",
+                "value": ""
+            },
+            {
+                "property": "icon",
+                "value": ""
+            }
+        ],
+        "waitForRunning": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "$outputData(\"eventData\").event_type",
+                "valueType": "jsonata"
+            }
+        ],
+        "x": 210,
+        "y": 240,
+        "wires": [
+            [
+                "d714a7740cab9c3d"
+            ]
+        ]
+    },
+    {
+        "id": "d714a7740cab9c3d",
+        "type": "debug",
+        "z": "929f4fd56b1a4bd9",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "2f7d62715f3f4eec",
+        "type": "server",
+        "name": "Home Assistant",
+        "version": 2,
+        "addon": false,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": "y|yes|true|on|home|open",
+        "connectionDelay": true,
+        "cacheJson": true,
+        "heartbeat": false,
+        "heartbeatInterval": "30"
+    }
+]
