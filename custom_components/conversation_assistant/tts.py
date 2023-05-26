@@ -19,4 +19,5 @@ class ConversationTextToSpeechEntity(TextToSpeechEntity):
         return ["zh-cn", "zh-hk", "zh-tw"]
 
     async def async_get_tts_audio(self, message: str, language: str, options):
-        return None
+        buffer = None
+        return 'mp3', buffer
