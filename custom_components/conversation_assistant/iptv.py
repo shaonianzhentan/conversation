@@ -1,6 +1,5 @@
 import os, aiohttp, time
 
-
 class track():
     def __init__(self, group, title, path):
         self.group = group
