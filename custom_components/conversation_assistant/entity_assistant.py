@@ -1,10 +1,12 @@
-import logging, datetime, re
+import logging, datetime, re, random
 _LOGGER = logging.getLogger(__name__)
 
 import recognizers_suite as Recognizers
 from recognizers_suite import Culture, ModelResult
-from radios import FilterBy, Order, RadioBrowser
-from .iptv import IPTV
+from urllib.parse import urlparse, parse_qs, parse_qsl, quote
+from .api_iptv import IPTV
+from .api_http import http_get
+from aiodns import DNSResolver
 
 class EntityAssistant:
 
@@ -47,28 +49,34 @@ class EntityAssistant:
 
     async def async_fm(self, text):
         ''' 广播电台 '''
-        if self.fm_id is not None and '广播' in text:
-            # 搜索广播电台
-            async with RadioBrowser(user_agent="MyAwesomeApp/1.0.0") as radios:
-                # https://de1.api.radio-browser.info/json/stations/bylanguage/chinese?hidebroken=true&order=changetimestamp
-                stations = await radios.stations(
-                    filter_by=FilterBy.LANGUAGE,
-                    filter_term='chinese',
-                    hide_broken=True,
-                    order=Order.CHANGE_TIMESTAMP,
-                    reverse=False,
-                )
-                collect = filter(lambda x: x.name == text, stations)
-                for item in collect:
-                    print(item)
-                    await self.hass.services.async_call('media_player', 'play_media', { 
-                        'entity_id': self.fm_id,
-                        'media_content_type': 'music',
-                        'media_content_id': item.url
-                    })
-                    state = self.hass.states.get(self.fm_id)
-                    friendly_name = state.attributes.get('friendly_name', '')
-                    return f'正在{friendly_name}上播放{text}'
+        if self.fm_id is not None and text.startswith('播放广播'):
+            text = text[4:]
+            resolver = DNSResolver()
+            result = await resolver.query("_api._tcp.radio-browser.info", "SRV")
+            random.shuffle(result)
+            radio_api = f'https://{result[0].host}/json/'
+
+            if text == '':
+                url = f'{radio_api}stations/search?limit=30&countrycode=CN&hidebroken=true&order=clickcount&reverse=true'
+                index = random.randint(0,29)
+            else:
+                url = f'{radio_api}stations/search?limit=2&name={quote(text)}&hidebroken=true&order=clickcount&reverse=true'
+                index = 0
+
+            result = await http_get(url)
+            if result is not None and len(result) > 0:
+                item = result[index]
+                print(item)
+                play_name = item['name']
+                play_url = item['url']
+                await self.hass.services.async_call('media_player', 'play_media', {
+                    'entity_id': self.fm_id,
+                    'media_content_type': 'music',
+                    'media_content_id': play_url
+                })
+                state = self.hass.states.get(self.fm_id)
+                friendly_name = state.attributes.get('friendly_name', '')
+                return f'正在{friendly_name}上播放{play_name}'
 
     async def async_music(self, text):
         if self.music_id is not None:
@@ -163,8 +171,7 @@ class EntityAssistant:
 
     async def async_tv(self, text):
         ''' 电视 '''
-        if self.tv_id is not None:
-            if text.startswith('我想看'):
+        if self.tv_id is not None and text.startswith('我想看'):
                 text = text[3:]
                 if text == '':
                     return None
@@ -186,16 +193,22 @@ class EntityAssistant:
         ''' 小爱音箱 '''
         if self.xiaoai_id is not None and (text.startswith('小爱') or text.startswith('小艾')):
             text = text[2:]
-            if text == '':
-                return None
 
             service_data = {
-                'text': text,
                 'entity_id': self.xiaoai_id,
-                'execute': True,
-                'silent': True,
                 'throw': True
             }
+            if text == '':
+                # 唤醒音乐
+                await self.hass.services.async_call('xiaomi_miot', 'xiaoai_wakeup', service_data)
+                return '小爱音箱正在聆听中...'
+
+            # 执行命令
+            service_data.update({
+                'text': text,
+                'execute': True,
+                'silent': True
+            })
             await self.hass.services.async_call('xiaomi_miot', 'intelligent_speaker', service_data)
             return text
 
