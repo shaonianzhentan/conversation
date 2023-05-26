@@ -106,6 +106,14 @@ script.1652361988275:
     url: http://music.163.com/song/media/outer/url?id=563563649.mp3
 ```
 
+## 公众号教程
+
+- [安装配置语音小助手插件](https://mp.weixin.qq.com/s/aRqxIvITqDdjQYB3lBZ5tg)
+- [意图脚本：简单的自定义指令](https://mp.weixin.qq.com/s/kzw1Rfvtx5lF3UyGfcNU9g)
+- [语音助手内置的控制命令](https://mp.weixin.qq.com/s/vNQk6YjP6q9d4RZgrzMnRA)
+- [一句话使用微信控制米家设备](https://mp.weixin.qq.com/s/k8AipEMZZwGrZx5zVBrBnQ)
+
+
 ## Node-Red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
 
