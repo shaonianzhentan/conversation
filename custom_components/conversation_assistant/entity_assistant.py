@@ -48,8 +48,9 @@ class EntityAssistant:
             return result
 
     async def async_fm(self, text):
-        ''' 广播电台 '''
-        if self.fm_id is not None and text.startswith('播放广播'):
+        ''' 广播 '''
+        entity_id = self.fm_id or self.music_id
+        if text.startswith('播放广播') and entity_id:
             text = text[4:]
             resolver = DNSResolver()
             result = await resolver.query("_api._tcp.radio-browser.info", "SRV")
@@ -70,15 +71,16 @@ class EntityAssistant:
                 play_name = item['name']
                 play_url = item['url']
                 await self.hass.services.async_call('media_player', 'play_media', {
-                    'entity_id': self.fm_id,
+                    'entity_id': entity_id,
                     'media_content_type': 'music',
                     'media_content_id': play_url
                 })
-                state = self.hass.states.get(self.fm_id)
+                state = self.hass.states.get(entity_id)
                 friendly_name = state.attributes.get('friendly_name', '')
                 return f'正在{friendly_name}上播放{play_name}'
 
     async def async_music(self, text):
+        ''' 音乐 '''
         if self.music_id is not None:
             service_name = None
             service_data = {
