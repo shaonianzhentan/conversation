@@ -108,6 +108,7 @@ script.1652361988275:
 
 ## 公众号教程
 
+`请在微信中打开，查看底部更多评论，一起沟通交流`
 - [安装配置语音小助手插件](https://mp.weixin.qq.com/s/aRqxIvITqDdjQYB3lBZ5tg)
 - [意图脚本：简单的自定义指令](https://mp.weixin.qq.com/s/kzw1Rfvtx5lF3UyGfcNU9g)
 - [语音助手内置的控制命令](https://mp.weixin.qq.com/s/vNQk6YjP6q9d4RZgrzMnRA)
