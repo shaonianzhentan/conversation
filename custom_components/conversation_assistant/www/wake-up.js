@@ -64,7 +64,8 @@ customElements.whenDefined("hui-view").then(() => {
             const shadow = this.attachShadow({ mode: 'open' });
             shadow.innerHTML = `
                 <style>
-                    .card-header{
+                    .card-header,
+                    .header-footer{
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
@@ -81,11 +82,9 @@ customElements.whenDefined("hui-view").then(() => {
                 </style>
                 <ha-card>
                     <h1 class="card-header">
-                        <div class="name">
-                            语音唤醒
-                        </div>
+                        <div class="name">语音唤醒</div>
                         <ha-switch></ha-switch>
-                    </h1>                
+                    </h1>
                     <div id="states" class="card-content">
                         <ha-select label="唤醒词">   
                             ${this.keywords.map((word) => `<mwc-list-item value="${word}">${word}</mwc-list-item>`).join('')}
@@ -99,7 +98,11 @@ customElements.whenDefined("hui-view").then(() => {
                         </div>
                         <ha-textfield label="控制命令"></ha-textfield>
                     </div>
-            </ha-card>`
+                    <div class="header-footer footer">
+                        <div class="name">语音答复</div>
+                        <ha-switch></ha-switch>
+                    </div>
+                </ha-card>`
             const input = shadow.querySelector('ha-textfield')
             input.onkeypress = (event) => {
                 if (event.keyCode == 13) {
@@ -117,19 +120,24 @@ customElements.whenDefined("hui-view").then(() => {
                 return
             }
 
-            const toggle = shadow.querySelector('ha-switch')
-
-            const wakeUpSwitch = WakeUpStorage.switch
-            if (wakeUpSwitch) {
-                toggle.checked = wakeUpSwitch
-                this.toast('刷新页面生效')
-            }
+            // 语音唤醒
+            const toggle = shadow.querySelector('.card-header ha-switch');
+            if(typeof WakeUpStorage.switch == 'boolean') toggle.checked = WakeUpStorage.switch;
 
             toggle.onchange = () => {
                 WakeUpStorage.switch = toggle.checked
                 this.toast('刷新页面生效')
             }
 
+            // 语音答复
+            const toggleSpeech = shadow.querySelector('.header-footer ha-switch');
+            if(typeof WakeUpStorage.speech == 'boolean') toggleSpeech.checked = WakeUpStorage.speech;
+
+            toggleSpeech.onchange = () => {
+                WakeUpStorage.speech = toggleSpeech.checked
+            }
+
+            // 唤醒词
             const hey = shadow.querySelector('ha-select')
             const wakeUpKey = WakeUpStorage.key
             if (wakeUpKey) {
