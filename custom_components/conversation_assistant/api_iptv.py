@@ -98,6 +98,7 @@ class IPTV():
         if is_download:
             print('拉取最新资源')
             #m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/iptv-org/iptv/master/streams/cn.m3u'
+            #m3u_url = 'https://epg.pw/test_channels_china.m3u'
             m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/master/TV-IPV4.m3u'
             # 下载文件
             request_timeout = aiohttp.ClientTimeout(total=10)
