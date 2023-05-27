@@ -14,6 +14,11 @@
 
 [![badge](https://img.shields.io/badge/QQ交流群-61417349-76beff?logo=tencentqq&style=for-the-badge)](https://qm.qq.com/cgi-bin/qm/qr?k=aoYbEJzQ8MiieLhvQfhE_Ck1vLENuErf&jump_from=webapi&authKey=FT+TXsLXVNUtYY9G0q82vrBTxVT8axAg2C/tP9U1x9JioabEAbzVB7sPVGy/nIHN)
 
+## 功能
+
+- 浏览器语音唤醒
+- 文本控制
+
 ## 配置
 
 安装完成后重启HA，刷新一下页面，在集成里搜索`语音小助手`
@@ -118,11 +123,6 @@ script.1652361988275:
 
 ## Node-Red 和 自动化
 - 监听`conversation`事件，命令文本参数：`text`
-
-## 功能
-
-- 语音唤醒
-- 文本控制
 
 ## 如果这个项目对你有帮助，请我喝杯<del style="font-size: 14px;">咖啡</del>奶茶吧😘
 |支付宝|微信|
