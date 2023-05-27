@@ -30,8 +30,8 @@ def parseM3U(infile):
         line=line.strip()
         if line.startswith('#EXTINF:'):
             # pull length and title from #EXTINF line
-            info,title=line.split('#EXTINF:')[1].split(',',1)
-            #print(info, title)
+            extinf=line.split('#EXTINF:')[1].split(',')
+            title = extinf[-1]
 
             # 过滤失效
             if '[Timeout]' in title or '[Geo-blocked]' in title:
@@ -80,6 +80,7 @@ class IPTV():
     def __init__(self) -> None:
         self.playlist = []
         self.groups = []
+        self.index = 0
 
     async def get_list(self):
         m3ufile = 'iptv.m3u'
@@ -98,7 +99,9 @@ class IPTV():
         if is_download:
             print('拉取最新资源')
             #m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/iptv-org/iptv/master/streams/cn.m3u'
-            m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/master/TV-IPV4.m3u'
+            #m3u_url = 'https://epg.pw/test_channels_china.m3u'
+            #m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/master/TV-IPV4.m3u'
+            m3u_url = 'https://ghproxy.com/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u'
             # 下载文件
             request_timeout = aiohttp.ClientTimeout(total=10)
             async with aiohttp.ClientSession(timeout=request_timeout) as session:
@@ -120,10 +123,9 @@ class IPTV():
 
     async def search_item(self, name):
         ''' 列表项搜索 '''
-        playlist = await self.get_list()
-        _list = list(filter(lambda x: name.lower() in x.title.lower(), playlist))
-        if len(_list) > 0:
-            return _list[0]
+        playlist = await self.search_list(name)
+        if len(playlist) > 0:
+            return playlist[0]
 
     async def search_url(self, name):
         ''' 播放URL搜索 '''
@@ -142,6 +144,6 @@ class IPTV():
                     async with aiohttp.ClientSession(timeout=request_timeout) as session:
                         async with session.get(item.path) as response:
                             print(response.status)
-                            return item.path
+                            return item
                 except Exception as ex:
                     pass

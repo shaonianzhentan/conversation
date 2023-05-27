@@ -56,50 +56,63 @@ customElements.whenDefined("hui-view").then(() => {
                 "Terminator"
             ]
             this.render()
-
         }
 
         // 创建界面
         render() {
+            const isSupport = location.protocol == 'https:' || location.hostname == 'localhost'
+
             const shadow = this.attachShadow({ mode: 'open' });
             shadow.innerHTML = `
                 <style>
-                    .card-header{
+                    .card-header,
+                    .header-footer{
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
                     }
-                    ha-select,ha-textfield{width:100%;}
-                    .tips{display:none;}
-                    .hide ha-switch,
-                    .hide ha-select{
+                    ha-select, ha-textfield{width:100%;}
+                    .tips-n{ display:none; }
+                    .tips-y{ color: gray;}
+                    .hide .tips-y {
                         display:none;
                     }
-                    .hide .tips{
+                    .hide .tips-n{
                         display:block;
+                    }
+                    .header-footer{
+                        padding: 0 20px 15px 20px;
+                        font-size: 18px;
                     }
                 </style>
                 <ha-card>
                     <h1 class="card-header">
-                        <div class="name">
-                            语音唤醒
-                        </div>
+                        <div class="name">语音唤醒</div>
                         <ha-switch></ha-switch>
-                    </h1>                
+                    </h1>
                     <div id="states" class="card-content">
+                        <div class="tips">
+                            <div class="tips-n">
+                                当前环境不支持语音唤醒，请使用<b>https</b>协议访问
+                                <br/>
+                                <a href="${location.href.replace('http://', 'https://')}" target="ha">
+                                    ${location.href.replace('http://', 'https://')}
+                                </a>
+                            </div>
+                            <div class="tips-y">
+                                ${WakeUpStorage.switch ? `正在监听唤醒词<mark> ${WakeUpStorage.key || 'Hey Google'} </mark>，请唤醒使用吧` : '打开语音唤醒，使用语音控制Home Assistant吧'}
+                            </div>                            
+                        </div>
                         <ha-select label="唤醒词">   
                             ${this.keywords.map((word) => `<mwc-list-item value="${word}">${word}</mwc-list-item>`).join('')}
                         </ha-select>
-                        <div class="tips">
-                            当前环境不支持语音唤醒，请使用<b>https</b>协议访问
-                            <br/>
-                            <a href="${location.href.replace('http://', 'https://')}" target="ha">
-                                ${location.href.replace('http://', 'https://')}
-                            </a>
-                        </div>
                         <ha-textfield label="控制命令"></ha-textfield>
                     </div>
-            </ha-card>`
+                    <div class="header-footer footer">
+                        <div class="name">语音答复</div>
+                        <ha-switch></ha-switch>
+                    </div>
+                </ha-card>`
             const input = shadow.querySelector('ha-textfield')
             input.onkeypress = (event) => {
                 if (event.keyCode == 13) {
@@ -112,30 +125,34 @@ customElements.whenDefined("hui-view").then(() => {
                 }
             }
 
-            if (!(location.protocol == 'https:' || location.hostname == 'localhost')) {
+            if (!isSupport) {
                 shadow.querySelector('ha-card').classList.add('hide')
                 return
             }
 
-            const toggle = shadow.querySelector('ha-switch')
-
-            const wakeUpSwitch = WakeUpStorage.switch
-            if (wakeUpSwitch) {
-                toggle.checked = wakeUpSwitch
-                this.toast('刷新页面生效')
-            }
+            // 语音唤醒
+            const toggle = shadow.querySelector('.card-header ha-switch');
+            if (typeof WakeUpStorage.switch == 'boolean') toggle.checked = WakeUpStorage.switch;
 
             toggle.onchange = () => {
                 WakeUpStorage.switch = toggle.checked
-                this.toast('刷新页面生效')
+                location.reload()
             }
 
+            // 语音答复
+            const toggleSpeech = shadow.querySelector('.header-footer ha-switch');
+            if (typeof WakeUpStorage.speech == 'boolean') toggleSpeech.checked = WakeUpStorage.speech;
+
+            toggleSpeech.onchange = () => {
+                WakeUpStorage.speech = toggleSpeech.checked
+            }
+
+            // 唤醒词
             const hey = shadow.querySelector('ha-select')
             const wakeUpKey = WakeUpStorage.key
             if (wakeUpKey) {
                 hey.value = wakeUpKey
             }
-
             hey.onchange = () => {
                 if (hey.value) {
                     if (hey.value != WakeUpStorage.key) {

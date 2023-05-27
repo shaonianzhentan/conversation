@@ -82,9 +82,9 @@ class ConversationAssistant():
                     entity_id = item.get('entity_id')
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
-                    entity_state = item.get('state', '') + ' ' + item.get("unit")
+                    entity_state = item.get('state', '')
 
-                    if domain == 'weather' and item.get('state') != 'unavailable':
+                    if domain == 'weather' and entity_state != 'unavailable':
                         ''' 天气 '''
                         state = self.hass.states.get(entity_id)
                         attributes = state.attributes
@@ -108,10 +108,26 @@ class ConversationAssistant():
                         # 完全匹配时点击按钮
                         self.call_service_entity(f'{domain}.press', entity_id)
                         return self.intent_result(f'点击{entity_name}按钮')
+                    elif domain == 'calendar' and entity_name == text:
+                        ''' 日历 '''
+                        state = self.hass.states.get(entity_id)
+                        attributes = state.attributes
+                        message = attributes.get('message')
+                        if message is not None:
+                            description = attributes.get('description')
+                            start_time = attributes.get('start_time')
+                            end_time = attributes.get('end_time')
+                            result_message.append(f'事件：{message}；')
+                            result_message.append(f'开始时间：{start_time}；')
+                            result_message.append(f'结束时间：{end_time}；')
+                            result_message.append(f'描述：{description}；')
+                        else:
+                            result_message.append('近期没有需要提醒的事件')
+                        break
                     else:
-                        result_message.append(f'{domain}{entity_name}：{entity_state}')
+                        result_message.append(f'{domain}{entity_name}：{entity_state} {item.get("unit")}')
 
-                return self.intent_result('\n\r'.join(result_message))
+                return self.intent_result('\r\n'.join(result_message))
 
         # trigger match
         result = await self.trigger_match(text)
