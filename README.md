@@ -14,16 +14,17 @@
 
 [![badge](https://img.shields.io/badge/QQ交流群-61417349-76beff?logo=tencentqq&style=for-the-badge)](https://qm.qq.com/cgi-bin/qm/qr?k=aoYbEJzQ8MiieLhvQfhE_Ck1vLENuErf&jump_from=webapi&authKey=FT+TXsLXVNUtYY9G0q82vrBTxVT8axAg2C/tP9U1x9JioabEAbzVB7sPVGy/nIHN)
 
-## 功能
-
-- 浏览器语音唤醒
-- 文本控制
-
 ## 配置
 
 安装完成后重启HA，刷新一下页面，在集成里搜索`语音小助手`
 
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=conversation_assistant)
+
+
+## 浏览器语音控制
+
+- 在`Edge浏览器`中使用`https`访问HA
+- 添加语音小助手卡片，开启语音唤醒功能
 
 ## 支持指令
 - 开关设备
@@ -63,12 +64,14 @@
 - 小度`打开卫生间的灯`
 - 小杜`打开卫生间的灯`
 
-### 电视（待测试）
+### 电视
 
 - 我想看 `cctv`
-- 更多...
+- 我想看 `cctv-1`
+- 我想看 `cctv-2`
+- 我想看 `cctv-3`
 
-### 广播电台
+### 广播
 
 - 播放广播
 - 播放广播`中国之声`
