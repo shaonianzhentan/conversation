@@ -232,10 +232,12 @@ class EntityAssistant:
         if self.calendar_id is not None and '提醒我' in text:
             arr = text.split('提醒我')
             time_text = arr[0]
+            description = arr[1]
+            if time_text == '' or description == '':
+                return None
             # 判断是否输入时间
             if time_text.count(':') == 1:
-                time_text = time_text.replace(':', '点')
-            description = arr[1]
+                time_text = time_text.replace(':', '点')            
             results = Recognizers.recognize_datetime(time_text, Culture.Chinese)
             length = len(results)
             if length > 0:
