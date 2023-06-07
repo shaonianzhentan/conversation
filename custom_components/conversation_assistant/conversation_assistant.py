@@ -39,8 +39,10 @@ class ConversationAssistant():
     # Voice service processing
     async def async_process(self, text):
         # update cache data
-        await self.semantic.update(text)
-        # print(self.semantic.entities)
+        result = await self.semantic.update(text)
+        if result is not None:
+            if result[0] == 0:
+                return self.intent_result(self.template('{% for state in states.' + result[1]+ ' -%} 【{{ state.name }} - {{ state.state }}】 {% endfor %} '))
         # Exact match
         result = await self.semantic.find_entity_name(text)
         if result is not None:

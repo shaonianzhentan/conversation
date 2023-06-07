@@ -1,4 +1,5 @@
 import re, logging
+from homeassistant.core import split_entity_id
 from homeassistant.helpers import template, entity_registry, area_registry
 from .util import create_matcher
 
@@ -22,12 +23,18 @@ class Semantic():
         arr = []
         for state in states:
             arr.append(state)
+            entity_id = state.entity_id
+            domain = split_entity_id(entity_id)[0]
+            if domain == text:
+                # 完全匹配到domain
+                return (0, domain)
+
             friendly_name = state.attributes.get('friendly_name')
             if friendly_name != '' and friendly_name is not None:
-                if friendly_name in text or self.aliases_in(state.entity_id, text):
+                if friendly_name in text or self.aliases_in(entity_id, text):
                     entities.append({
-                        'domain': state.entity_id.split('.')[0],
-                        'entity_id': state.entity_id,
+                        'domain': domain,
+                        'entity_id': entity_id,
                         'entity_name': friendly_name,
                         'state': state.state
                     })
