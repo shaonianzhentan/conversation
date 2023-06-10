@@ -5,7 +5,9 @@
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/conversation",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "https://gitee.com/shaonianzhentan/conversation/raw/dev/python/recognizers_text-1.0.0a0-py3-none-any.whl"
+  ],
   "codeowners": [
     "@shaonianzhentan"
   ],
