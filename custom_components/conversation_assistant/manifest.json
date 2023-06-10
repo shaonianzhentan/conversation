@@ -1,13 +1,10 @@
 {
   "domain": "conversation_assistant",
   "name": "\u8BED\u97F3\u5C0F\u52A9\u624B",
-  "version": "2023.6.7",
+  "version": "2023.6.11",
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/conversation",
-  "requirements": [
-    "emoji==1.7.0",
-    "recognizers-text-suite>=1.0.2a2"
-  ],
+  "requirements": [],
   "dependencies": [],
   "codeowners": [
     "@shaonianzhentan"
