@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from functools import partial
-import logging, datetime, re
+import logging, datetime, re, os
 from typing import Literal
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import intent, template
-from homeassistant.util import ulid
+from homeassistant.util import ulid, package
 from home_assistant_intents import get_domains_and_languages, get_intents
 
 from .entity_assistant import EntityAssistant
@@ -22,6 +22,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await update_listener(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    pk_name = f"{os.path.dirname(__file__)}/recognizers_text-1.0.0a0-py3-none-any.whl"
+    if package.is_installed('recognizers-text') == False:
+        package.install_package(pk_name)
+
     return True
 
 async def update_listener(hass, entry):
