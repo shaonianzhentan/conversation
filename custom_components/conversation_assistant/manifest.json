@@ -4,7 +4,9 @@
   "version": "2023.6.11",
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/conversation",
-  "requirements": [],
+  "requirements": [
+    "ms-recognizers-text-suite==1.0.0a1"
+  ],
   "dependencies": [],
   "codeowners": [
     "@shaonianzhentan"
