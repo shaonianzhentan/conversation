@@ -8,7 +8,7 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import intent, template
-from homeassistant.util import ulid, package
+from homeassistant.util import ulid
 from home_assistant_intents import get_domains_and_languages, get_intents
 
 from .entity_assistant import EntityAssistant
@@ -18,11 +18,6 @@ DATA_VOICE = "conversation_voice"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-
-    pk_name = f"{os.path.dirname(__file__)}/recognizers_text-1.0.0a0-py3-none-any.whl"
-    if package.is_installed('recognizers-text') == False:
-        package.install_package(pk_name)
-
     ''' 安装集成 '''
     await update_listener(hass, entry)
 
