@@ -18,14 +18,15 @@ DATA_VOICE = "conversation_voice"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    ''' 安装集成 '''
-    await update_listener(hass, entry)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     pk_name = f"{os.path.dirname(__file__)}/recognizers_text-1.0.0a0-py3-none-any.whl"
     if package.is_installed('recognizers-text') == False:
         package.install_package(pk_name)
+
+    ''' 安装集成 '''
+    await update_listener(hass, entry)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
