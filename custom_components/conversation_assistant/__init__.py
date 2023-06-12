@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-import logging, datetime, re
+import logging, datetime, re, os
 from typing import Literal
 
 from homeassistant.components import conversation
@@ -22,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await update_listener(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
 
 async def update_listener(hass, entry):

@@ -94,9 +94,9 @@ class EntityAssistant:
                 service_name= 'media_previous_track'
             elif ['下一曲', '下一首', '下一个'].count(text) == 1:
                 service_name= 'media_next_track'
-            elif ['声音小点', '小点声音', '小一点声音', '声音小一点'].count(text) == 1:
+            elif ['声音小点', '小点声音', '小点声', '小一点声音', '声音小一点'].count(text) == 1:
                 service_name= 'volume_down'
-            elif ['声音大点', '大点声音', '大一点声音', '声音大一点'].count(text) == 1:
+            elif ['声音大点', '大点声音', '大点声', '大一点声音', '声音大一点'].count(text) == 1:
                 service_name= 'volume_up'
             elif text.startswith('播放每日推荐'):
                 service_name = 'play_media'
@@ -232,10 +232,12 @@ class EntityAssistant:
         if self.calendar_id is not None and '提醒我' in text:
             arr = text.split('提醒我')
             time_text = arr[0]
+            description = arr[1]
+            if time_text == '' or description == '':
+                return None
             # 判断是否输入时间
             if time_text.count(':') == 1:
-                time_text = time_text.replace(':', '点')
-            description = arr[1]
+                time_text = time_text.replace(':', '点')            
             results = Recognizers.recognize_datetime(time_text, Culture.Chinese)
             length = len(results)
             if length > 0:
