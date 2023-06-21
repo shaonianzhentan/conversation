@@ -69,12 +69,17 @@ class OptionsFlowHandler(OptionsFlow):
         music_media_entities = [ default_name ]
         xiaoai_media_entities = [ default_name ]
         xiaodu_media_entities = [ default_name ]
+        tv_media_entities = [ default_name ]
 
         for state in media_states:
-            if state.attributes.get('platform') == 'cloud_music':
+            platform = state.attributes.get('platform')
+            if platform == 'cloud_music':
                 music_media_entities.append(state.entity_id)
                 continue
-            if state.attributes.get('platform') == 'xiaodu':
+            if platform == 'tv':
+                tv_media_entities.append(state.entity_id)
+                continue
+            if platform == 'xiaodu':
                 xiaodu_media_entities.append(state.entity_id)
                 continue
             if state.attributes.get('xiaoai_id') is not None:
@@ -85,7 +90,7 @@ class OptionsFlowHandler(OptionsFlow):
         DATA_SCHEMA = vol.Schema({
             vol.Optional("calendar_id", default=options.get('calendar_id', default_name)): vol.In(calendar_entities),
             vol.Optional("music_id", default=options.get('music_id', default_name)): vol.In(music_media_entities),
-            vol.Optional("tv_id", default=options.get('tv_id', default_name)): vol.In(media_entities),
+            vol.Optional("tv_id", default=options.get('tv_id', default_name)): vol.In(tv_media_entities),
             vol.Optional("fm_id", default=options.get('fm_id', default_name)): vol.In(media_entities),
             vol.Optional("xiaoai_id", default=options.get('xiaoai_id', default_name)): vol.In(xiaoai_media_entities),
             vol.Optional("xiaodu_id", default=options.get('xiaodu_id', default_name)): vol.In(xiaodu_media_entities)
