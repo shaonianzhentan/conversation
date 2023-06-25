@@ -59,33 +59,42 @@ class OptionsFlowHandler(OptionsFlow):
                 del user_input['xiaodu_id']
             return self.async_create_entry(title='', data=user_input)
 
+        # 日历
         calendar_states = self.hass.states.async_all('calendar')
-        calendar_entities = list(map(lambda x: x.entity_id, calendar_states))
-        calendar_entities.append(default_name)
+        calendar_entities = { default_name: default_name }
+        for state in calendar_states:
+            entity_id = state.entity_id
+            friendly_name = state.attributes.get('friendly_name')
+            if friendly_name is not None:
+                calendar_entities[entity_id] = f'{friendly_name}（{entity_id}）'
 
         media_states = self.hass.states.async_all('media_player')
 
-        media_entities = [ default_name ]
-        music_media_entities = [ default_name ]
-        xiaoai_media_entities = [ default_name ]
-        xiaodu_media_entities = [ default_name ]
-        tv_media_entities = [ default_name ]
+        media_entities = { default_name: default_name }
+        music_media_entities = { default_name: default_name }
+        xiaoai_media_entities = { default_name: default_name }
+        xiaodu_media_entities = { default_name: default_name }
+        tv_media_entities = { default_name: default_name }
 
         for state in media_states:
+            friendly_name = state.attributes.get('friendly_name')
             platform = state.attributes.get('platform')
+            entity_id = state.entity_id
+            value = f'{friendly_name}（{entity_id}）'
+
             if platform == 'cloud_music':
-                music_media_entities.append(state.entity_id)
+                music_media_entities[entity_id] = value
                 continue
             if platform == 'tv':
-                tv_media_entities.append(state.entity_id)
+                tv_media_entities[entity_id] = value
                 continue
             if platform == 'xiaodu':
-                xiaodu_media_entities.append(state.entity_id)
+                xiaodu_media_entities[entity_id] = value
                 continue
             if state.attributes.get('xiaoai_id') is not None:
-                xiaoai_media_entities.append(state.entity_id)
+                xiaoai_media_entities[entity_id] = value
                 continue
-            media_entities.append(state.entity_id)
+            media_entities[entity_id] = value
 
         DATA_SCHEMA = vol.Schema({
             vol.Optional("calendar_id", default=options.get('calendar_id', default_name)): vol.In(calendar_entities),
