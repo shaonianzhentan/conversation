@@ -42,8 +42,8 @@ class ConversationAssistant():
         result = await self.semantic.update(text)
         if result is not None:
             if result[0] == 0:
-                return self.intent_result(self.template('{% for state in states.' + result[1]+ ''' -%} 【{{ state.name }} - {{ state.state }}】 
-                {% endfor %} '''))
+                return self.intent_result(self.template('{% for state in states.' + result[1]+ ''' -%}【{{ state.name }} - {{ state.state }}】
+{% endfor %} '''))
         # Exact match
         result = await self.semantic.find_entity_name(text)
         if result is not None:

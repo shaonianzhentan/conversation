@@ -4,7 +4,6 @@ _LOGGER = logging.getLogger(__name__)
 import recognizers_suite as Recognizers
 from recognizers_suite import Culture, ModelResult
 from urllib.parse import urlparse, parse_qs, parse_qsl, quote
-from .api_iptv import IPTV
 from .api_http import http_get
 from aiodns import DNSResolver
 
@@ -18,9 +17,6 @@ class EntityAssistant:
         self.fm_id = config.get('fm_id')
         self.xiaoai_id = config.get('xiaoai_id')
         self.xiaodu_id = config.get('xiaodu_id')
-
-        self.iptv = IPTV()
-        hass.data.setdefault('conversation_iptv', self.iptv)
 
     async def async_process(self, text):
         result = await self.async_calendar(text)
@@ -174,20 +170,63 @@ class EntityAssistant:
     async def async_tv(self, text):
         ''' 电视 '''
         if self.tv_id is not None and text.startswith('我想看'):
-                text = text[3:]
+                text = text[3:].lower()
                 if text == '':
                     return None
 
-                item = await self.iptv.async_search_play(text)
-                if item is not None:
+                media_id = None
+                matchObj = re.match(r'中央(.+)台', text)
+                if matchObj is not None:
+                    results = Recognizers.recognize_number(text, Culture.Chinese)
+                    length = len(results)
+                    if length > 0:
+                        result = results[length - 1]
+                        values = list(result.resolution.values())[0]
+                        num = values[0]
+                        if num == '1':
+                            media_id = 'https://tv.cctv.com/live/cctv1/'
+                        elif num == '2':
+                            media_id = 'https://tv.cctv.com/live/cctv2/'
+                        elif num == '3':
+                            media_id = 'https://tv.cctv.com/live/cctv3/'
+                        elif num == '4':
+                            media_id = 'https://tv.cctv.com/live/cctv4/'
+                        elif num == '5':
+                            media_id = 'https://tv.cctv.com/live/cctv5/'
+                        elif num == '6':
+                            media_id = 'https://tv.cctv.com/live/cctv6/'
+                        elif num == '7':
+                            media_id = 'https://tv.cctv.com/live/cctv7/'
+                        elif num == '8':
+                            media_id = 'https://tv.cctv.com/live/cctv8/'
+                        elif num == '9':
+                            media_id = 'https://tv.cctv.com/live/cctvjilu/'
+                        elif num == '10':
+                            media_id = 'https://tv.cctv.com/live/cctv10/'
+                        elif num == '11':
+                            media_id = 'https://tv.cctv.com/live/cctv11/'
+                        elif num == '12':
+                            media_id = 'https://tv.cctv.com/live/cctv12/'
+                        elif num == '13':
+                            media_id = 'https://tv.cctv.com/live/cctv13/'
+                        elif num == '14':
+                            media_id = 'https://tv.cctv.com/live/cctvchild/'
+                        elif num == '15':
+                            media_id = 'https://tv.cctv.com/live/cctv15/'
+                        elif num == '16':
+                            media_id = 'https://tv.cctv.com/live/cctv16/'
+                        elif num == '17':
+                            media_id = 'https://tv.cctv.com/live/cctv17/'
+
+                if media_id is not None:
                     await self.hass.services.async_call('media_player', 'play_media', {
-                        'media_content_type': 'video',
-                        'media_content_id': item.path,
+                        'media_content_type': 'web',
+                        'media_content_id': media_id,
                         'entity_id': self.tv_id
                     })
                     state = self.hass.states.get(self.tv_id)
                     friendly_name = state.attributes.get('friendly_name')
-                    return f'正在{friendly_name}上播放{item.title}'
+                    return f'正在{friendly_name}上播放{text}'
                 else:
                     return f'没有找到{text}'
 
