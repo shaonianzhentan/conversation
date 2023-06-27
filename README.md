@@ -10,6 +10,7 @@
 [![badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
 [![badge](https://img.shields.io/badge/wechat-微信控制-6cae6a?logo=wechat&style=for-the-badge)](https://github.com/shaonianzhentan/ha_wechat)
 [![badge](https://img.shields.io/badge/android-家庭助理-purple?logo=android&style=for-the-badge)](https://github.com/shaonianzhentan/ha_app)
+[![badge](https://img.shields.io/badge/android-家庭助理TV-orange?logo=android&style=for-the-badge)](https://github.com/shaonianzhentan/ha_tv)
 
 
 [![badge](https://img.shields.io/badge/QQ交流群-61417349-76beff?logo=tencentqq&style=for-the-badge)](https://qm.qq.com/cgi-bin/qm/qr?k=aoYbEJzQ8MiieLhvQfhE_Ck1vLENuErf&jump_from=webapi&authKey=FT+TXsLXVNUtYY9G0q82vrBTxVT8axAg2C/tP9U1x9JioabEAbzVB7sPVGy/nIHN)
