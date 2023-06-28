@@ -82,7 +82,7 @@ class EntityAssistant:
             service_data = {
                 'entity_id': self.music_id
             }
-            if ['播放', '继续播放', '播放音乐'].count(text) == 1:
+            if ['播放', '继续播放', '播放音乐', '音乐播放'].count(text) == 1:
                 service_name= 'media_play'
             elif ['暂停', '暂停音乐', '音乐暂停'].count(text) == 1:
                 service_name= 'media_pause'
