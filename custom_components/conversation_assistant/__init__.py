@@ -40,7 +40,7 @@ async def update_listener(hass, entry):
             )
         )
         return result
-    hass.data[DATA_VOICE] = ConversationAssistant(hass, recognize)
+    hass.data[DATA_VOICE] = ConversationAssistant(hass, recognize, entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 删除集成 '''

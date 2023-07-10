@@ -26,7 +26,8 @@ WEATHER_STATE = {
 
 class ConversationAssistant():
 
-    def __init__(self, hass, recognize):
+    def __init__(self, hass, recognize, entry_id):
+        self.id = entry_id
         self.hass = hass
         local = hass.config.path("custom_components/conversation_assistant/www")
         LOCAL_PATH = '/www-conversation'
@@ -625,6 +626,7 @@ class ConversationAssistant():
 
     def update(self, text, reply):
         self.hass.states.async_set('conversation.voice', text, {
+            'id': self.id,
             "icon": "mdi:account-voice",
             "friendly_name": "语音小助手",
             "reply": reply
