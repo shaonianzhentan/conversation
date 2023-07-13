@@ -99,7 +99,8 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
                 conversation_id=conversation_id,
                 context=user_input.context,
                 language=language,
-                agent_id='homeassistant'
+                agent_id='homeassistant',
+                device_id=user_input.device_id
             )
         intent_response = conversation_result.response
         if intent_response.error_code is not None:
