@@ -1,3 +1,6 @@
+'''
+https://github.com/home-assistant/core/tree/dev/homeassistant/components/conversation
+'''
 from __future__ import annotations
 
 from functools import partial
@@ -36,6 +39,7 @@ async def update_listener(hass, entry):
                 text=text,
                 context=Context(),
                 conversation_id=conversation_id,
+                device_id=None,
                 language=None
             )
         )
