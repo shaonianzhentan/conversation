@@ -9,10 +9,8 @@ class HttpView(HomeAssistantView):
 
     async def post(self, request):
         hass = request.app["hass"]
-        body = request.json()
+        body = await request.json()
         text = body.get('text')
-
         conversation_assistant = hass.data[manifest.domain]
         result = await conversation_assistant.recognize(text)
-
         return self.json(result.as_dict())
