@@ -14,18 +14,18 @@ from homeassistant.helpers import intent, template
 from homeassistant.util import ulid
 from home_assistant_intents import get_domains_and_languages, get_intents
 
+from .http import HttpView
 from .entity_assistant import EntityAssistant
 from .conversation_assistant import ConversationAssistant
-DATA_VOICE = "conversation_voice"
+from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 安装集成 '''
+    hass.http.register_view(HttpView)
     await update_listener(hass, entry)
-
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
 
 async def update_listener(hass, entry):
@@ -44,12 +44,12 @@ async def update_listener(hass, entry):
             )
         )
         return result
-    hass.data[DATA_VOICE] = ConversationAssistant(hass, recognize, entry.entry_id)
+    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 删除集成 '''
     conversation.async_unset_agent(hass, entry)
-    del hass.data[DATA_VOICE]
+    del hass.data[manifest.domain]
     return True
 
 class ConversationAssistantAgent(conversation.AbstractConversationAgent):
@@ -88,7 +88,7 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
                 language = "zh-tw"
 
         # 处理意图
-        conversation_assistant = self.hass.data[DATA_VOICE]
+        conversation_assistant = self.hass.data[manifest.domain]
         text = conversation_assistant.trim_char(user_input.text)
         conversation_assistant.fire_text(text)
 
