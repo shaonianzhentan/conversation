@@ -20,6 +20,7 @@ from .conversation_assistant import ConversationAssistant
 from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
+PLATFORMS = [ Platform.STT,  Platform.TTS ]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 安装集成 '''
@@ -27,10 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await update_listener(hass, entry)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        [ Platform.STT ],
-    )
+    speech_key = entry.options.get('speech_key', '')
+    if speech_key != '':
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 async def update_listener(hass, entry):
@@ -55,6 +55,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 删除集成 '''
     conversation.async_unset_agent(hass, entry)
     del hass.data[manifest.domain]
+
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     return True
 
 class ConversationAssistantAgent(conversation.AbstractConversationAgent):

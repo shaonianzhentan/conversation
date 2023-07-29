@@ -18,6 +18,7 @@
                 "title": "语音小助手",
                 "description": "指定默认控制的实体",
                 "data": {
+                    "speech_key": "Azure语音服务密钥",
                     "calendar_id": "日历",
                     "music_id": "音乐",
                     "tv_id": "电视",

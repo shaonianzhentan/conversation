@@ -21,9 +21,10 @@ async def async_setup_entry(
 
 class ConversationSttEntity(stt.SpeechToTextEntity):
 
-    def __init__(self, config_entry: ConfigEntry,):
-        self.name = '语音转文本'
+    def __init__(self, config_entry: ConfigEntry):
         self.speech_key = config_entry.options.get('speech_key')
+        self._attr_name = '语音助手STT'
+        self._attr_unique_id = f"{config_entry.entry_id}-stt"
 
     @property
     def supported_languages(self):

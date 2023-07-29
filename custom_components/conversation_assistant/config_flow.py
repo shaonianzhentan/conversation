@@ -97,6 +97,7 @@ class OptionsFlowHandler(OptionsFlow):
             media_entities[entity_id] = value
 
         DATA_SCHEMA = vol.Schema({
+            vol.Optional("speech_key", default=options.get('speech_key', '')): str,
             vol.Optional("calendar_id", default=options.get('calendar_id', default_name)): vol.In(calendar_entities),
             vol.Optional("music_id", default=options.get('music_id', default_name)): vol.In(music_media_entities),
             vol.Optional("tv_id", default=options.get('tv_id', default_name)): vol.In(tv_media_entities),
