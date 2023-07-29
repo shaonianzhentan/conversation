@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import intent, template
 from homeassistant.util import ulid
 from home_assistant_intents import get_domains_and_languages, get_intents
-
+from homeassistant.const import Platform
 from .http import HttpView
 from .entity_assistant import EntityAssistant
 from .conversation_assistant import ConversationAssistant
@@ -26,6 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.http.register_view(HttpView)
     await update_listener(hass, entry)
     entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [ Platform.STT ],
+    )
     return True
 
 async def update_listener(hass, entry):
