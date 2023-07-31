@@ -1,9 +1,9 @@
-import logging
+import logging, aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components import tts
-
+from urllib.parse import quote
 import azure.cognitiveservices.speech as speechsdk
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class ConversationTtsEntity(tts.TextToSpeechEntity):
 
     @property
     def supported_languages(self):
-        return ["zh-cn", "zh-hk", "zh-tw"]
+        return ["zh-cn"]
 
     @property
     def supported_options(self):
@@ -47,10 +47,18 @@ class ConversationTtsEntity(tts.TextToSpeechEntity):
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[str] | None:
-        return ["zh-cn", "zh-hk", "zh-tw"]
+        return [ 
+            tts.Voice(voice_id='默认', name='默认')
+        ]
 
     async def async_get_tts_audio(self, message, language, options):
         voice_name: str | None = options.get(tts.ATTR_VOICE)
         voice_speaker: str | None = options.get(ATTR_SPEAKER)
+
+        url = f'https://fanyi.baidu.com/gettts?lan=zh&text={quote(message)}&spd=5&source=web'
+        _LOGGER.debug(url)
         buffer = []
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                buffer = await response.read()
         return 'mp3', buffer
