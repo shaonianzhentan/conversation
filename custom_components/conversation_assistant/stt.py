@@ -55,41 +55,48 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO]
 
-    async def async_process_audio_stream(self, metadata: stt.SpeechMetadata, stream) -> stt.SpeechResult:
-        try:
-            translation_config = speechsdk.translation.SpeechTranslationConfig(
+    def init_speechsdk(self):
+        ''' 初始化语音识别 '''
+        speech_config = speechsdk.translation.SpeechTranslationConfig(
                 subscription=self.speech_key, region="eastasia",
                 speech_recognition_language='zh-CN')
-            
-            audio_config = speechsdk.audio.FromStreamInput(stream)
 
-            recognizer = speechsdk.translation.TranslationRecognizer(
-                translation_config=translation_config, audio_config=audio_config)
-            
-            result = recognizer.recognize_once()
+        # setup the audio stream
+        push_stream = speechsdk.audio.PushAudioInputStream()
+        audio_config = speechsdk.audio.AudioConfig(stream=push_stream)
 
-            # Check the result
-            if result.reason == speechsdk.ResultReason.TranslatedSpeech:                
-                text = result.text
-                print("""Recognized: {}
-                German translation: {}
-                French translation: {}
-                Chinese translation: {}""".format(
-                    result.text, result.translations['de'],
-                    result.translations['fr'],
-                    result.translations['zh-Hans'],))
-            elif result.reason == speechsdk.ResultReason.RecognizedSpeech:
-                print("Recognized: {}".format(result.text))
-            elif result.reason == speechsdk.ResultReason.NoMatch:
-                print("No speech could be recognized: {}".format(result.no_match_details))
-            elif result.reason == speechsdk.ResultReason.Canceled:
-                print("Translation canceled: {}".format(result.cancellation_details.reason))
-                if result.cancellation_details.reason == speechsdk.CancellationReason.Error:
-                    print("Error details: {}".format(result.cancellation_details.error_details))
+        # instantiate the speech recognizer with push stream input
+        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+            
+        # Connect callbacks to the events fired by the speech recognizer
+        speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
+        speech_recognizer.recognized.connect(lambda evt: print('RECOGNIZED: {}'.format(evt)))
+        speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
+        speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
+        speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
+
+        # start continuous speech recognition
+        speech_recognizer.start_continuous_recognition()
+
+        return speech_recognizer, push_stream
+
+    async def async_process_audio_stream(self, metadata: stt.SpeechMetadata, stream) -> stt.SpeechResult:
+        text = None
+        try:
+            speech_recognizer, push_stream = self.init_speechsdk()
+
+            async for audio_bytes in stream:
+                push_stream.write(audio_bytes)
+
+            push_stream.close()
+            speech_recognizer.stop_continuous_recognition()
 
         except Exception as err:
             _LOGGER.exception("Error processing audio stream: %s", err)
             return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+        if text is None:
+            return stt.SpeechResult('没听到声音', stt.SpeechResultState.ERROR)
 
         return stt.SpeechResult(
             text,
