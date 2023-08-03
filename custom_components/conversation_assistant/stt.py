@@ -28,7 +28,7 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
 
     @property
     def supported_languages(self):
-        return ["zh-cn", "zh-hk", "zh-tw"]
+        return ["zh-cn"]
     
     @property
     def supported_formats(self) -> list[stt.AudioFormats]:
@@ -55,48 +55,42 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO]
 
-    def init_speechsdk(self):
-        ''' 初始化语音识别 '''
-        speech_config = speechsdk.translation.SpeechTranslationConfig(
-                subscription=self.speech_key, region="eastasia",
-                speech_recognition_language='zh-CN')
-
-        # setup the audio stream
-        push_stream = speechsdk.audio.PushAudioInputStream()
-        audio_config = speechsdk.audio.AudioConfig(stream=push_stream)
-
-        # instantiate the speech recognizer with push stream input
-        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
-            
-        # Connect callbacks to the events fired by the speech recognizer
-        speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
-        speech_recognizer.recognized.connect(lambda evt: print('RECOGNIZED: {}'.format(evt)))
-        speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
-        speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
-        speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
-
-        # start continuous speech recognition
-        speech_recognizer.start_continuous_recognition()
-
-        return speech_recognizer, push_stream
-
-    async def async_process_audio_stream(self, metadata: stt.SpeechMetadata, stream) -> stt.SpeechResult:
+    async def async_process_audio_stream(self, metadata: stt.SpeechMetadata, stt_stream) -> stt.SpeechResult:
         text = None
         try:
-            speech_recognizer, push_stream = self.init_speechsdk()
+            speech_key, service_region = self.speech_key, "eastasia"
+            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 
-            async for audio_bytes in stream:
-                push_stream.write(audio_bytes)
+            stream = speechsdk.audio.PushAudioInputStream()
+            audio_config = speechsdk.audio.AudioConfig(stream=stream)
 
-            push_stream.close()
+            speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, language="zh-CN", audio_config=audio_config)
+            
+            # Connect callbacks to the events fired by the speech recognizer
+            speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
+            speech_recognizer.recognized.connect(lambda evt: print('RECOGNIZED: {}'.format(evt)))
+            speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
+            speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
+            speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
+
+            speech_recognizer.start_continuous_recognition()
+            print('开始识别')
+
+            async for audio_bytes in stt_stream:
+                stream.write(audio_bytes)
+
+            print('结束啦')
+            stream.close()
             speech_recognizer.stop_continuous_recognition()
-
+            
         except Exception as err:
+            print(err)
             _LOGGER.exception("Error processing audio stream: %s", err)
-            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)        
 
         if text is None:
-            return stt.SpeechResult('没听到声音', stt.SpeechResultState.ERROR)
+            print('没听到声音')
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
         return stt.SpeechResult(
             text,
