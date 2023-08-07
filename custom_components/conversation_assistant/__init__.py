@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass, entry):
     ''' 更新配置 '''
-    speech_key = entry.options.get('speech_key', '')
-    if speech_key != '':
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     assistant = ConversationAssistantAgent(hass, entry)
     conversation.async_set_agent(hass, entry, assistant)
