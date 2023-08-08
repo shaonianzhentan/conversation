@@ -16,8 +16,9 @@
         "step": {
             "user": {
                 "title": "语音小助手",
-                "description": "指定默认控制的实体",
+                "description": "指定默认控制的实体，使用语音快速控制\n配置语音服务密钥可以使用在线语音识别、文本转语音服务",
                 "data": {
+                    "speech_key": "Azure语音服务密钥",
                     "calendar_id": "日历",
                     "music_id": "音乐",
                     "tv_id": "电视",

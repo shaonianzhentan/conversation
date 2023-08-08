@@ -13,13 +13,14 @@ from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import intent, template
 from homeassistant.util import ulid
 from home_assistant_intents import get_domains_and_languages, get_intents
-
+from homeassistant.const import Platform
 from .http import HttpView
 from .entity_assistant import EntityAssistant
 from .conversation_assistant import ConversationAssistant
 from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
+PLATFORMS = [ Platform.STT,  Platform.TTS ]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 安装集成 '''
@@ -30,6 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass, entry):
     ''' 更新配置 '''
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     assistant = ConversationAssistantAgent(hass, entry)
     conversation.async_set_agent(hass, entry, assistant)
 
@@ -44,7 +47,7 @@ async def update_listener(hass, entry):
             )
         )
         return result
-    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry.entry_id)
+    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry.entry_id)    
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 删除集成 '''

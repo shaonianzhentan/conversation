@@ -1,10 +1,9 @@
 import logging, datetime, re, random
 _LOGGER = logging.getLogger(__name__)
 
-import recognizers_suite as Recognizers
-from recognizers_suite import Culture, ModelResult
 from urllib.parse import urlparse, parse_qs, parse_qsl, quote
 from .api_http import http_get
+from .util_recognizer import get_calendar_datetime, get_number_value
 from aiodns import DNSResolver
 
 class EntityAssistant:
@@ -177,12 +176,8 @@ class EntityAssistant:
                 media_id = None
                 matchObj = re.match(r'中央(.+)台', text)
                 if matchObj is not None:
-                    results = Recognizers.recognize_number(text, Culture.Chinese)
-                    length = len(results)
-                    if length > 0:
-                        result = results[length - 1]
-                        values = list(result.resolution.values())[0]
-                        num = values[0]
+                    num = get_number_value(text)
+                    if num is not None:
                         if num == '1':
                             media_id = 'https://tv.cctv.com/live/cctv1/'
                         elif num == '2':
@@ -237,7 +232,7 @@ class EntityAssistant:
 
             service_data = {
                 'entity_id': self.xiaoai_id,
-                'throw': True
+                'throw': False
             }
             if text == '':
                 # 唤醒音乐
@@ -276,50 +271,19 @@ class EntityAssistant:
                 return None
             # 判断是否输入时间
             if time_text.count(':') == 1:
-                time_text = time_text.replace(':', '点')            
-            results = Recognizers.recognize_datetime(time_text, Culture.Chinese)
-            length = len(results)
-            if length > 0:
-                result = results[length - 1]
-                values = list(result.resolution.values())[0]
-                print(values)
-                value = values[0]
-                t = value['type']
-                v = value['value']
+                time_text = time_text.replace(':', '点')
 
-                now = datetime.datetime.now()
-                start_date_time = None
+            result = get_calendar_datetime(time_text)
+            if result is not None:
+                start_date_time, end_date_time = result
+                if start_date_time is None:
+                    return '时间已经过去了，没有提醒的必要啦'
 
-                # 早晚
-                if len(values) == 2:
-                    # 和当前时间比较
-                    if t == 'time':
-                        if now.strftime('%H:%M:%S') > v:
-                            value = values[1]
-                            t = value['type']
-                            v = value['value']
-
-                if t == 'datetime':
-                    start_date_time = v
-                elif t == 'time':
-                    localtime = now.strftime('%Y-%m-%d %H:%M:%S')
-                    if v < localtime[11:]:
-                        return '时间已经过去了，没有提醒的必要啦'
-                    start_date_time = localtime[:11] + v
-                elif t == 'duration':
-                    now = now + datetime.timedelta(seconds=+int(v))
-                    start_date_time = now.strftime('%Y-%m-%d %H:%M:%S')
-
-                if start_date_time is not None:
-                    # 结束时间
-                    end_date_time = datetime.datetime.strptime(start_date_time, '%Y-%m-%d %H:%M:%S')
-                    end_date_time = end_date_time + datetime.timedelta(seconds=+60)
-
-                    await self.hass.services.async_call('calendar', 'create_event', {
-                        'entity_id': self.calendar_id,
-                        'start_date_time': start_date_time,
-                        'end_date_time': end_date_time.strftime('%Y-%m-%d %H:%M:%S'),
-                        'summary': description,
-                        'description': text
-                    })
-                    return f'【{start_date_time}】{description}'
+                await self.hass.services.async_call('calendar', 'create_event', {
+                    'entity_id': self.calendar_id,
+                    'start_date_time': start_date_time,
+                    'end_date_time': end_date_time,
+                    'summary': description,
+                    'description': text
+                })
+                return f'【{start_date_time}】{description}'
