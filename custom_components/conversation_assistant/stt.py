@@ -72,12 +72,11 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
             
             def speech_recognized(evt):
                 print('RECOGNIZED: {}'.format(evt))
+                nonlocal text
+                text = evt.result.text
+
                 nonlocal is_recognized
                 is_recognized = True
-
-                nonlocal text
-                text = evt.result
-                print(text)
 
             # Connect callbacks to the events fired by the speech recognizer
             speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
@@ -91,19 +90,17 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
 
             async for audio_bytes in stt_stream:
                 stream.write(audio_bytes)
+
+            if is_recognized == False:
+                stream.close()
+                speech_recognizer.stop_continuous_recognition()
+
+            while True:
                 if is_recognized:
-                    print('识别结束')
-                    stream.close()
-                    speech_recognizer.stop_continuous_recognition()
                     break
 
         except Exception as err:
-            print(err)
             _LOGGER.exception("Error processing audio stream: %s", err)
-            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
-
-        if text is None:
-            print('没听到声音')
             return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
         return stt.SpeechResult(
