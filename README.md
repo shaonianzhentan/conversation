@@ -21,6 +21,10 @@
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=conversation_assistant)
 
 
+## TTS & STT
+- 语音转文本（`需配置Azure服务密钥`）
+- 文本转语音
+
 ## 浏览器语音控制
 
 - 在`Edge浏览器`中使用`https`访问HA
