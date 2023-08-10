@@ -1,10 +1,8 @@
-import logging
+import logging, requests, json
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components import stt
-
-import azure.cognitiveservices.speech as speechsdk
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +20,9 @@ async def async_setup_entry(
 class ConversationSttEntity(stt.SpeechToTextEntity):
 
     def __init__(self, config_entry: ConfigEntry):
-        self.speech_key = config_entry.options.get('speech_key', '')
         self._attr_name = '语音助手STT'
-        self._attr_unique_id = f"{config_entry.entry_id}-stt"
+        self._attr_unique_id = f"{config_entry.entry_id}-stt"        
+        self.speech_key = config_entry.options.get('speech_key', '')
 
     @property
     def supported_languages(self):
@@ -56,48 +54,17 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
         return [stt.AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(self, metadata: stt.SpeechMetadata, stt_stream) -> stt.SpeechResult:
+        
         if self.speech_key == '':
             return stt.SpeechResult('未配置Azure语音服务密钥', stt.SpeechResultState.SUCCESS)
 
-        text = None
-        is_recognized = False
         try:
-            speech_key, service_region = self.speech_key, "eastasia"
-            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+            async def get_chunk():
+                async for audio_bytes in stt_stream:
+                    yield audio_bytes
 
-            stream = speechsdk.audio.PushAudioInputStream()
-            audio_config = speechsdk.audio.AudioConfig(stream=stream)
-
-            speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, language="zh-CN", audio_config=audio_config)
-            
-            def speech_recognized(evt):
-                print('RECOGNIZED: {}'.format(evt))
-                nonlocal text
-                text = evt.result.text
-
-                nonlocal is_recognized
-                is_recognized = True
-
-            # Connect callbacks to the events fired by the speech recognizer
-            speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
-            speech_recognizer.recognized.connect(speech_recognized)
-            speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
-            speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
-            speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
-
-            speech_recognizer.start_continuous_recognition()
-            print('开始识别')
-
-            async for audio_bytes in stt_stream:
-                stream.write(audio_bytes)
-
-            if is_recognized == False:
-                stream.close()
-                speech_recognizer.stop_continuous_recognition()
-
-            while True:
-                if is_recognized:
-                    break
+            result = await self.hass.async_add_executor_job(self.post_audio, get_chunk)
+            text = "".join(result["DisplayText"])
 
         except Exception as err:
             _LOGGER.exception("Error processing audio stream: %s", err)
@@ -107,3 +74,20 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
             text,
             stt.SpeechResultState.SUCCESS,
         )
+
+    def post_audio(self, get_chunk):
+        ''' 微软语音识别 '''
+        region = 'eastasia'
+        url = "https://%s.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=zh-CN" % region
+
+        headers = { 'Accept': 'application/json;text/xml',
+            'Connection': 'Keep-Alive',
+            'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+            'Ocp-Apim-Subscription-Key': self.speech_key,
+            'Transfer-Encoding': 'chunked',
+            'Expect': '100-continue' }
+
+        response = requests.post(url=url, data=get_chunk(), headers=headers)
+        resultJson = json.loads(response.text)
+        print(json.dumps(resultJson, indent=4))
+        return resultJson

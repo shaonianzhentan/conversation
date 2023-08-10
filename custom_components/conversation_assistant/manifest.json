@@ -6,7 +6,6 @@
   "documentation": "https://github.com/shaonianzhentan/conversation",
   "requirements": [
     "ms-recognizers-text-suite==1.0.0a1",
-    "azure-cognitiveservices-speech>=1.30.0",
     "aiodns>=3.0.0"
   ],
   "dependencies": [],
