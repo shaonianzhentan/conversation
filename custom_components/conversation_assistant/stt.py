@@ -1,10 +1,8 @@
-import logging
+import logging, aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components import stt
-
-import azure.cognitiveservices.speech as speechsdk
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +20,9 @@ async def async_setup_entry(
 class ConversationSttEntity(stt.SpeechToTextEntity):
 
     def __init__(self, config_entry: ConfigEntry):
-        self.speech_key = config_entry.options.get('speech_key', '')
         self._attr_name = '语音助手STT'
-        self._attr_unique_id = f"{config_entry.entry_id}-stt"
+        self._attr_unique_id = f"{config_entry.entry_id}-stt"        
+        self.speech_key = config_entry.options.get('speech_key', '')
 
     @property
     def supported_languages(self):
@@ -56,54 +54,41 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
         return [stt.AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(self, metadata: stt.SpeechMetadata, stt_stream) -> stt.SpeechResult:
+        
         if self.speech_key == '':
             return stt.SpeechResult('未配置Azure语音服务密钥', stt.SpeechResultState.SUCCESS)
 
-        text = None
-        is_recognized = False
         try:
-            speech_key, service_region = self.speech_key, "eastasia"
-            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
 
-            stream = speechsdk.audio.PushAudioInputStream()
-            audio_config = speechsdk.audio.AudioConfig(stream=stream)
-
-            speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, language="zh-CN", audio_config=audio_config)
-            
-            def speech_recognized(evt):
-                print('RECOGNIZED: {}'.format(evt))
-                nonlocal text
-                text = evt.result.text
-
-                nonlocal is_recognized
-                is_recognized = True
-
-            # Connect callbacks to the events fired by the speech recognizer
-            speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
-            speech_recognizer.recognized.connect(speech_recognized)
-            speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
-            speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
-            speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
-
-            speech_recognizer.start_continuous_recognition()
-            print('开始识别')
-
-            async for audio_bytes in stt_stream:
-                stream.write(audio_bytes)
-
-            if is_recognized == False:
-                stream.close()
-                speech_recognizer.stop_continuous_recognition()
-
-            while True:
-                if is_recognized:
-                    break
+            text = await self.async_post_audio(stt_stream)
+            if text is not None and text != '':
+              return stt.SpeechResult(text, stt.SpeechResultState.SUCCESS)
 
         except Exception as err:
             _LOGGER.exception("Error processing audio stream: %s", err)
-            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
-        return stt.SpeechResult(
-            text,
-            stt.SpeechResultState.SUCCESS,
-        )
+        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+    async def async_post_audio(self, stt_stream):
+        ''' 微软语音识别 '''
+        region = 'eastasia'
+        url = "https://%s.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=zh-CN" % region
+
+        headers = { 
+            'Accept': 'application/json;text/xml',
+            'Connection': 'Keep-Alive',
+            'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+            'Ocp-Apim-Subscription-Key': self.speech_key,
+            'Expect': '100-continue' }
+
+        async def file_sender():
+          async for audio_bytes in stt_stream:
+            yield audio_bytes
+          _LOGGER.debug('识别结束')
+
+        async with aiohttp.ClientSession() as session:
+          async with session.post(url, headers=headers, data=file_sender()) as response:
+            if response.status == 200:
+              result = await response.json()
+              _LOGGER.debug(result)
+              return result['DisplayText']
