@@ -4,7 +4,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components import tts
 from urllib.parse import quote
-import azure.cognitiveservices.speech as speechsdk
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_SPEAKER = 'speaker'
