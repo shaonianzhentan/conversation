@@ -1,4 +1,4 @@
-import logging, requests, json
+import logging, aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -59,35 +59,36 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
             return stt.SpeechResult('未配置Azure语音服务密钥', stt.SpeechResultState.SUCCESS)
 
         try:
-            async def get_chunk():
-                async for audio_bytes in stt_stream:
-                    yield audio_bytes
 
-            result = await self.hass.async_add_executor_job(self.post_audio, get_chunk)
-            text = "".join(result["DisplayText"])
+            text = await self.async_post_audio(stt_stream)
+            if text is not None and text != '':
+              return stt.SpeechResult(text, stt.SpeechResultState.SUCCESS)
 
         except Exception as err:
             _LOGGER.exception("Error processing audio stream: %s", err)
-            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
-        return stt.SpeechResult(
-            text,
-            stt.SpeechResultState.SUCCESS,
-        )
+        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
-    def post_audio(self, get_chunk):
+    async def async_post_audio(self, stt_stream):
         ''' 微软语音识别 '''
         region = 'eastasia'
         url = "https://%s.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=zh-CN" % region
 
-        headers = { 'Accept': 'application/json;text/xml',
+        headers = { 
+            'Accept': 'application/json;text/xml',
             'Connection': 'Keep-Alive',
             'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
             'Ocp-Apim-Subscription-Key': self.speech_key,
-            'Transfer-Encoding': 'chunked',
             'Expect': '100-continue' }
 
-        response = requests.post(url=url, data=get_chunk(), headers=headers)
-        resultJson = json.loads(response.text)
-        print(json.dumps(resultJson, indent=4))
-        return resultJson
+        async def file_sender():
+          async for audio_bytes in stt_stream:
+            yield audio_bytes
+          _LOGGER.debug('识别结束')
+
+        async with aiohttp.ClientSession() as session:
+          async with session.post(url, headers=headers, data=file_sender()) as response:
+            if response.status == 200:
+              result = await response.json()
+              _LOGGER.debug(result)
+              return result['DisplayText']

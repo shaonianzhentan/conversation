@@ -62,7 +62,7 @@ class EntityAssistant:
             result = await http_get(url)
             if result is not None and len(result) > 0:
                 item = result[index]
-                print(item)
+                _LOGGER.debug(item)
                 play_name = item['name']
                 play_url = item['url']
                 await self.hass.services.async_call('media_player', 'play_media', {
