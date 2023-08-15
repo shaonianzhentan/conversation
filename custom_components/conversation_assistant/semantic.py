@@ -57,6 +57,11 @@ class Semantic():
                 entities[index] = None
         self.entities = list(filter(lambda x:x is not None, entities))
 
+    def get_entities_by_domain(self, domain):
+      ''' 获取实体 '''
+      states = self.hass.states.async_all()
+      return list(filter(lambda state: split_entity_id(state.entity_id)[0] == domain, states))
+
     # 获取别名
     def get_aliases(self, entity_id):
         _list = []

@@ -42,13 +42,20 @@ class ConversationAssistant():
         # update cache data
         result = await self.semantic.update(text)
         if result is not None:
+            # 域名匹配
             if result[0] == 0:
+                entities = self.semantic.get_entities_by_domain(result[1])
+                extra_data = {
+                  'entities': list(map(lambda state: state.entity_id, entities))
+                }
                 return self.intent_result(self.template('{% for state in states.' + result[1]+ ''' -%}【{{ state.name }} - {{ state.state }}】
-{% endfor %} '''))
-        # Exact match
+{% endfor %} '''), extra_data)
+
+        # 精确匹配
         result = await self.semantic.find_entity_name(text)
         if result is not None:
             if isinstance(result, dict):
+                # 匹配到单个实体
                 entity_id = result.get('entity_id')
                 entity_name = result.get('entity_name')
                 domain = result.get('domain')
@@ -81,12 +88,15 @@ class ConversationAssistant():
                     # default reply
                     return self.intent_result(f'执行脚本：{entity_id}', extra_data)
             elif isinstance(result, list):
-                result_message = []
+                # 匹配到多个实体
+                entities = []
+                result_message = []                
                 for item in result:
                     entity_id = item.get('entity_id')
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
                     entity_state = item.get('state', '')
+                    entities.append(entity_id)
 
                     if domain == 'weather' and entity_state != 'unavailable':
                         ''' 天气 '''
@@ -111,7 +121,7 @@ class ConversationAssistant():
                     elif ['input_button', 'button'].count(domain) > 0 and entity_name == text:
                         # 完全匹配时点击按钮
                         self.call_service_entity(f'{domain}.press', entity_id)
-                        return self.intent_result(f'点击{entity_name}按钮')
+                        return self.intent_result(f'点击{entity_name}按钮', { 'entities': entities })
                     elif domain == 'calendar' and entity_name == text:
                         ''' 日历 '''
                         state = self.hass.states.get(entity_id)
@@ -131,36 +141,47 @@ class ConversationAssistant():
                     else:
                         result_message.append(f'{domain}{entity_name}：{entity_state} {item.get("unit")}')
 
-                return self.intent_result('\r\n'.join(result_message))
+                return self.intent_result('\r\n'.join(result_message), { 'entities': entities })
 
-        # trigger match
-        result = await self.trigger_match(text)
-        if result is not None:
-            return self.intent_result(result)
+        extra_data = None
+        entities = self.semantic.entities
+        # 命令中包含设备
+        if len(entities) > 0:
+            extra_data = {
+              'entities': list(map(lambda state: state.get('entity_id'), entities))
+            }
 
-        # activate match
-        result = await self.activate_match(text)
-        if result is not None:
-            return self.intent_result(result)
+            # trigger match
+            result = await self.trigger_match(text)
+            if result is not None:
+                return self.intent_result(result, extra_data)
 
-        # light
-        result = await self.light_match(text)
-        if result is not None:
-            return self.intent_result(result)
+            # activate match
+            result = await self.activate_match(text)
+            if result is not None:
+                return self.intent_result(result, extra_data)
 
-        # media_player
-        result = await self.media_player_match(text)
-        if result is not None:
-            return self.intent_result(result)
+            # light
+            result = await self.light_match(text)
+            if result is not None:
+                return self.intent_result(result, extra_data)
 
-        # climate
-        result = await self.climate_match(text)
-        if result is not None:
-            return self.intent_result(result)
-        
+            # media_player
+            result = await self.media_player_match(text)
+            if result is not None:
+                return self.intent_result(result, extra_data)
+
+            # climate
+            result = await self.climate_match(text)
+            if result is not None:
+                return self.intent_result(result, extra_data)
+
+        # 设备开关操作匹配
         result = await self.turn_match(text)
         if result is not None:
-            return self.intent_result(result)
+            return self.intent_result(result.get('message'), {
+                'entities': result.get('entities')
+            })
 
         # 微信位置匹配
         result = await self.wechat_match(text)
@@ -527,6 +548,8 @@ class ConversationAssistant():
                 turnOff_text = matchTurnOff[0]
             if matchTurnOff[2] != '':
                 turnOff_text = matchTurnOff[2]
+        
+        extra_entities = []
         # single device
         turnOn_entities = await self.semantic.find_entity_multiple(turnOn_text)
         if len(turnOn_entities) > 0:
@@ -534,6 +557,7 @@ class ConversationAssistant():
                 domain = entity.get('domain')
                 entity_id = entity.get('entity_id')
                 entity_name = entity.get('entity_name')
+                extra_entities.append(entity_id)
                 service = 'turn_on'
                 if domain == 'cover':
                     service = 'open_cover'
@@ -549,6 +573,7 @@ class ConversationAssistant():
                 domain = entity.get('domain')
                 entity_id = entity.get('entity_id')
                 entity_name = entity.get('entity_name')
+                extra_entities.append(entity_id)
                 service = 'turn_off'
                 if domain == 'cover':
                     service = 'close_cover'
@@ -566,6 +591,7 @@ class ConversationAssistant():
                 domain = entity.get('domain')
                 entity_id = entity.get('entity_id')
                 entity_name = entity.get('entity_name')
+                extra_entities.append(entity_id)
                 service = 'turn_on'
                 if domain == 'cover':
                     service = 'open_cover'
@@ -582,6 +608,7 @@ class ConversationAssistant():
                 domain = entity.get('domain')
                 entity_id = entity.get('entity_id')
                 entity_name = entity.get('entity_name')
+                extra_entities.append(entity_id)
                 service = 'turn_off'
                 if domain == 'cover':
                     service = 'close_cover'
@@ -592,7 +619,10 @@ class ConversationAssistant():
                     result.append(f'关闭{domain}{entity_name}')
 
         if len(result) > 0:
-            return '、'.join(result)
+            return {
+                'message': '、'.join(result),
+                'entities': extra_entities
+            }
 
     async def wechat_match(self, text):
         compileX = re.compile("微信定位(\d+\.\d+),(\d+\.\d+)")
