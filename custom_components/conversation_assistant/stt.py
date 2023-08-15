@@ -66,6 +66,7 @@ class ConversationSttEntity(stt.SpeechToTextEntity):
 
         except Exception as err:
             _LOGGER.exception("Error processing audio stream: %s", err)
+            return stt.SpeechResult('识别出现异常，请检查Azure语音服务密钥是否正确，或者联系插件作者寻求帮助', stt.SpeechResultState.SUCCESS)
 
         return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
