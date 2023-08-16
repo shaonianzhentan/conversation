@@ -46,7 +46,7 @@ class ConversationAssistant():
             if result[0] == 0:
                 entities = self.semantic.get_entities_by_domain(result[1])
                 extra_data = {
-                  'entities': list(map(lambda state: state.entity_id, entities))
+                  'entities': list(map(lambda state: { 'id': state.entity_id, 'name': state.attributes.get('friendly_name'), 'state': state.state }, entities))
                 }
                 return self.intent_result(self.template('{% for state in states.' + result[1]+ ''' -%}【{{ state.name }} - {{ state.state }}】
 {% endfor %} '''), extra_data)
@@ -96,7 +96,11 @@ class ConversationAssistant():
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
                     entity_state = item.get('state', '')
-                    entities.append(entity_id)
+                    entities.append({
+                      'id': entity_id,
+                      'name': entity_name,
+                      'state': entity_state
+                    })
 
                     if domain == 'weather' and entity_state != 'unavailable':
                         ''' 天气 '''
@@ -148,7 +152,7 @@ class ConversationAssistant():
         # 命令中包含设备
         if len(entities) > 0:
             extra_data = {
-              'entities': list(map(lambda state: state.get('entity_id'), entities))
+              'entities': self.semantic.extra_entities
             }
 
             # trigger match
@@ -555,9 +559,14 @@ class ConversationAssistant():
         if len(turnOn_entities) > 0:
             for entity in turnOn_entities:
                 domain = entity.get('domain')
-                entity_id = entity.get('entity_id')
-                entity_name = entity.get('entity_name')
-                extra_entities.append(entity_id)
+                entity_id = entity.get('id')
+                entity_name = entity.get('name')
+                entity_state = entity.get('state')
+                extra_entities.append({
+                  'id': entity_id,
+                  'name': entity_name,
+                  'state': entity_state
+                })
                 service = 'turn_on'
                 if domain == 'cover':
                     service = 'open_cover'
@@ -571,9 +580,14 @@ class ConversationAssistant():
         if len(turnOff_entities) > 0:
             for entity in turnOff_entities:
                 domain = entity.get('domain')
-                entity_id = entity.get('entity_id')
-                entity_name = entity.get('entity_name')
-                extra_entities.append(entity_id)
+                entity_id = entity.get('id')
+                entity_name = entity.get('name')
+                entity_state = entity.get('state')
+                extra_entities.append({
+                  'id': entity_id,
+                  'name': entity_name,
+                  'state': entity_state
+                })
                 service = 'turn_off'
                 if domain == 'cover':
                     service = 'close_cover'
@@ -589,9 +603,14 @@ class ConversationAssistant():
             entities = await self.semantic.findAll_entity(area)
             for entity in entities:
                 domain = entity.get('domain')
-                entity_id = entity.get('entity_id')
-                entity_name = entity.get('entity_name')
-                extra_entities.append(entity_id)
+                entity_id = entity.get('id')
+                entity_name = entity.get('name')
+                entity_state = entity.get('state')
+                extra_entities.append({
+                  'id': entity_id,
+                  'name': entity_name,
+                  'state': entity_state
+                })
                 service = 'turn_on'
                 if domain == 'cover':
                     service = 'open_cover'
@@ -606,9 +625,14 @@ class ConversationAssistant():
             entities = await self.semantic.findAll_entity(area)
             for entity in entities:
                 domain = entity.get('domain')
-                entity_id = entity.get('entity_id')
-                entity_name = entity.get('entity_name')
-                extra_entities.append(entity_id)
+                entity_id = entity.get('id')
+                entity_name = entity.get('name')
+                entity_state = entity.get('state')
+                extra_entities.append({
+                  'id': entity_id,
+                  'name': entity_name,
+                  'state': entity_state
+                })
                 service = 'turn_off'
                 if domain == 'cover':
                     service = 'close_cover'

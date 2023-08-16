@@ -56,6 +56,7 @@ class Semantic():
             else:
                 entities[index] = None
         self.entities = list(filter(lambda x:x is not None, entities))
+        self.extra_entities = list(map(lambda state: { 'id': state['entity_id'], 'name': state['entity_name'], 'state': state['state'] }, self.entities))
 
     def get_entities_by_domain(self, domain):
       ''' 获取实体 '''
@@ -120,15 +121,15 @@ class Semantic():
                 if friendly_name in text or self.aliases_in(state.entity_id, text):
                     arr.append({
                         'domain': state.entity_id.split('.')[0],
-                        'entity_id': state.entity_id,
-                        'entity_name': friendly_name,
+                        'id': state.entity_id,
+                        'name': friendly_name,
                         'state': state.state
                     })
-        arr.sort(reverse=True, key=lambda x:len(x['entity_name']))
+        arr.sort(reverse=True, key=lambda x:len(x['name']))
         tmp_text = text
         for index, entity in enumerate(arr):
-            entity_name = entity['entity_name']
-            alias = self.aliases_in(entity['entity_id'], tmp_text)
+            entity_name = entity['name']
+            alias = self.aliases_in(entity['id'], tmp_text)
             if entity_name in tmp_text:
                 tmp_text = tmp_text.replace(entity_name, '')
             elif alias:
@@ -233,8 +234,9 @@ class Semantic():
                         domain = entity_id.split('.')[0]
                         arr.append({
                             'domain': domain,
-                            'entity_id': entity_id,
-                            'entity_name': friendly_name
+                            'id': entity_id,
+                            'name': friendly_name,
+                            'state': state.state
                         })
         return arr
 
@@ -267,42 +269,6 @@ class Semantic():
                 'area_name': area,
                 'area_words': words
             }
-
-    async def parser_turn_off(self, text, entity):
-        cmd = 'turn_off'
-        if entity is not None:
-            domain = entity.get('domain')
-            if domain == 'cover':
-                cmd = 'close_cover'
-            elif domain == 'lock':
-                cmd = 'lock'
-        return await self.parser_turn_cmd(text, cmd, '关闭|关掉|关上|关一下|关下')
-
-    async def parser_turn_on(self, text, entity):
-        cmd = 'turn_on'
-        if entity is not None:
-            domain = entity.get('domain')
-            if domain == 'cover':
-                cmd = 'open_cover'
-            elif domain == 'lock':
-                cmd = 'unlock'
-        return await self.parser_turn_cmd(text, cmd, '打开|开启|开一下|开下')
-
-    async def parser_turn_cmd(self, text, cmd, key):
-        matchObj = self.parser_match(text, key)
-        if matchObj is not None:
-            result = await self.find_area(matchObj[0])
-            if result is None:
-                result = await self.find_area(matchObj[2])
-            if result is None:
-                result = await self.find_entity_like(matchObj[2])
-
-            if result is not None:
-                return {
-                    'cmd': cmd,
-                    'cmd_text': matchObj[1],
-                    **result
-                }
 
     def parser_match(self, text, find):
         matchObj = re.match(rf'(.*)({find})(.*)', text)
