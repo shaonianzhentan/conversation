@@ -25,13 +25,6 @@ PLATFORMS = [ Platform.STT,  Platform.TTS ]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 安装集成 '''
     hass.http.register_view(HttpView)
-    await update_listener(hass, entry)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-    return True
-
-async def update_listener(hass, entry):
-    ''' 更新配置 '''
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     assistant = ConversationAssistantAgent(hass, entry)
     conversation.async_set_agent(hass, entry, assistant)
@@ -47,13 +40,25 @@ async def update_listener(hass, entry):
             )
         )
         return result
-    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry.entry_id)    
+    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry.entry_id)
+    
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    return True
+
+async def update_listener(hass, entry):
+    ''' 更新配置 '''
+    await async_unload_entry(hass, entry)
+    await async_setup_entry(hass, entry)
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 删除集成 '''
     conversation.async_unset_agent(hass, entry)
     del hass.data[manifest.domain]
-    return True
+
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
 
 class ConversationAssistantAgent(conversation.AbstractConversationAgent):
 
