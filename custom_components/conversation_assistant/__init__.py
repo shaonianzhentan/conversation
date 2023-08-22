@@ -115,7 +115,18 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
             # 插件意图
             result = await self.entity_assistant.async_process(text)
             if result is not None:
-                intent_response = conversation_assistant.intent_result(result)
+                message, entity_id = result
+                state = self.hass.states.get(entity_id)
+                entities = [
+                    {
+                      'id': entity_id,
+                      'name': state.attributes.get('friendly_name'),
+                      'state': state.state
+                    }
+                ]
+                intent_response = conversation_assistant.intent_result(message, {
+                  'entities': entities
+                })
             else:
                 intent_response = await conversation_assistant.async_process(text)
 

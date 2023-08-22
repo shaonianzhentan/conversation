@@ -20,27 +20,27 @@ class EntityAssistant:
     async def async_process(self, text):
         result = await self.async_calendar(text)
         if result is not None:
-            return result
+            return result, self.calendar_id
 
         result = await self.async_fm(text)
         if result is not None:
-            return result
+            return result, self.fm_id
 
         result = await self.async_music(text)
         if result is not None:
-            return result
+            return result, self.music_id
 
         result = await self.async_tv(text)
         if result is not None:
-            return result
+            return result, self.tv_id
 
         result = await self.async_xiaoai(text)
         if result is not None:
-            return result
+            return result, self.xiaoai_id
 
         result = await self.async_xiaodu(text)
         if result is not None:
-            return result
+            return result, self.xiaodu_id
 
     async def async_fm(self, text):
         ''' 广播 '''
