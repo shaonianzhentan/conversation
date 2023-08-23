@@ -1,7 +1,7 @@
 {
   "domain": "conversation_assistant",
   "name": "\u8BED\u97F3\u5C0F\u52A9\u624B",
-  "version": "2023.8.22",
+  "version": "2023.8.23",
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/conversation",
   "requirements": [
