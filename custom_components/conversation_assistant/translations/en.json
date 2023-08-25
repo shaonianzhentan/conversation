@@ -24,7 +24,8 @@
                     "tv_id": "电视",
                     "fm_id": "广播电台",
                     "xiaoai_id": "小爱音箱",
-                    "xiaodu_id": "小度音箱"
+                    "xiaodu_id": "小度音箱",
+                    "robot_id": "聊天机器人"
                 }
             }
         },

@@ -26,8 +26,11 @@ WEATHER_STATE = {
 
 class ConversationAssistant():
 
-    def __init__(self, hass, recognize, entry_id):
-        self.id = entry_id
+    def __init__(self, hass, recognize, entry):
+        
+        self.id = entry.entry_id
+        self.robot_id = entry.options.get('robot_id')
+
         self.hass = hass
         local = hass.config.path("custom_components/conversation_assistant/www")
         LOCAL_PATH = '/www-conversation'
@@ -671,9 +674,32 @@ class ConversationAssistant():
         message = "对不起，我不明白"
         try:
             timeout = aiohttp.ClientTimeout(total=5)
-            async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=timeout) as r:
-                res = await r.json(content_type=None)
-                message = res['data']['info']['text']
+
+            if self.robot_id == 'haier':
+                # 海尔机器人
+                url = 'https://www.haigeek.com/skillcenter/skillPlate/skillTrial'
+                headers = {
+                  'Content-Type': 'application/json'
+                }
+                body = {
+                  "userQuery": text,
+                  "userId": "d0c6a515-5221-42d3-977e-6d275cec2a70",
+                  "deviceId": "2c995a8c-bf38-4788-8614-d40b47ba3b05"
+                }
+                async with aiohttp.ClientSession(headers=headers) as session:
+                  async with session.post(url=url, json=body, timeout=timeout) as res:
+                    result = await res.json(content_type=None)
+                    _LOGGER.debug(result)
+                    if result.get('retCode') == '00000':
+                      res_data = result['data']
+                      # print(res_data)
+                      message = res_data['response']
+            else:
+                # 默认机器人
+                async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=timeout) as r:
+                    result = await r.json(content_type=None)
+                    _LOGGER.debug(result)
+                    message = result['data']['info']['text']
         except Exception as e:
             _LOGGER.debug(e)
         return message

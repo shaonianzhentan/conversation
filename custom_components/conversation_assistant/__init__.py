@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
         return result
-    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry.entry_id)
+    hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry)
     
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -98,6 +98,12 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
         # 处理意图
         conversation_assistant = self.hass.data[manifest.domain]
         text = conversation_assistant.trim_char(user_input.text)
+        if text == '':
+          return conversation.ConversationResult(
+            response=conversation_assistant.intent_result('没有接收到控制命令'), 
+            conversation_id=conversation_id
+          )
+
         conversation_assistant.fire_text(text)
 
         # 调用Hass意图
