@@ -1,34 +1,34 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "语音小助手",
-                "description": "一个简单的中文语音控制插件",
-                "data": {}
-            }
-        },
-        "error": {},
-        "abort": {
-            "single_instance_allowed": "仅允许单个配置."
-        }
+  "config": {
+    "step": {
+      "user": {
+        "title": "语音小助手",
+        "description": "一个简单的中文语音控制插件",
+        "data": {}
+      }
     },
-    "options": {
-        "step": {
-            "user": {
-                "title": "语音小助手",
-                "description": "指定默认控制的实体，使用语音快速控制\n配置语音服务密钥可以使用在线语音识别、文本转语音服务",
-                "data": {
-                    "speech_key": "Azure语音服务密钥",
-                    "calendar_id": "日历",
-                    "music_id": "音乐",
-                    "tv_id": "电视",
-                    "fm_id": "广播电台",
-                    "xiaoai_id": "小爱音箱",
-                    "xiaodu_id": "小度音箱",
-                    "robot_id": "聊天机器人"
-                }
-            }
-        },
-        "error": {}
+    "error": {},
+    "abort": {
+      "single_instance_allowed": "仅允许单个配置."
     }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "语音小助手",
+        "description": "指定默认控制的实体，使用语音快速控制\n配置语音服务密钥可以使用在线语音识别、文本转语音服务",
+        "data": {
+          "speech_key": "Azure语音服务密钥",
+          "calendar_id": "日历",
+          "music_id": "音乐",
+          "tv_id": "电视",
+          "fm_id": "广播电台",
+          "xiaoai_id": "小爱音箱",
+          "xiaodu_id": "小度音箱",
+          "robot_id": "智能聊天机器人"
+        }
+      }
+    },
+    "error": {}
+  }
 }
