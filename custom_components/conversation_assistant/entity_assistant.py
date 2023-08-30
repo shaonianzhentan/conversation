@@ -93,6 +93,25 @@ class EntityAssistant:
                 service_name= 'volume_down'
             elif ['声音大点', '大点声音', '大点声', '大一点声音', '声音大一点'].count(text) == 1:
                 service_name= 'volume_up'
+            elif text == '随机播放':
+                service_name = 'shuffle_set'
+                service_data.update({
+                    'shuffle': True
+                })
+            elif text == '单曲循环':
+                service_name = 'repeat_set'
+                service_data.update({
+                    'repeat': 'one'
+                })
+            elif text == '列表播放':
+                await self.hass.services.async_call('media_player', 'shuffle_set', {
+                    'shuffle': False,
+                    **service_data
+                })
+                service_name = 'repeat_set'
+                service_data.update({
+                    'repeat': 'all'
+                })
             elif text.startswith('播放每日推荐'):
                 service_name = 'play_media'
                 service_data.update({
