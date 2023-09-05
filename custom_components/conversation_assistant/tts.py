@@ -42,7 +42,7 @@ class ConversationTtsEntity(tts.TextToSpeechEntity):
     @property
     def default_options(self):
         """Return a dict include default options."""
-        return {tts.ATTR_AUDIO_OUTPUT: "wav"}
+        return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[str] | None:
