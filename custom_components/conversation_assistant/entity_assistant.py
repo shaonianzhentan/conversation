@@ -1,10 +1,12 @@
-import logging, datetime, re, random
-_LOGGER = logging.getLogger(__name__)
-
-from urllib.parse import urlparse, parse_qs, parse_qsl, quote
-from .api_http import http_get
+from .manifest import manifest
 from .util_recognizer import get_calendar_datetime, get_number_value
-from aiodns import DNSResolver
+from .api_http import http_get
+from urllib.parse import urlparse, parse_qs, parse_qsl, quote
+import logging
+import datetime
+import re
+import random
+_LOGGER = logging.getLogger(__name__)
 
 class EntityAssistant:
 
@@ -45,34 +47,17 @@ class EntityAssistant:
     async def async_fm(self, text):
         ''' 广播 '''
         entity_id = self.fm_id or self.music_id
-        if text.startswith('播放广播') and entity_id:
-            text = text[4:]
-            resolver = DNSResolver()
-            result = await resolver.query("_api._tcp.radio-browser.info", "SRV")
-            random.shuffle(result)
-            radio_api = f'https://{result[0].host}/json/'
-
-            if text == '':
-                url = f'{radio_api}stations/search?limit=30&countrycode=CN&hidebroken=true&order=clickcount&reverse=true'
-                index = random.randint(0,29)
-            else:
-                url = f'{radio_api}stations/search?limit=2&name={quote(text)}&hidebroken=true&order=clickcount&reverse=true'
-                index = 0
-
-            result = await http_get(url)
-            if result is not None and len(result) > 0:
-                item = result[index]
-                _LOGGER.debug(item)
-                play_name = item['name']
-                play_url = item['url']
-                await self.hass.services.async_call('media_player', 'play_media', {
-                    'entity_id': entity_id,
-                    'media_content_type': 'music',
-                    'media_content_id': play_url
-                })
-                state = self.hass.states.get(entity_id)
-                friendly_name = state.attributes.get('friendly_name', '')
-                return f'正在{friendly_name}上播放{play_name}'
+        if '播放' in text and '广播' in text and entity_id:
+            assistant = self.hass.data[manifest.domain]
+            result = await assistant.haier_robot(text)
+            if result is not None:
+                if result.get('respType') == 'media':
+                    await self.hass.services.async_call('media_player', 'play_media', {
+                        'entity_id': entity_id,
+                        'media_content_type': 'music',
+                        'media_content_id': result.get('resourceUrl')
+                    })
+                    return result['response']
 
     async def async_music(self, text):
         ''' 音乐 '''
@@ -82,17 +67,17 @@ class EntityAssistant:
                 'entity_id': self.music_id
             }
             if ['播放', '继续播放', '播放音乐', '音乐播放'].count(text) == 1:
-                service_name= 'media_play'
+                service_name = 'media_play'
             elif ['暂停', '暂停音乐', '音乐暂停'].count(text) == 1:
-                service_name= 'media_pause'
+                service_name = 'media_pause'
             elif ['上一曲', '上一首', '上一个'].count(text) == 1:
-                service_name= 'media_previous_track'
+                service_name = 'media_previous_track'
             elif ['下一曲', '下一首', '下一个'].count(text) == 1:
-                service_name= 'media_next_track'
+                service_name = 'media_next_track'
             elif ['声音小点', '小点声音', '小点声', '小一点声音', '声音小一点'].count(text) == 1:
-                service_name= 'volume_down'
+                service_name = 'volume_down'
             elif ['声音大点', '大点声音', '大点声', '大一点声音', '声音大一点'].count(text) == 1:
-                service_name= 'volume_up'
+                service_name = 'volume_up'
             elif text == '随机播放':
                 service_name = 'shuffle_set'
                 service_data.update({
@@ -172,7 +157,6 @@ class EntityAssistant:
             elif text.startswith('播放专辑'):
                 pass
 
-
             if service_name is not None:
                 await self.hass.services.async_call('media_player', service_name, service_data)
 
@@ -180,7 +164,8 @@ class EntityAssistant:
                 if ['volume_up', 'volume_down'].count(service_name) == 1:
                     state = self.hass.states.get(self.music_id)
                     friendly_name = state.attributes.get('friendly_name')
-                    volume_level = state.attributes.get("volume_level", 0) * 100
+                    volume_level = state.attributes.get(
+                        "volume_level", 0) * 100
                     return f'{friendly_name}的音量是{volume_level}%'
 
                 return f'音乐{text}'
@@ -188,61 +173,61 @@ class EntityAssistant:
     async def async_tv(self, text):
         ''' 电视 '''
         if self.tv_id is not None and text.startswith('我想看'):
-                text = text[3:].lower()
-                if text == '':
-                    return None
+            text = text[3:].lower()
+            if text == '':
+                return None
 
-                media_id = None
-                matchObj = re.match(r'中央(.+)台', text)
-                if matchObj is not None:
-                    num = get_number_value(text)
-                    if num is not None:
-                        if num == '1':
-                            media_id = 'https://tv.cctv.com/live/cctv1/'
-                        elif num == '2':
-                            media_id = 'https://tv.cctv.com/live/cctv2/'
-                        elif num == '3':
-                            media_id = 'https://tv.cctv.com/live/cctv3/'
-                        elif num == '4':
-                            media_id = 'https://tv.cctv.com/live/cctv4/'
-                        elif num == '5':
-                            media_id = 'https://tv.cctv.com/live/cctv5/'
-                        elif num == '6':
-                            media_id = 'https://tv.cctv.com/live/cctv6/'
-                        elif num == '7':
-                            media_id = 'https://tv.cctv.com/live/cctv7/'
-                        elif num == '8':
-                            media_id = 'https://tv.cctv.com/live/cctv8/'
-                        elif num == '9':
-                            media_id = 'https://tv.cctv.com/live/cctvjilu/'
-                        elif num == '10':
-                            media_id = 'https://tv.cctv.com/live/cctv10/'
-                        elif num == '11':
-                            media_id = 'https://tv.cctv.com/live/cctv11/'
-                        elif num == '12':
-                            media_id = 'https://tv.cctv.com/live/cctv12/'
-                        elif num == '13':
-                            media_id = 'https://tv.cctv.com/live/cctv13/'
-                        elif num == '14':
-                            media_id = 'https://tv.cctv.com/live/cctvchild/'
-                        elif num == '15':
-                            media_id = 'https://tv.cctv.com/live/cctv15/'
-                        elif num == '16':
-                            media_id = 'https://tv.cctv.com/live/cctv16/'
-                        elif num == '17':
-                            media_id = 'https://tv.cctv.com/live/cctv17/'
+            media_id = None
+            matchObj = re.match(r'中央(.+)台', text)
+            if matchObj is not None:
+                num = get_number_value(text)
+                if num is not None:
+                    if num == '1':
+                        media_id = 'https://tv.cctv.com/live/cctv1/'
+                    elif num == '2':
+                        media_id = 'https://tv.cctv.com/live/cctv2/'
+                    elif num == '3':
+                        media_id = 'https://tv.cctv.com/live/cctv3/'
+                    elif num == '4':
+                        media_id = 'https://tv.cctv.com/live/cctv4/'
+                    elif num == '5':
+                        media_id = 'https://tv.cctv.com/live/cctv5/'
+                    elif num == '6':
+                        media_id = 'https://tv.cctv.com/live/cctv6/'
+                    elif num == '7':
+                        media_id = 'https://tv.cctv.com/live/cctv7/'
+                    elif num == '8':
+                        media_id = 'https://tv.cctv.com/live/cctv8/'
+                    elif num == '9':
+                        media_id = 'https://tv.cctv.com/live/cctvjilu/'
+                    elif num == '10':
+                        media_id = 'https://tv.cctv.com/live/cctv10/'
+                    elif num == '11':
+                        media_id = 'https://tv.cctv.com/live/cctv11/'
+                    elif num == '12':
+                        media_id = 'https://tv.cctv.com/live/cctv12/'
+                    elif num == '13':
+                        media_id = 'https://tv.cctv.com/live/cctv13/'
+                    elif num == '14':
+                        media_id = 'https://tv.cctv.com/live/cctvchild/'
+                    elif num == '15':
+                        media_id = 'https://tv.cctv.com/live/cctv15/'
+                    elif num == '16':
+                        media_id = 'https://tv.cctv.com/live/cctv16/'
+                    elif num == '17':
+                        media_id = 'https://tv.cctv.com/live/cctv17/'
 
-                if media_id is not None:
-                    await self.hass.services.async_call('media_player', 'play_media', {
-                        'media_content_type': 'web',
-                        'media_content_id': media_id,
-                        'entity_id': self.tv_id
-                    })
-                    state = self.hass.states.get(self.tv_id)
-                    friendly_name = state.attributes.get('friendly_name')
-                    return f'正在{friendly_name}上播放{text}'
-                else:
-                    return f'没有找到{text}'
+            if media_id is not None:
+                await self.hass.services.async_call('media_player', 'play_media', {
+                    'media_content_type': 'web',
+                    'media_content_id': media_id,
+                    'entity_id': self.tv_id
+                })
+                state = self.hass.states.get(self.tv_id)
+                friendly_name = state.attributes.get('friendly_name')
+                return f'正在{friendly_name}上播放{text}'
+            else:
+                return f'没有找到{text}'
 
     async def async_xiaoai(self, text):
         ''' 小爱音箱 '''

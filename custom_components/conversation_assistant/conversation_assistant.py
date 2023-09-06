@@ -1,4 +1,6 @@
-import logging, aiohttp, re
+import logging
+import aiohttp
+import re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
 from .manifest import manifest
@@ -24,18 +26,21 @@ WEATHER_STATE = {
     'windy-variant': '很大风'
 }
 
+
 class ConversationAssistant():
 
     def __init__(self, hass, recognize, entry):
-        
+
         self.id = entry.entry_id
         self.robot_id = entry.options.get('robot_id')
 
         self.hass = hass
-        local = hass.config.path("custom_components/conversation_assistant/www")
+        local = hass.config.path(
+            "custom_components/conversation_assistant/www")
         LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
-        hass.components.frontend.add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
+        hass.components.frontend.add_extra_js_url(
+            hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
         self.update(manifest.version, '')
         self.semantic = Semantic(hass)
         self.recognize = recognize
@@ -49,9 +54,9 @@ class ConversationAssistant():
             if result[0] == 0:
                 entities = self.semantic.get_entities_by_domain(result[1])
                 extra_data = {
-                  'entities': list(map(lambda state: { 'id': state.entity_id, 'name': state.attributes.get('friendly_name'), 'state': state.state }, entities))
+                    'entities': list(map(lambda state: {'id': state.entity_id, 'name': state.attributes.get('friendly_name'), 'state': state.state}, entities))
                 }
-                return self.intent_result(self.template('{% for state in states.' + result[1]+ ''' -%}【{{ state.name }} - {{ state.state }}】
+                return self.intent_result(self.template('{% for state in states.' + result[1] + ''' -%}【{{ state.name }} - {{ state.state }}】
 {% endfor %} '''), extra_data)
 
         # 精确匹配
@@ -68,7 +73,8 @@ class ConversationAssistant():
                     self.call_service(entity_id, slots)
                     vars = []
                     for key in slots:
-                        vars.append('{% set ' + key + '="' + slots[key] + '" %}')
+                        vars.append(
+                            '{% set ' + key + '="' + slots[key] + '" %}')
                     var_str = ''.join(vars)
 
                     # 额外数据
@@ -78,11 +84,13 @@ class ConversationAssistant():
 
                             url = extra_data.get('url')
                             if url is not None:
-                                extra_data['url'] = self.template(var_str + url).strip()
+                                extra_data['url'] = self.template(
+                                    var_str + url).strip()
 
                             picurl = extra_data.get('picurl')
                             if picurl is not None:
-                                extra_data['picurl'] = self.template(var_str + picurl).strip()
+                                extra_data['picurl'] = self.template(
+                                    var_str + picurl).strip()
 
                     # customze reply
                     reply = result.get('reply')
@@ -93,16 +101,16 @@ class ConversationAssistant():
             elif isinstance(result, list):
                 # 匹配到多个实体
                 entities = []
-                result_message = []                
+                result_message = []
                 for item in result:
                     entity_id = item.get('entity_id')
                     entity_name = item.get('entity_name')
                     domain = item.get('domain')
                     entity_state = item.get('state', '')
                     entities.append({
-                      'id': entity_id,
-                      'name': entity_name,
-                      'state': entity_state
+                        'id': entity_id,
+                        'name': entity_name,
+                        'state': entity_state
                     })
 
                     if domain == 'weather' and entity_state != 'unavailable':
@@ -110,7 +118,8 @@ class ConversationAssistant():
                         state = self.hass.states.get(entity_id)
                         attributes = state.attributes
                         unit = attributes.get('temperature_unit')
-                        result_message.append(f'今天天气{WEATHER_STATE.get(state.state, state.state)}，温度{attributes.get("temperature")} {unit}，湿度{attributes.get("humidity")} %')
+                        result_message.append(
+                            f'今天天气{WEATHER_STATE.get(state.state, state.state)}，温度{attributes.get("temperature")} {unit}，湿度{attributes.get("humidity")} %')
                         forecast = attributes.get('forecast', [])
                         for index, item in enumerate(forecast):
                             date = item['datetime']
@@ -124,11 +133,12 @@ class ConversationAssistant():
                             condition = item['condition']
                             temperature = item['temperature']
                             templow = item['templow']
-                            result_message.append(f'{date}天气{WEATHER_STATE.get(condition, condition)}，最高温度{temperature} {unit}，最低温度{templow} {unit}')
+                            result_message.append(
+                                f'{date}天气{WEATHER_STATE.get(condition, condition)}，最高温度{temperature} {unit}，最低温度{templow} {unit}')
                     elif ['input_button', 'button'].count(domain) > 0 and entity_name == text:
                         # 完全匹配时点击按钮
                         self.call_service_entity(f'{domain}.press', entity_id)
-                        return self.intent_result(f'点击{entity_name}按钮', { 'entities': entities })
+                        return self.intent_result(f'点击{entity_name}按钮', {'entities': entities})
                     elif domain == 'calendar' and entity_name == text:
                         ''' 日历 '''
                         state = self.hass.states.get(entity_id)
@@ -146,16 +156,17 @@ class ConversationAssistant():
                             result_message.append('近期没有需要提醒的事件')
                         break
                     else:
-                        result_message.append(f'{domain}{entity_name}：{entity_state} {item.get("unit")}')
+                        result_message.append(
+                            f'{domain}{entity_name}：{entity_state} {item.get("unit")}')
 
-                return self.intent_result('\r\n'.join(result_message), { 'entities': entities })
+                return self.intent_result('\r\n'.join(result_message), {'entities': entities})
 
         extra_data = None
         entities = self.semantic.entities
         # 命令中包含设备
         if len(entities) > 0:
             extra_data = {
-              'entities': self.semantic.extra_entities
+                'entities': self.semantic.extra_entities
             }
 
             # trigger match
@@ -207,7 +218,8 @@ class ConversationAssistant():
                 domain = entity.get('domain')
                 if ['scene'].count(domain) > 0 and ('激活' in text or '启用' in text or '启动' in text):
                     entity_name = entity['entity_name']
-                    self.call_service_entity('scene.turn_on', entity['entity_id'])
+                    self.call_service_entity(
+                        'scene.turn_on', entity['entity_id'])
                     result.append(f'{domain}{entity_name}')
             if len(result) > 0:
                 return f"正在激活{'、'.join(result)}"
@@ -232,7 +244,8 @@ class ConversationAssistant():
                     if service != '':
                         entity_id = entity['entity_id']
                         entity_name = entity['entity_name']
-                        self.call_service_entity(f'{domain}.{service}', entity_id)
+                        self.call_service_entity(
+                            f'{domain}.{service}', entity_id)
                         result.append(f'{domain}{entity_name}')
             if len(result) > 0:
                 return f"正在触发{'、'.join(result)}"
@@ -260,7 +273,8 @@ class ConversationAssistant():
                         brightness = 1
 
                     if brightness > 0:
-                        self.call_service('light.turn_on', { 'entity_id': entity_id, 'brightness_pct': brightness })
+                        self.call_service('light.turn_on', {
+                                          'entity_id': entity_id, 'brightness_pct': brightness})
                         result.append(f'{entity_name}的亮度正在设为{brightness}%')
                     else:
                         color_obj = {
@@ -351,67 +365,67 @@ class ConversationAssistant():
                             '亚麻布': 'linen',
                             '洋红': 'magenta',
                             '褐红色': 'maroon',
-                            #'颜色': 'mediumaquamarine',
-                            #'颜色': 'mediumblue',
-                            #'颜色': 'mediumorchid',
-                            #'颜色': 'mediumpurple',
-                            #'颜色': 'mediumseagreen',
-                            #'颜色': 'mediumslateblue',
-                            #'颜色': 'mediumspringgreen',
-                            #'颜色': 'mediumturquoise',
-                            #'颜色': 'mediumvioletred',
-                            #'颜色': 'midnightblue',
-                            #'颜色': 'mintcream',
-                            #'颜色': 'mistyrose',
-                            #'颜色': 'moccasin',
-                            #'颜色': 'navajowhite',
-                            #'颜色': 'navy',
-                            #'颜色': 'navyblue',
-                            #'颜色': 'oldlace',
+                            # '颜色': 'mediumaquamarine',
+                            # '颜色': 'mediumblue',
+                            # '颜色': 'mediumorchid',
+                            # '颜色': 'mediumpurple',
+                            # '颜色': 'mediumseagreen',
+                            # '颜色': 'mediumslateblue',
+                            # '颜色': 'mediumspringgreen',
+                            # '颜色': 'mediumturquoise',
+                            # '颜色': 'mediumvioletred',
+                            # '颜色': 'midnightblue',
+                            # '颜色': 'mintcream',
+                            # '颜色': 'mistyrose',
+                            # '颜色': 'moccasin',
+                            # '颜色': 'navajowhite',
+                            # '颜色': 'navy',
+                            # '颜色': 'navyblue',
+                            # '颜色': 'oldlace',
                             '橄榄色': 'olive',
-                            #'颜色': 'olivedrab',
+                            # '颜色': 'olivedrab',
                             '橙色': 'orange',
-                            #'颜色': 'orangered',
-                            #'颜色': 'orchid',
-                            #'颜色': 'palegoldenrod',
-                            #'颜色': 'palegreen',
-                            #'颜色': 'paleturquoise',
-                            #'颜色': 'palevioletred',
-                            #'颜色': 'papayawhip',
-                            #'颜色': 'peachpuff',
-                            #'颜色': 'peru',
+                            # '颜色': 'orangered',
+                            # '颜色': 'orchid',
+                            # '颜色': 'palegoldenrod',
+                            # '颜色': 'palegreen',
+                            # '颜色': 'paleturquoise',
+                            # '颜色': 'palevioletred',
+                            # '颜色': 'papayawhip',
+                            # '颜色': 'peachpuff',
+                            # '颜色': 'peru',
                             '粉色': 'pink',
-                            #'颜色': 'plum',
-                            #'颜色': 'powderblue',
+                            # '颜色': 'plum',
+                            # '颜色': 'powderblue',
                             '紫色': 'purple',
                             '红色': 'red',
-                            #'颜色': 'rosybrown',
-                            #'颜色': 'royalblue',
-                            #'颜色': 'saddlebrown',
-                            #'颜色': 'salmon',
-                            #'颜色': 'sandybrown',
-                            #'颜色': 'seagreen',
-                            #'颜色': 'seashell',
-                            #'颜色': 'sienna',
+                            # '颜色': 'rosybrown',
+                            # '颜色': 'royalblue',
+                            # '颜色': 'saddlebrown',
+                            # '颜色': 'salmon',
+                            # '颜色': 'sandybrown',
+                            # '颜色': 'seagreen',
+                            # '颜色': 'seashell',
+                            # '颜色': 'sienna',
                             '银色': 'silver',
                             '天蓝色': 'skyblue',
-                            #'颜色': 'slateblue',
-                            #'颜色': 'slategray',
-                            #'颜色': 'slategrey',
-                            #'颜色': 'snow',
-                            #'颜色': 'springgreen',
-                            #'颜色': 'steelblue',
-                            #'颜色': 'tan',
-                            #'颜色': 'teal',
-                            #'颜色': 'thistle',
-                            #'颜色': 'tomato',
-                            #'颜色': 'turquoise',
-                            #'颜色': 'violet',
-                            #'颜色': 'wheat',
+                            # '颜色': 'slateblue',
+                            # '颜色': 'slategray',
+                            # '颜色': 'slategrey',
+                            # '颜色': 'snow',
+                            # '颜色': 'springgreen',
+                            # '颜色': 'steelblue',
+                            # '颜色': 'tan',
+                            # '颜色': 'teal',
+                            # '颜色': 'thistle',
+                            # '颜色': 'tomato',
+                            # '颜色': 'turquoise',
+                            # '颜色': 'violet',
+                            # '颜色': 'wheat',
                             '白色': 'white',
-                            #'颜色': 'whitesmoke',
+                            # '颜色': 'whitesmoke',
                             '黄色': 'yellow',
-                            #'颜色': 'yellowgreen'
+                            # '颜色': 'yellowgreen'
                         }
                         # 颜色
                         compileX = re.compile('|'.join(color_obj.keys()))
@@ -419,8 +433,10 @@ class ConversationAssistant():
                         if len(findX) > 0:
                             name = findX[0]
                             color_name = color_obj[name]
-                            self.call_service('light.turn_on', { 'entity_id': entity_id, 'color_name': color_name })
-                            result.append(f'{entity_name}的颜色调整为{color_name}{name}')
+                            self.call_service('light.turn_on', {
+                                              'entity_id': entity_id, 'color_name': color_name})
+                            result.append(
+                                f'{entity_name}的颜色调整为{color_name}{name}')
 
             if len(result) > 0:
                 return '、'.join(result)
@@ -439,24 +455,30 @@ class ConversationAssistant():
                     findX = compileX.findall(text)
                     if len(findX) > 0:
                         if findX[0] == '上':
-                            self.call_service_entity('media_player.media_previous_track', entity_id)
+                            self.call_service_entity(
+                                'media_player.media_previous_track', entity_id)
                         else:
-                            self.call_service_entity('media_player.media_next_track', entity_id)
+                            self.call_service_entity(
+                                'media_player.media_next_track', entity_id)
                         return f'{entity_name}{findX[0]}一首'
                     # play or pause
                     if '播放' in text:
-                        self.call_service_entity('media_player.media_play', entity_id)
+                        self.call_service_entity(
+                            'media_player.media_play', entity_id)
                         return f'{entity_name}播放'
                     if '暂停' in text:
-                        self.call_service_entity('media_player.media_pause', entity_id)
+                        self.call_service_entity(
+                            'media_player.media_pause', entity_id)
                         return f'{entity_name}暂停'
 
                     if ['声音小点', '小点声音', '小一点声音', '声音小一点', '音量减少', '减少音量', '音量调低', '调低音量'].count(text) == 1:
-                        self.call_service_entity('media_player.volume_down', entity_id)
+                        self.call_service_entity(
+                            'media_player.volume_down', entity_id)
                         return f'{entity_name}音量减少'
 
                     if ['声音大点', '大点声音', '大一点声音', '声音大一点', '音量增加', '增加音量', '音量调高', '调高音量'].count(text) == 1:
-                        self.call_service_entity('media_player.volume_up', entity_id)
+                        self.call_service_entity(
+                            'media_player.volume_up', entity_id)
                         return f'{entity_name}音量增加'
 
                     if '声音' in text or '音量' in text:
@@ -471,7 +493,8 @@ class ConversationAssistant():
                                 'entity_id': entity_id,
                                 'volume_level': volume_level / 100.0
                             })
-                            result.append(f'{entity_name}音量正在调整为{volume_level}%')
+                            result.append(
+                                f'{entity_name}音量正在调整为{volume_level}%')
             if len(result) > 0:
                 return '、'.join(result)
 
@@ -484,7 +507,7 @@ class ConversationAssistant():
                 if domain == 'climate':
                     entity_id = entity.get('entity_id')
                     entity_name = entity.get('entity_name')
-                    
+
                     hvac_mode = ''
                     if '自动模式' in text:
                         hvac_mode = 'auto'
@@ -496,7 +519,7 @@ class ConversationAssistant():
                         hvac_mode = 'dry'
                     if '仅送风模式' in text:
                         hvac_mode = 'fan_only'
-                    
+
                     if hvac_mode != '':
                         self.call_service('climate.set_hvac_mode', {
                             'entity_id': entity_id,
@@ -505,7 +528,7 @@ class ConversationAssistant():
                         result.append(f'{entity_name}运行模式设为{hvac_mode}')
                         continue
 
-                    # set temperature 
+                    # set temperature
                     if '度' in text and ('设' in text or '调' in text):
                         compileX = re.compile("\d+")
                         findX = compileX.findall(text)
@@ -527,7 +550,6 @@ class ConversationAssistant():
                             continue
             if len(result) > 0:
                 return '、'.join(result)
-
 
     async def turn_match(self, text):
         result = []
@@ -555,7 +577,7 @@ class ConversationAssistant():
                 turnOff_text = matchTurnOff[0]
             if matchTurnOff[2] != '':
                 turnOff_text = matchTurnOff[2]
-        
+
         extra_entities = []
         # single device
         turnOn_entities = await self.semantic.find_entity_multiple(turnOn_text)
@@ -566,9 +588,9 @@ class ConversationAssistant():
                 entity_name = entity.get('name')
                 entity_state = entity.get('state')
                 extra_entities.append({
-                  'id': entity_id,
-                  'name': entity_name,
-                  'state': entity_state
+                    'id': entity_id,
+                    'name': entity_name,
+                    'state': entity_state
                 })
                 service = 'turn_on'
                 if domain == 'cover':
@@ -578,7 +600,7 @@ class ConversationAssistant():
                 if self.hass.services.has_service(domain, service):
                     self.call_service_entity(f'{domain}.{service}', entity_id)
                     result.append(f'打开{domain}{entity_name}')
-        
+
         turnOff_entities = await self.semantic.find_entity_multiple(turnOff_text)
         if len(turnOff_entities) > 0:
             for entity in turnOff_entities:
@@ -587,9 +609,9 @@ class ConversationAssistant():
                 entity_name = entity.get('name')
                 entity_state = entity.get('state')
                 extra_entities.append({
-                  'id': entity_id,
-                  'name': entity_name,
-                  'state': entity_state
+                    'id': entity_id,
+                    'name': entity_name,
+                    'state': entity_state
                 })
                 service = 'turn_off'
                 if domain == 'cover':
@@ -610,9 +632,9 @@ class ConversationAssistant():
                 entity_name = entity.get('name')
                 entity_state = entity.get('state')
                 extra_entities.append({
-                  'id': entity_id,
-                  'name': entity_name,
-                  'state': entity_state
+                    'id': entity_id,
+                    'name': entity_name,
+                    'state': entity_state
                 })
                 service = 'turn_on'
                 if domain == 'cover':
@@ -632,9 +654,9 @@ class ConversationAssistant():
                 entity_name = entity.get('name')
                 entity_state = entity.get('state')
                 extra_entities.append({
-                  'id': entity_id,
-                  'name': entity_name,
-                  'state': entity_state
+                    'id': entity_id,
+                    'name': entity_name,
+                    'state': entity_state
                 })
                 service = 'turn_off'
                 if domain == 'cover':
@@ -658,7 +680,8 @@ class ConversationAssistant():
             location = findX[0]
             latitude = location[0]
             longitude = location[1]
-            vars = '{% set location = { "latitude": ' + latitude + ', "longitude": ' + longitude + ' } %}'
+            vars = '{% set location = { "latitude": ' + \
+                latitude + ', "longitude": ' + longitude + ' } %}'
             return self.template(vars + '''{% set state = closest(location.latitude,location.longitude, states) %}
 距离最近的实体【{{ state.name }}】
 距离【{{ state.name }}】{{ distance(location.latitude,location.longitude, state) | round(2) }}公里
@@ -677,32 +700,37 @@ class ConversationAssistant():
 
             if self.robot_id == 'haier':
                 # 海尔机器人
-                url = 'https://www.haigeek.com/skillcenter/skillPlate/skillTrial'
-                headers = {
-                  'Content-Type': 'application/json'
-                }
-                body = {
-                  "userQuery": text,
-                  "userId": "d0c6a515-5221-42d3-977e-6d275cec2a70",
-                  "deviceId": "2c995a8c-bf38-4788-8614-d40b47ba3b05"
-                }
-                async with aiohttp.ClientSession(headers=headers) as session:
-                  async with session.post(url=url, json=body, timeout=timeout) as res:
-                    result = await res.json(content_type=None)
-                    _LOGGER.debug(result)
-                    if result.get('retCode') == '00000':
-                      res_data = result['data']
-                      # print(res_data)
-                      message = res_data['response']
+                result = await self.haier_robot(text)
+                if result is not None:
+                    message = result['response']
             else:
                 # 默认机器人
-                async with aiohttp.request('GET','https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=timeout) as r:
+                async with aiohttp.request('GET', 'https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=timeout) as r:
                     result = await r.json(content_type=None)
                     _LOGGER.debug(result)
                     message = result['data']['info']['text']
         except Exception as e:
             _LOGGER.debug(e)
         return message
+
+    async def haier_robot(self, text):
+        ''' 海尔机器人 '''
+        timeout = aiohttp.ClientTimeout(total=5)
+        url = 'https://www.haigeek.com/skillcenter/skillPlate/skillTrial'
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        body = {
+            "userQuery": text,
+            "userId": "d0c6a515-5221-42d3-977e-6d275cec2a70",
+            "deviceId": "2c995a8c-bf38-4788-8614-d40b47ba3b05"
+        }
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(url=url, json=body, timeout=timeout) as res:
+                result = await res.json(content_type=None)
+                _LOGGER.debug(result)
+                if result.get('retCode') == '00000':
+                    return result['data']
 
     def update(self, text, reply):
         self.hass.states.async_set('conversation.voice', text, {
@@ -718,7 +746,7 @@ class ConversationAssistant():
         return tpl.async_render(None)
 
     # 返回意图结果
-    def intent_result(self, message, extra_data = None):
+    def intent_result(self, message, extra_data=None):
         intent_result = intent.IntentResponse(self.hass.config.language)
         intent_result.async_set_speech(message, 'plain', extra_data)
         return intent_result
@@ -726,14 +754,15 @@ class ConversationAssistant():
     # 异步调用服务
     def call_service(self, service, data={}):
         arr = service.split('.')
-        self.hass.async_create_task(self.hass.services.async_call(arr[0], arr[1], data))
+        self.hass.async_create_task(
+            self.hass.services.async_call(arr[0], arr[1], data))
 
     def call_service_entity(self, service, entity_id):
-        self.call_service(service, { 'entity_id': entity_id })
+        self.call_service(service, {'entity_id': entity_id})
 
     def fire_text(self, text):
         hass = self.hass
-        data = { 'text': text }
+        data = {'text': text}
         hass.bus.fire('conversation', data)
         if hass.services.has_service('python_script', 'conversation'):
             self.call_service('python_script.conversation', data)
