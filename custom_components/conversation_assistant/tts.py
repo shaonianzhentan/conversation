@@ -54,7 +54,7 @@ class ConversationTtsEntity(tts.TextToSpeechEntity):
         voice_name: str | None = options.get(tts.ATTR_VOICE)
         voice_speaker: str | None = options.get(ATTR_SPEAKER)
 
-        url = f'https://fanyi.baidu.com/gettts?lan=zh&text={quote(message)}&spd=5&source=web'
+        url = f'https://dict.youdao.com/dictvoice?audio={quote(message)}&le=zh'
         _LOGGER.debug(url)
         buffer = []
         async with aiohttp.ClientSession() as session:
