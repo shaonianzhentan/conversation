@@ -54,7 +54,11 @@ class ConversationAssistant():
             if result[0] == 0:
                 entities = self.semantic.get_entities_by_domain(result[1])
                 extra_data = {
-                    'entities': list(map(lambda state: {'id': state.entity_id, 'name': state.attributes.get('friendly_name'), 'state': state.state}, entities))
+                    'entities': list(map(lambda state: {
+                        'id': state.entity_id, 
+                        'name': state.attributes.get('friendly_name'), 
+                        'state': self.hass.formatEntityState(state)
+                      }, entities))
                 }
                 return self.intent_result(self.template('{% for state in states.' + result[1] + ''' -%}【{{ state.name }} - {{ state.state }}】
 {% endfor %} '''), extra_data)
