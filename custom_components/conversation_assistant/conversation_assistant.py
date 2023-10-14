@@ -57,7 +57,7 @@ class ConversationAssistant():
                     'entities': list(map(lambda state: {
                         'id': state.entity_id, 
                         'name': state.attributes.get('friendly_name'), 
-                        'state': self.hass.formatEntityState(state)
+                        'state': state.state
                       }, entities))
                 }
                 return self.intent_result(self.template('{% for state in states.' + result[1] + ''' -%}【{{ state.name }} - {{ state.state }}】

@@ -36,7 +36,7 @@ class Semantic():
                         'domain': domain,
                         'entity_id': entity_id,
                         'entity_name': friendly_name,
-                        'state': self.hass.formatEntityState(state)
+                        'state': state.state
                     })
         arr.sort(reverse=True, key=lambda x:x.last_changed)
         self.states = arr
@@ -108,7 +108,7 @@ class Semantic():
                         'domain': domain,
                         'entity_id': entity_id,
                         'entity_name': friendly_name,
-                        'state': self.hass.formatEntityState(state)
+                        'state': state.state
                     }
     
     # match entity name
@@ -123,7 +123,7 @@ class Semantic():
                         'domain': state.entity_id.split('.')[0],
                         'id': state.entity_id,
                         'name': friendly_name,
-                        'state': self.hass.formatEntityState(state)
+                        'state': state.state
                     })
         arr.sort(reverse=True, key=lambda x:len(x['name']))
         tmp_text = text
@@ -188,7 +188,7 @@ class Semantic():
                     'domain': domain,
                     'entity_id': entity_id,
                     'entity_name': friendly_name,
-                    'state': self.hass.formatEntityState(state),
+                    'state': state.state,
                     'unit': attributes.get('unit_of_measurement', '')
                 })
         if len(arr) > 0:
@@ -236,7 +236,7 @@ class Semantic():
                             'domain': domain,
                             'id': entity_id,
                             'name': friendly_name,
-                            'state': self.hass.formatEntityState(state)
+                            'state': state.state
                         })
         return arr
 
