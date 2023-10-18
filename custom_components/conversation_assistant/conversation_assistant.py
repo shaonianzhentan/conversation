@@ -739,6 +739,7 @@ class ConversationAssistant():
     def update(self, text, reply):
         self.hass.states.async_set('conversation.voice', text, {
             'id': self.id,
+            'custom_ui_more_info': 'conversation-assistant',
             "icon": "mdi:account-voice",
             "friendly_name": "语音小助手",
             "reply": reply
