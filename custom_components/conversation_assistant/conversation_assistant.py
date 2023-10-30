@@ -33,6 +33,7 @@ class ConversationAssistant():
 
         self.id = entry.entry_id
         self.robot_id = entry.options.get('robot_id')
+        self.speech_key = entry.options.get('speech_key', '')
 
         self.hass = hass
         local = hass.config.path(
