@@ -11,7 +11,7 @@ async def async_speech_recognition(speech_key, buffer_data, content_type='wav'):
     headers = {
         'Accept': 'application/json;text/xml',
         'Connection': 'Keep-Alive',
-        'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000' if content_type == 'wav' else 'audio/pcm',
+        'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000' if content_type == 'wav' else 'audio/pcm; samplerate=16000',
         'Ocp-Apim-Subscription-Key': speech_key,
         'Expect': '100-continue'
     }
