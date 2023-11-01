@@ -104,6 +104,13 @@ class EntityAssistant:
                     'media_content_id': 'cloudmusic://163/my/daily'
                 })
                 text = f'正在播放每日推荐音乐'
+            elif text.startswith('播放我喜欢的音乐'):
+                service_name = 'play_media'
+                service_data.update({
+                    'media_content_type': 'music',
+                    'media_content_id': 'cloudmusic://163/my/ilike'
+                })
+                text = f'正在播放我喜欢的音乐'
             elif text.startswith('我想听') and text.endswith('的歌'):
                 matchObj = re.match(r'我想听(.+)的歌', text)
                 if matchObj is not None:
