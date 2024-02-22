@@ -3,16 +3,12 @@ https://github.com/home-assistant/core/tree/dev/homeassistant/components/convers
 '''
 from __future__ import annotations
 
-from functools import partial
-import logging, datetime, re, os
-from typing import Literal
+import logging
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, Context
-from homeassistant.helpers import intent, template
-from homeassistant.util import ulid
-from home_assistant_intents import get_domains_and_languages, get_intents
+from home_assistant_intents import get_languages
 from homeassistant.const import Platform
 from .http import HttpView
 from .entity_assistant import EntityAssistant
@@ -20,7 +16,8 @@ from .conversation_assistant import ConversationAssistant
 from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = [ Platform.STT,  Platform.TTS ]
+PLATFORMS = [Platform.STT,  Platform.TTS]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 安装集成 '''
@@ -41,15 +38,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return result
     hass.data[manifest.domain] = ConversationAssistant(hass, recognize, entry)
-    
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
+
 
 async def update_listener(hass, entry):
     ''' 更新配置 '''
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 删除集成 '''
@@ -59,14 +58,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-
 class ConversationAssistantAgent(conversation.AbstractConversationAgent):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
-        
+
         self.entity_assistant = EntityAssistant(hass, entry.options)
 
     @property
@@ -77,7 +75,7 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return get_domains_and_languages()["homeassistant"]
+        return get_languages()
 
     async def async_process(
         self, user_input: conversation.ConversationInput
@@ -99,23 +97,23 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
         conversation_assistant = self.hass.data[manifest.domain]
         text = conversation_assistant.trim_char(user_input.text)
         if text == '':
-          return conversation.ConversationResult(
-            response=conversation_assistant.intent_result('没有接收到控制命令'), 
-            conversation_id=conversation_id
-          )
+            return conversation.ConversationResult(
+                response=conversation_assistant.intent_result('没有接收到控制命令'),
+                conversation_id=conversation_id
+            )
 
         conversation_assistant.fire_text(text)
 
         # 调用Hass意图
         conversation_result = await conversation.async_converse(
-                hass=self.hass,
-                text=text,
-                conversation_id=conversation_id,
-                context=user_input.context,
-                language=language,
-                agent_id='homeassistant',
-                device_id=user_input.device_id
-            )
+            hass=self.hass,
+            text=text,
+            conversation_id=conversation_id,
+            context=user_input.context,
+            language=language,
+            agent_id='homeassistant',
+            device_id=user_input.device_id
+        )
         intent_response = conversation_result.response
         if intent_response.error_code is not None:
             # 插件意图
@@ -125,13 +123,13 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
                 state = self.hass.states.get(entity_id)
                 entities = [
                     {
-                      'id': entity_id,
-                      'name': state.attributes.get('friendly_name'),
-                      'state': state.state
+                        'id': entity_id,
+                        'name': state.attributes.get('friendly_name'),
+                        'state': state.state
                     }
                 ]
                 intent_response = conversation_assistant.intent_result(message, {
-                  'entities': entities
+                    'entities': entities
                 })
             else:
                 intent_response = await conversation_assistant.async_process(text)
