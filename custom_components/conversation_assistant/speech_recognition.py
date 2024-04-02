@@ -17,7 +17,7 @@ async def async_speech_recognition(speech_key, buffer_data, content_type='wav'):
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, data=buffer_data) as response:
+        async with session.post(url, headers=headers, data=buffer_data if isinstance(buffer_data, bytearray) else buffer_data()) as response:
             if response.status == 200:
                 result = await response.json()
                 _LOGGER.debug(result)

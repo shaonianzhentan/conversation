@@ -2,6 +2,7 @@ import logging
 import aiohttp
 import re
 from homeassistant.helpers import template, intent
+from homeassistant.components.frontend import add_extra_js_url
 from .semantic import Semantic
 from .manifest import manifest
 
@@ -40,8 +41,7 @@ class ConversationAssistant():
             "custom_components/conversation_assistant/www")
         LOCAL_PATH = '/www-conversation'
         hass.http.register_static_path(LOCAL_PATH, local, False)
-        hass.components.frontend.add_extra_js_url(
-            hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
+        add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
         self.update(manifest.version, '')
         self.semantic = Semantic(hass)
         self.recognize = recognize
