@@ -267,10 +267,11 @@ class EntityAssistant:
                 return None
 
             service_data = {
-                'text': text,
+                'media_content_type': 'txt',
+                'media_content_id': text,
                 'entity_id': self.xiaodu_id
             }
-            await self.hass.services.async_call('baidu', 'command', service_data)
+            await self.hass.services.async_call('media_player', 'play_media', service_data)
             return text
 
     async def async_calendar(self, text):

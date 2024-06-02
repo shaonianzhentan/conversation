@@ -1,0 +1,30 @@
+blueprint:
+  name: 日历提醒
+  description: 使用语音小助手添加日历信息，然后通过添加这个自动化进行消息自定义提醒
+  domain: automation
+  source_url: https://github.com/shaonianzhentan/conversation/blob/master/blueprints/calendar_reminders.yaml
+  input:
+    calendar_id:
+      name: 日历实体
+      description: 语音小助手关联的日历实体
+      selector:
+        entity:
+          domain: calendar
+    todo:
+      name: 执行动作
+      description: 消息变量：message
+      default: []
+      selector:
+        action: {}
+trigger:
+- platform: calendar
+  event: start
+  offset: "0:0:0"
+  entity_id: !input calendar_id
+action:
+- variables:
+    message: '{{ trigger.calendar_event.summary }}'
+- choose:
+  - conditions:
+    - '{{ message != "" }}'
+    sequence: !input todo
