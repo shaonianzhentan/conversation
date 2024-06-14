@@ -267,7 +267,7 @@ class ConversationAssistant():
                     brightness = 0
                     if '亮度' in text:
                         # check numbers
-                        compileX = re.compile("\d+")
+                        compileX = re.compile(r"\d+")
                         findX = compileX.findall(text)
                         if len(findX) > 0:
                             value = int(findX[0])
@@ -488,7 +488,7 @@ class ConversationAssistant():
 
                     if '声音' in text or '音量' in text:
                         # check numbers
-                        compileX = re.compile("\d+")
+                        compileX = re.compile(r"\d+")
                         findX = compileX.findall(text)
                         if len(findX) > 0:
                             volume_level = int(findX[0])
@@ -535,7 +535,7 @@ class ConversationAssistant():
 
                     # set temperature
                     if '度' in text and ('设' in text or '调' in text):
-                        compileX = re.compile("\d+")
+                        compileX = re.compile(r"\d+")
                         findX = compileX.findall(text)
                         if len(findX) > 0:
                             value = int(findX[0])
@@ -679,7 +679,7 @@ class ConversationAssistant():
             }
 
     async def wechat_match(self, text):
-        compileX = re.compile("微信定位(\d+\.\d+),(\d+\.\d+)")
+        compileX = re.compile(r"微信定位(\d+\.\d+),(\d+\.\d+)")
         findX = compileX.findall(text)
         if len(findX) > 0:
             location = findX[0]
@@ -760,8 +760,7 @@ class ConversationAssistant():
     # 异步调用服务
     def call_service(self, service, data={}):
         arr = service.split('.')
-        self.hass.async_create_task(
-            self.hass.services.async_call(arr[0], arr[1], data))
+        self.hass.create_task(self.hass.services.async_call(arr[0], arr[1], data))
 
     def call_service_entity(self, service, entity_id):
         self.call_service(service, {'entity_id': entity_id})

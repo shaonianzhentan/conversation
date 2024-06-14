@@ -3,7 +3,7 @@ https://github.com/home-assistant/core/tree/dev/homeassistant/components/convers
 '''
 from __future__ import annotations
 
-import logging
+import logging, asyncio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
@@ -47,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass, entry):
     ''' 更新配置 '''
     await async_unload_entry(hass, entry)
+    await asyncio.sleep(1)
     await async_setup_entry(hass, entry)
 
 
