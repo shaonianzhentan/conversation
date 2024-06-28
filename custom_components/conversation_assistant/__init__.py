@@ -18,7 +18,6 @@ from .manifest import manifest
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.STT,  Platform.TTS]
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ''' 安装集成 '''
     hass.http.register_view(HttpView)
@@ -102,8 +101,6 @@ class ConversationAssistantAgent(conversation.AbstractConversationAgent):
                 response=conversation_assistant.intent_result('没有接收到控制命令'),
                 conversation_id=conversation_id
             )
-
-        conversation_assistant.fire_text(text)
 
         # 调用Hass意图
         conversation_result = await conversation.async_converse(

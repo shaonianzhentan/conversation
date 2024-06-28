@@ -764,10 +764,3 @@ class ConversationAssistant():
 
     def call_service_entity(self, service, entity_id):
         self.call_service(service, {'entity_id': entity_id})
-
-    def fire_text(self, text):
-        hass = self.hass
-        data = {'text': text}
-        hass.bus.fire('conversation', data)
-        if hass.services.has_service('python_script', 'conversation'):
-            self.call_service('python_script.conversation', data)
