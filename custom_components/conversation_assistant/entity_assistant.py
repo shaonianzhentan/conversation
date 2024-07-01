@@ -162,7 +162,15 @@ class EntityAssistant:
                     text = f'正在播放歌单{kv}'
 
             elif text.startswith('播放专辑'):
-                pass
+                arr = text.split('播放专辑')
+                if len(arr) == 2 and arr[1] != '':
+                    kv = arr[1]
+                    service_name = 'play_media'
+                    service_data.update({
+                        'media_content_type': 'music',
+                        'media_content_id': f'cloudmusic://play/xmly?kv={kv}'
+                    })
+                    text = f'正在播放喜马拉雅专辑{kv}'
 
             if service_name is not None:
                 await self.hass.services.async_call('media_player', service_name, service_data)
