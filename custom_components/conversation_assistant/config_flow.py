@@ -32,7 +32,6 @@ class SimpleConfigFlow(ConfigFlow, domain=manifest.domain):
     def async_get_options_flow(entry: ConfigEntry):
         return OptionsFlowHandler(entry)
 
-
 class OptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry):
         self.config_entry = config_entry
@@ -96,12 +95,6 @@ class OptionsFlowHandler(OptionsFlow):
                 continue
             media_entities[entity_id] = value
 
-        # 聊天机器人
-        chat_list = {
-            'default': '默认',
-            'haier': '海尔',
-        }
-
         DATA_SCHEMA = vol.Schema({
             vol.Optional("speech_key", default=options.get('speech_key', '')): str,
             vol.Optional("calendar_id", default=options.get('calendar_id', default_name)): vol.In(calendar_entities),
@@ -109,7 +102,6 @@ class OptionsFlowHandler(OptionsFlow):
             vol.Optional("tv_id", default=options.get('tv_id', default_name)): vol.In(tv_media_entities),
             vol.Optional("fm_id", default=options.get('fm_id', default_name)): vol.In(media_entities),
             vol.Optional("xiaoai_id", default=options.get('xiaoai_id', default_name)): vol.In(xiaoai_media_entities),
-            vol.Optional("xiaodu_id", default=options.get('xiaodu_id', default_name)): vol.In(xiaodu_media_entities),
-            vol.Optional("robot_id", default=options.get('robot_id', 'default')): vol.In(chat_list)
+            vol.Optional("xiaodu_id", default=options.get('xiaodu_id', default_name)): vol.In(xiaodu_media_entities)
         })
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors=errors)

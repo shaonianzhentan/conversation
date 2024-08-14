@@ -2,7 +2,6 @@ import logging
 import aiohttp
 import re
 from homeassistant.helpers import template, intent
-from homeassistant.components.frontend import add_extra_js_url
 from .semantic import Semantic
 from .manifest import manifest
 
@@ -27,21 +26,14 @@ WEATHER_STATE = {
     'windy-variant': '很大风'
 }
 
-
 class ConversationAssistant():
 
     def __init__(self, hass, recognize, entry):
 
         self.id = entry.entry_id
-        self.robot_id = entry.options.get('robot_id')
         self.speech_key = entry.options.get('speech_key', '')
 
         self.hass = hass
-        local = hass.config.path(
-            "custom_components/conversation_assistant/www")
-        LOCAL_PATH = '/www-conversation'
-        hass.http.register_static_path(LOCAL_PATH, local, False)
-        add_extra_js_url(hass, f'{LOCAL_PATH}/wake-up.js?v={manifest.version}')
         self.update(manifest.version, '')
         self.semantic = Semantic(hass)
         self.recognize = recognize
@@ -699,22 +691,14 @@ class ConversationAssistant():
 
     # Chat robot
     async def chat_robot(self, text):
-        message = "对不起，我不明白"
+        message = "语音小助手无法识别这个命令"
         try:
-            timeout = aiohttp.ClientTimeout(total=5)
-
-            if self.robot_id == 'haier':
-                # 海尔机器人
-                result = await self.haier_robot(text)
-                if result is not None:
-                    message = result['response']
-            else:
-                # 默认机器人
-                async with aiohttp.request('GET', 'https://api.ownthink.com/bot?appid=xiaosi&spoken=' + text, timeout=timeout) as r:
-                    result = await r.json(content_type=None)
-                    _LOGGER.debug(result)
-                    message = result['data']['info']['text']
+            # 海尔机器人
+            result = await self.haier_robot(text)
+            if result is not None:
+                message = result['response']
         except Exception as e:
+            print(e)
             _LOGGER.debug(e)
         return message
 
