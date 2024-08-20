@@ -468,12 +468,16 @@ class ConversationAssistant():
                             'media_player.media_pause', entity_id)
                         return f'{entity_name}暂停'
 
-                    if ['声音小点', '小点声音', '小一点声音', '声音小一点', '音量减少', '减少音量', '音量调低', '调低音量'].count(text) == 1:
+                    patterns = [r'声音小点', r'小点声音', r'小一点声音', r'声音小一点', r'音量减少', r'减少音量', r'音量调低', r'调低音量']
+                    regex = '|'.join(patterns)
+                    if re.search(regex, text):
                         self.call_service_entity(
                             'media_player.volume_down', entity_id)
                         return f'{entity_name}音量减少'
 
-                    if ['声音大点', '大点声音', '大一点声音', '声音大一点', '音量增加', '增加音量', '音量调高', '调高音量'].count(text) == 1:
+                    patterns = [r'声音大点', r'大点声音', r'大一点声音', r'声音大一点', r'音量增加', r'增加音量', r'音量调高', r'调高音量']
+                    regex = '|'.join(patterns)
+                    if re.search(regex, text):
                         self.call_service_entity(
                             'media_player.volume_up', entity_id)
                         return f'{entity_name}音量增加'
