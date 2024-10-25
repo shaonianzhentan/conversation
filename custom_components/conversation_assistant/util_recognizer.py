@@ -1,6 +1,6 @@
 import datetime
-import recognizers_suite as Recognizers
-from recognizers_suite import Culture, ModelResult
+import ms_recognizers_suite as Recognizers
+from ms_recognizers_suite import Culture, ModelResult
 
 def get_number_value(number_text):
     results = Recognizers.recognize_number(number_text, Culture.Chinese)
@@ -8,6 +8,8 @@ def get_number_value(number_text):
     if length > 0:
         result = results[length - 1]
         values = list(result.resolution.values())[0]
+        if isinstance(values, str):
+            return values
         return values[0]
 
 def get_calendar_datetime(time_text):
