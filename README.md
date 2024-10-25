@@ -85,7 +85,6 @@
 ## 相关服务
 - https://azure.microsoft.com/zh-cn/products/cognitive-services/speech-to-text/
 - https://www.haigeek.com/haigeekWeb/#/skill-center
-- https://www.ownthink.com/docs/bot/
 
 ---
 **在使用的过程之中，如果遇到无法解决的问题，付费咨询请加Q`635147515`**
