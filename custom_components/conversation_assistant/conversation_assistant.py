@@ -555,8 +555,8 @@ class ConversationAssistant():
         result = []
         turnOn_text = ''
         turnOff_text = ''
-        matchTurnOn = self.semantic.parser_match(text, '打开|开启|开一下|开下')
-        matchTurnOff = self.semantic.parser_match(text, '关闭|关掉|关上|关一下|关下')
+        matchTurnOn = self.semantic.parser_match(text, '打开|开启|开一下|开下|开')
+        matchTurnOff = self.semantic.parser_match(text, '关闭|关掉|关上|关一下|关下|关')
         if matchTurnOn is not None and matchTurnOff is not None:
             if matchTurnOn[0] != '':
                 turnOn_text = matchTurnOn[2]

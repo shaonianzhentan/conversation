@@ -74,7 +74,8 @@ class Semantic():
 
             if entity.aliases:
                 for alias in entity.aliases:
-                    _list.append(alias)
+                    if isinstance(alias, str):
+                        _list.append(alias)
         return _list
 
     # 完全匹配
@@ -271,7 +272,7 @@ class Semantic():
             }
 
     def parser_match(self, text, find):
-        matchObj = re.match(rf'(.*)({find})(.*)', text)
+        matchObj = re.match(rf'(.*?)({find})(.*)', text)
         if matchObj is not None:
             result = (matchObj.group(1), matchObj.group(2), matchObj.group(3))
             _LOGGER.debug(result)
