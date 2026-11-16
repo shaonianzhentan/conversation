@@ -1,21 +1,19 @@
 import re, logging
 from homeassistant.core import split_entity_id
-from homeassistant.helpers import template, entity_registry, area_registry
+from homeassistant.helpers import entity_registry, area_registry
 from .util import create_matcher
 
 _LOGGER = logging.getLogger(__name__)
 
 class Semantic():
-    
+
     def __init__(self, hass):
         self.hass = hass
-        self.entity_registry = None
+        self.entity_registry = entity_registry.async_get(hass)
+        self.area_registry = area_registry.async_get(hass)
 
     # cache data
     async def update(self, text):
-        # 注册实体
-        self.entity_registry = entity_registry.async_get(self.hass)
-
         entities = []
         self.areas = []
         # all state
@@ -41,8 +39,7 @@ class Semantic():
         arr.sort(reverse=True, key=lambda x:x.last_changed)
         self.states = arr
         # all area
-        area = area_registry.async_get(self.hass)
-        self.area_list = area.async_list_areas()
+        self.area_list = self.area_registry.async_list_areas()
         for item in self.area_list:
             if item.name in text:
                 self.areas.append(item.name)
@@ -74,7 +71,7 @@ class Semantic():
 
             if entity.aliases:
                 for alias in entity.aliases:
-                    _list.append(alias)
+                    _list.append(str(alias))
         return _list
 
     # 完全匹配
@@ -222,8 +219,7 @@ class Semantic():
             obj = await self.get_area(area.get('area_name'))
             if obj is not None:
                 word = area.get('area_words')[2].strip('的')
-                registry_entity = entity_registry.async_get(self.hass)
-                entities = entity_registry.async_entries_for_area(registry_entity, obj.id)
+                entities = entity_registry.async_entries_for_area(self.entity_registry, obj.id)
                 for entity in entities:
                     entity_id = entity.entity_id
                     state = self.hass.states.get(entity_id)

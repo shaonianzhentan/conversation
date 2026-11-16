@@ -1,13 +1,13 @@
 {
   "domain": "conversation_assistant",
-  "name": "\u8BED\u97F3\u5C0F\u52A9\u624B",
-  "version": "2025.10.22",
+  "name": "语音小助手",
+  "version": "2026.11.16",
   "config_flow": true,
   "documentation": "https://github.com/shaonianzhentan/conversation",
   "requirements": [
     "ms-recognizers-text-suite==1.0.1"
   ],
-  "dependencies": [],
+  "dependencies": ["conversation"],
   "codeowners": [
     "@shaonianzhentan"
   ],

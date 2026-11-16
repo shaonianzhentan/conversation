@@ -1,84 +1,78 @@
 # 语音小助手
 
-一个在Home Assistant里使用的简单中文语音控制插件
+一个在 Home Assistant 里使用的中文语音控制插件，作为 Conversation Agent 接入 HA 语音助手。
 
-[![badge](https://img.shields.io/badge/Home-Assistant-%23049cdb)](https://www.home-assistant.io/)
-[![badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-![visit](https://visitor-badge.laobi.icu/badge?page_id=shaonianzhentan.conversation&left_text=visit)
+## 安装
 
-[![badge](https://img.shields.io/badge/Conversation-语音小助手-049cdb?logo=homeassistant&style=for-the-badge)](https://github.com/shaonianzhentan/conversation)
-[![badge](https://img.shields.io/badge/Windows-家庭助理-blue?logo=windows&style=for-the-badge)](https://www.microsoft.com/zh-cn/store/productId/9n2jp5z9rxx2)
-[![badge](https://img.shields.io/badge/wechat-微信控制-6cae6a?logo=wechat&style=for-the-badge)](https://github.com/shaonianzhentan/ha_wechat)
-[![badge](https://img.shields.io/badge/android-家庭助理-purple?logo=android&style=for-the-badge)](https://github.com/shaonianzhentan/ha_app)
-
-[![badge](https://img.shields.io/badge/QQ交流群-61417349-76beff?logo=tencentqq&style=for-the-badge)](https://qm.qq.com/cgi-bin/qm/qr?k=aoYbEJzQ8MiieLhvQfhE_Ck1vLENuErf&jump_from=webapi&authKey=FT+TXsLXVNUtYY9G0q82vrBTxVT8axAg2C/tP9U1x9JioabEAbzVB7sPVGy/nIHN)
+HACS 添加自定义仓库 `https://github.com/shaonianzhentan/conversation`，搜索 `语音小助手` 安装，重启 HA 后在集成中添加。
 
 ## 配置
 
-安装完成后重启HA，刷新一下页面，在集成里搜索`语音小助手`
+添加集成后，在选项中配置以下实体（可选）：
 
-[![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=conversation_assistant)
-
-## 浏览器语音控制
-
-- 在`Edge浏览器`中使用`https`访问HA
-- 在语音小助手实体界面中开启语音唤醒功能
-- 大声喊出唤醒词，出现聆听界面后，说出你要控制的命令
+| 配置项 | 说明 |
+|---|---|
+| 日历 | 用于创建提醒事件 |
+| 音乐 | 网易云音乐媒体播放器 |
+| 广播 | 通用媒体播放器（播放广播） |
+| 小爱音箱 | 小米米家小爱音箱 |
+| 小度音箱 | 小度音箱 |
 
 ## 支持指令
-- 开关设备
-- 灯光亮度
-- `light名称` `红|橙|黄|绿|青|蓝|紫`色
-- `触发` `自动化|按钮|脚本|警报控制面板`
-- `激活|启动|启用`场景
-- 支持媒体播放器
-- 支持空调
 
-### 音乐
+### 设备控制
 
-- 播放、暂停、上一曲、下一曲
-- 随机播放、单曲循环、列表播放
-- 声音小点、小点声音、小一点声音、声音小一点
-- 声音大点、大点声音、大一点声音、声音大一点
+- 打开/关闭 `设备名称`
+- `区域名`的 `设备名称` 打开/关闭
+- 灯光亮度设为 `数字`%
+- 灯光调成 `颜色`
+- 触发 `自动化/按钮/脚本`
+- 激活 `场景名`
+
+### 媒体播放器
+
+- 播放 / 暂停
+- 上一曲 / 下一曲
+- 声音大一点 / 声音小一点
+- 音量设为 `数字`%
+
+### 空调
+
+- `自动/制热/制冷/除湿/送风`模式
+- 温度设为 `数字`度
+- 湿度设为 `数字`%
+
+### 音乐（网易云）
+
 - 播放每日推荐
-- 我想听`歌名`
-- 我想听`歌手`的歌
-- 播放歌单`歌单名称`
-- 播放电台`电台名称`
-- 播放专辑`喜马拉雅专辑名称`
+- 播放我喜欢的音乐
+- 我想听 `歌名` 的歌
+- 播放歌单 `歌单名`
+- 播放电台 `电台名`
+- 播放专辑 `专辑名`
+- 随机播放 / 单曲循环 / 列表播放
 
-### 日历
+### 日历提醒
 
-- `一个时间点`提醒我`要做的事`
-- `八点半`提醒我`洗碗`
+- `时间`提醒我`要做的事`
+- 发送日历实体名称查看近期事件
 
-提示：发送日历实体名称，可以查看最近提醒事件
-
-### 小爱音箱（控制接入米家的设备）
+### 小爱音箱
 
 - 小爱`打开卫生间的灯`
-- 小艾`打开卫生间的灯`
 
-### 小度音箱（控制接入小度的设备）
+### 小度音箱
 
 - 小度`打开卫生间的灯`
-- 小杜`打开卫生间的灯`
 
 ### 广播
 
 - 播放广播
-- 播放广播`中国之声`
 
-## 如果这个项目对你有帮助，请我喝杯<del style="font-size: 14px;">咖啡</del>奶茶吧😘
-|支付宝|微信|
-|---|---|
-<img src="https://github.com/shaonianzhentan/image/raw/main/ha_wechat/pay_alipay.png" align="left" height="160" alt="支付宝" title="支付宝">  |  <img src="https://github.com/shaonianzhentan/image/raw/main/ha_wechat/pay_wechat.png" align="left" height="160" alt="微信支付" title="微信">
+## TTS
 
-#### 关注我的微信订阅号，了解更多HomeAssistant相关知识
-<img src="https://ha.jiluxinqing.com/img/wechat-channel.png" height="160" alt="HomeAssistant家庭助理" title="HomeAssistant家庭助理"> 
+内置有道词典 TTS，在 HA 语音助手设置中选择 `语音助手TTS` 即可使用。
 
-## 相关服务
-- https://www.haigeek.com/haigeekWeb/#/skill-center
+## 相关链接
 
----
-**在使用的过程之中，如果遇到无法解决的问题，付费咨询请加Q`635147515`**
+- [GitHub 仓库](https://github.com/shaonianzhentan/conversation)
