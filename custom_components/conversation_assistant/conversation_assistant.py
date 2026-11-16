@@ -1,8 +1,8 @@
 import logging
-import aiohttp
 import re
 from homeassistant.helpers import template, intent
 from .semantic import Semantic
+from .haier import async_haier_robot
 from .manifest import manifest
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,16 +26,114 @@ WEATHER_STATE = {
     'windy-variant': '很大风'
 }
 
+# 灯光颜色映射
+LIGHT_COLORS = {
+    '主题色': 'homeassistant',
+    '爱丽丝蓝': 'aliceblue',
+    '古董白': 'antiquewhite',
+    '浅绿色': 'aqua',
+    '碧绿': 'aquamarine',
+    '青白色': 'azure',
+    '米色': 'beige',
+    '陶坯黄': 'bisque',
+    '杏仁白': 'blanchedalmond',
+    '蓝色': 'blue',
+    '蓝紫色': 'blueviolet',
+    '棕色': 'brown',
+    '硬木褐': 'burlywood',
+    '军服蓝': 'cadetblue',
+    '查特酒绿': 'chartreuse',
+    '巧克力色': 'chocolate',
+    '珊瑚红': 'coral',
+    '矢车菊蓝': 'cornflowerblue',
+    '玉米穗黄': 'cornsilk',
+    '绯红': 'crimson',
+    '青色': 'cyan',
+    '深蓝色': 'darkblue',
+    '深青色': 'darkcyan',
+    '深金菊黄': 'darkgoldenrod',
+    '深灰色': 'darkgray',
+    '墨绿色': 'darkgreen',
+    '黑灰色': 'darkgrey',
+    '深卡其色': 'darkkhaki',
+    '深品红': 'darkmagenta',
+    '深橄榄绿': 'darkolivegreen',
+    '深橙': 'darkorange',
+    '深洋兰紫': 'darkorchid',
+    '深红色': 'darkred',
+    '深鲑红': 'darksalmon',
+    '深海藻绿': 'darkseagreen',
+    '深岩蓝': 'darkslateblue',
+    '深岩灰': 'darkslategray',
+    '暗岩灰': 'darkslategrey',
+    '深松石绿': 'darkturquoise',
+    '深紫罗兰': 'darkviolet',
+    '深粉色': 'deeppink',
+    '深天蓝': 'deepskyblue',
+    '昏灰': 'dimgray',
+    '浅灰': 'dimgrey',
+    '湖蓝': 'dodgerblue',
+    '火砖红': 'firebrick',
+    '花卉白': 'floralwhite',
+    '森林绿': 'forestgreen',
+    '紫红色': 'fuchsia',
+    '庚氏灰': 'gainsboro',
+    '幽灵白': 'ghostwhite',
+    '金色': 'gold',
+    '金菊黄': 'goldenrod',
+    '灰色': 'gray',
+    '绿色': 'green',
+    '黄绿色': 'greenyellow',
+    '灰白色': 'grey',
+    '蜜瓜绿': 'honeydew',
+    '艳粉': 'hotpink',
+    '印度红': 'indianred',
+    '靛蓝': 'indigo',
+    '象牙白': 'ivory',
+    '卡其色': 'khaki',
+    '薰衣草紫': 'lavender',
+    '薰衣草红': 'lavenderblush',
+    '草坪绿': 'lawngreen',
+    '柠檬绸黄': 'lemonchiffon',
+    '浅蓝': 'lightblue',
+    '浅珊瑚红': 'lightcoral',
+    '浅青': 'lightcyan',
+    '浅金菊黄': 'lightgoldenrodyellow',
+    '亮灰': 'lightgray',
+    '浅绿': 'lightgreen',
+    '浅灰': 'lightgrey',
+    '浅粉': 'lightpink',
+    '浅肉色': 'lightsalmon',
+    '浅海藻绿': 'lightseagreen',
+    '浅天蓝': 'lightskyblue',
+    '浅板岩灰色': 'lightslategray',
+    '浅板岩灰白色': 'lightslategrey',
+    '亮钢蓝': 'lightsteelblue',
+    '浅黄色': 'lightyellow',
+    '石灰': 'lime',
+    '石灰绿': 'limegreen',
+    '亚麻布': 'linen',
+    '洋红': 'magenta',
+    '褐红色': 'maroon',
+    '橄榄色': 'olive',
+    '橙色': 'orange',
+    '粉色': 'pink',
+    '紫色': 'purple',
+    '红色': 'red',
+    '银色': 'silver',
+    '天蓝色': 'skyblue',
+    '白色': 'white',
+    '黄色': 'yellow',
+}
+
 class ConversationAssistant():
 
-    def __init__(self, hass, recognize, entry):
+    def __init__(self, hass, entry):
 
         self.id = entry.entry_id
 
         self.hass = hass
-        self.update(manifest.version, '')
         self.semantic = Semantic(hass)
-        self.recognize = recognize
 
     # Voice service processing
     async def async_process(self, text):
@@ -66,12 +164,15 @@ class ConversationAssistant():
                 if domain == 'script':
                     # reg match
                     slots = result.get('slots', {})
-                    self.call_service(entity_id, slots)
-                    vars = []
+                    self.call_service('script.turn_on', {
+                        'entity_id': entity_id,
+                        'variables': slots,
+                    })
+                    var_list = []
                     for key in slots:
-                        vars.append(
+                        var_list.append(
                             '{% set ' + key + '="' + slots[key] + '" %}')
-                    var_str = ''.join(vars)
+                    var_str = ''.join(var_list)
 
                     # 额外数据
                     extra_data = result.get('extra_data')
@@ -273,156 +374,7 @@ class ConversationAssistant():
                                           'entity_id': entity_id, 'brightness_pct': brightness})
                         result.append(f'{entity_name}的亮度正在设为{brightness}%')
                     else:
-                        color_obj = {
-                            '主题色': 'homeassistant',
-                            '爱丽丝蓝': 'aliceblue',
-                            '古董白': 'antiquewhite',
-                            '浅绿色': 'aqua',
-                            '碧绿': 'aquamarine',
-                            '青白色': 'azure',
-                            '米色': 'beige',
-                            '陶坯黄': 'bisque',
-                            '杏仁白': 'blanchedalmond',
-                            '蓝色': 'blue',
-                            '蓝紫色': 'blueviolet',
-                            '棕色': 'brown',
-                            '硬木褐': 'burlywood',
-                            '军服蓝': 'cadetblue',
-                            '查特酒绿': 'chartreuse',
-                            '巧克力色': 'chocolate',
-                            '珊瑚红': 'coral',
-                            '矢车菊蓝': 'cornflowerblue',
-                            '玉米穗黄': 'cornsilk',
-                            '绯红': 'crimson',
-                            '青色': 'cyan',
-                            '深蓝色': 'darkblue',
-                            '深青色': 'darkcyan',
-                            '深金菊黄': 'darkgoldenrod',
-                            '深灰色': 'darkgray',
-                            '墨绿色': 'darkgreen',
-                            '黑灰色': 'darkgrey',
-                            '深卡其色': 'darkkhaki',
-                            '深品红': 'darkmagenta',
-                            '深橄榄绿': 'darkolivegreen',
-                            '深橙': 'darkorange',
-                            '深洋兰紫': 'darkorchid',
-                            '深红色': 'darkred',
-                            '深鲑红': 'darksalmon',
-                            '深海藻绿': 'darkseagreen',
-                            '深岩蓝': 'darkslateblue',
-                            '深岩灰': 'darkslategray',
-                            '暗岩灰': 'darkslategrey',
-                            '深松石绿': 'darkturquoise',
-                            '深紫罗兰': 'darkviolet',
-                            '深粉色': 'deeppink',
-                            '深天蓝': 'deepskyblue',
-                            '昏灰': 'dimgray',
-                            '浅灰': 'dimgrey',
-                            '湖蓝': 'dodgerblue',
-                            '火砖红': 'firebrick',
-                            '花卉白': 'floralwhite',
-                            '森林绿': 'forestgreen',
-                            '紫红色': 'fuchsia',
-                            '庚氏灰': 'gainsboro',
-                            '幽灵白': 'ghostwhite',
-                            '金色': 'gold',
-                            '金菊黄': 'goldenrod',
-                            '灰色': 'gray',
-                            '绿色': 'green',
-                            '黄绿色': 'greenyellow',
-                            '灰白色': 'grey',
-                            '蜜瓜绿': 'honeydew',
-                            '艳粉': 'hotpink',
-                            '印度红': 'indianred',
-                            '靛蓝': 'indigo',
-                            '象牙白': 'ivory',
-                            '卡其色': 'khaki',
-                            '薰衣草紫': 'lavender',
-                            '薰衣草红': 'lavenderblush',
-                            '草坪绿': 'lawngreen',
-                            '柠檬绸黄': 'lemonchiffon',
-                            '浅蓝': 'lightblue',
-                            '浅珊瑚红': 'lightcoral',
-                            '浅青': 'lightcyan',
-                            '浅金菊黄': 'lightgoldenrodyellow',
-                            '亮灰': 'lightgray',
-                            '浅绿': 'lightgreen',
-                            '浅灰': 'lightgrey',
-                            '浅粉': 'lightpink',
-                            '浅肉色': 'lightsalmon',
-                            '浅海藻绿': 'lightseagreen',
-                            '浅天蓝': 'lightskyblue',
-                            '浅板岩灰色': 'lightslategray',
-                            '浅板岩灰白色': 'lightslategrey',
-                            '亮钢蓝': 'lightsteelblue',
-                            '浅黄色': 'lightyellow',
-                            '石灰': 'lime',
-                            '石灰绿': 'limegreen',
-                            '亚麻布': 'linen',
-                            '洋红': 'magenta',
-                            '褐红色': 'maroon',
-                            # '颜色': 'mediumaquamarine',
-                            # '颜色': 'mediumblue',
-                            # '颜色': 'mediumorchid',
-                            # '颜色': 'mediumpurple',
-                            # '颜色': 'mediumseagreen',
-                            # '颜色': 'mediumslateblue',
-                            # '颜色': 'mediumspringgreen',
-                            # '颜色': 'mediumturquoise',
-                            # '颜色': 'mediumvioletred',
-                            # '颜色': 'midnightblue',
-                            # '颜色': 'mintcream',
-                            # '颜色': 'mistyrose',
-                            # '颜色': 'moccasin',
-                            # '颜色': 'navajowhite',
-                            # '颜色': 'navy',
-                            # '颜色': 'navyblue',
-                            # '颜色': 'oldlace',
-                            '橄榄色': 'olive',
-                            # '颜色': 'olivedrab',
-                            '橙色': 'orange',
-                            # '颜色': 'orangered',
-                            # '颜色': 'orchid',
-                            # '颜色': 'palegoldenrod',
-                            # '颜色': 'palegreen',
-                            # '颜色': 'paleturquoise',
-                            # '颜色': 'palevioletred',
-                            # '颜色': 'papayawhip',
-                            # '颜色': 'peachpuff',
-                            # '颜色': 'peru',
-                            '粉色': 'pink',
-                            # '颜色': 'plum',
-                            # '颜色': 'powderblue',
-                            '紫色': 'purple',
-                            '红色': 'red',
-                            # '颜色': 'rosybrown',
-                            # '颜色': 'royalblue',
-                            # '颜色': 'saddlebrown',
-                            # '颜色': 'salmon',
-                            # '颜色': 'sandybrown',
-                            # '颜色': 'seagreen',
-                            # '颜色': 'seashell',
-                            # '颜色': 'sienna',
-                            '银色': 'silver',
-                            '天蓝色': 'skyblue',
-                            # '颜色': 'slateblue',
-                            # '颜色': 'slategray',
-                            # '颜色': 'slategrey',
-                            # '颜色': 'snow',
-                            # '颜色': 'springgreen',
-                            # '颜色': 'steelblue',
-                            # '颜色': 'tan',
-                            # '颜色': 'teal',
-                            # '颜色': 'thistle',
-                            # '颜色': 'tomato',
-                            # '颜色': 'turquoise',
-                            # '颜色': 'violet',
-                            # '颜色': 'wheat',
-                            '白色': 'white',
-                            # '颜色': 'whitesmoke',
-                            '黄色': 'yellow',
-                            # '颜色': 'yellowgreen'
-                        }
+                        color_obj = LIGHT_COLORS
                         # 颜色
                         compileX = re.compile('|'.join(color_obj.keys()))
                         findX = compileX.findall(text)
@@ -680,7 +632,7 @@ class ConversationAssistant():
             location = findX[0]
             latitude = location[0]
             longitude = location[1]
-            vars = '{% set location = { "latitude": ' + \
+            var_str = '{% set location = { "latitude": ' + \
                 latitude + ', "longitude": ' + longitude + ' } %}'
             return self.template(vars + '''{% set state = closest(location.latitude,location.longitude, states) %}
 距离最近的实体【{{ state.name }}】
@@ -701,37 +653,12 @@ class ConversationAssistant():
             if result is not None:
                 message = result['response']
         except Exception as e:
-            print(e)
-            _LOGGER.debug(e)
+            _LOGGER.exception("chat_robot error: %s", e)
         return message
 
     async def haier_robot(self, text):
         ''' 海尔机器人 '''
-        timeout = aiohttp.ClientTimeout(total=5)
-        url = 'https://www.haigeek.com/skillcenter/skillPlate/skillTrial'
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        body = {
-            "userQuery": text,
-            "userId": "d0c6a515-5221-42d3-977e-6d275cec2a70",
-            "deviceId": "2c995a8c-bf38-4788-8614-d40b47ba3b05"
-        }
-        async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.post(url=url, json=body, timeout=timeout) as res:
-                result = await res.json(content_type=None)
-                _LOGGER.debug(result)
-                if result.get('retCode') == '00000':
-                    return result['data']
-
-    def update(self, text, reply):
-        self.hass.states.async_set('conversation.voice', text, {
-            'id': self.id,
-            'custom_ui_more_info': 'conversation-assistant',
-            "icon": "mdi:account-voice",
-            "friendly_name": "语音小助手",
-            "reply": reply
-        })
+        return await async_haier_robot(text)
 
     # Parsing template
     def template(self, message):
@@ -745,7 +672,9 @@ class ConversationAssistant():
         return intent_result
 
     # 异步调用服务
-    def call_service(self, service, data={}):
+    def call_service(self, service, data=None):
+        if data is None:
+            data = {}
         arr = service.split('.')
         self.hass.create_task(self.hass.services.async_call(arr[0], arr[1], data))
 

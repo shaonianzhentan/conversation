@@ -50,9 +50,6 @@ class ConversationTtsEntity(tts.TextToSpeechEntity):
         ]
 
     async def async_get_tts_audio(self, message, language, options):
-        voice_name: str | None = options.get(tts.ATTR_VOICE)
-        voice_speaker: str | None = options.get(ATTR_SPEAKER)
-
         url = f'https://dict.youdao.com/dictvoice?audio={quote(message)}&le=zh'
         _LOGGER.debug(url)
         buffer = []
